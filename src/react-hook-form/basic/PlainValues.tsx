@@ -1,7 +1,8 @@
-import { notification } from "antd";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Button from "../../components/Button";
 import InputBox from "../../components/InputBox";
+import { showNotify } from "../../utils";
+import { ErrorMsg } from "../components";
 import { COLORS, GENDERS, OCCUPATIONS } from "../constant";
 import { PlainFormField } from "../types";
 
@@ -22,19 +23,16 @@ export default function PlainValues() {
   });
 
   const onSubmit: SubmitHandler<PlainFormField> = (data) => {
-    notification.open({
-      message: <p className="text-blue-700 font-semibold">Submitted Info</p>,
-      description: (
-        <p className="text-base leading-7">{JSON.stringify(data)}</p>
-      ),
-      duration: 0,
+    showNotify({
+      message: "Submitted Info",
+      description: data,
     });
   };
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="max-w-lg flex flex-col gap-3"
+      className="flex flex-col gap-3"
     >
       <div>
         <InputBox
@@ -44,9 +42,7 @@ export default function PlainValues() {
             required: "Name is required",
           })}
         />
-        {errors.name && (
-          <p className="mt-2 text-red-500">{errors.name.message}</p>
-        )}
+        <ErrorMsg error={errors.name} />
       </div>
 
       <div>
@@ -66,9 +62,7 @@ export default function PlainValues() {
             },
           })}
         />
-        {errors.age && (
-          <p className="mt-2 text-red-500">{errors.age.message}</p>
-        )}
+        <ErrorMsg error={errors.age} />
       </div>
 
       <div className="flex items-center">
@@ -114,12 +108,10 @@ export default function PlainValues() {
           ))}
         </ul>
         {/*
-            defaultValues.colors is an array but its error message is still string,
-            dont know why it's typed as FieldError[]
-          */}
-        {errors.colors && (
-          <p className="mt-2 text-red-500">{errors.colors.message}</p>
-        )}
+          defaultValues.colors is an array but its error message is still string,
+          dont know why it's typed as FieldError[]
+        */}
+        <ErrorMsg error={errors.colors} />
       </div>
 
       <div>
@@ -139,9 +131,7 @@ export default function PlainValues() {
             </label>
           ))}
         </div>
-        {errors.occupation && (
-          <p className="mt-2 text-red-500">{errors.occupation.message}</p>
-        )}
+        <ErrorMsg error={errors.occupation} />
       </div>
 
       <Button className="mx-auto" type="submit">
