@@ -23,5 +23,8 @@ export const showNotify = ({
       </p>
     ),
     duration,
+    style: {
+      borderRadius: "0.5rem",
+    },
   });
 };
