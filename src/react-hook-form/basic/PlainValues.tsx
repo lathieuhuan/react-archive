@@ -30,10 +30,7 @@ export default function PlainValues() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col gap-3"
-    >
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
       <div>
         <InputBox
           className="w-full"
@@ -75,11 +72,13 @@ export default function PlainValues() {
             required: "Gender is required",
           })}
         >
-          {GENDERS.map((gender) => (
-            <option className="capitalize" key={gender}>
-              {gender}
-            </option>
-          ))}
+          {GENDERS.map((gender) => {
+            return (
+              <option className="capitalize" key={gender}>
+                {gender}
+              </option>
+            );
+          })}
         </select>
         {errors.gender && (
           <p className="mt-2 text-red-500">{errors.gender.message}</p>
@@ -89,23 +88,25 @@ export default function PlainValues() {
       <div className="flex flex-col">
         <p className="text-lg">Choose colors</p>
         <ul className="pl-2">
-          {COLORS.map((color) => (
-            <li key={color} className="mt-2">
-              <label>
-                <input
-                  className="mr-2"
-                  type="checkbox"
-                  {...register("colors", {
-                    required: "Choose atleast 1 color",
-                  })}
-                  value={color}
-                />
-                <span className="capitalize" style={{ color }}>
-                  {color}
-                </span>
-              </label>
-            </li>
-          ))}
+          {COLORS.map((color) => {
+            return (
+              <li key={color} className="mt-2">
+                <label>
+                  <input
+                    className="mr-2"
+                    type="checkbox"
+                    {...register("colors", {
+                      required: "Choose atleast 1 color",
+                    })}
+                    value={color}
+                  />
+                  <span className="capitalize" style={{ color }}>
+                    {color}
+                  </span>
+                </label>
+              </li>
+            );
+          })}
         </ul>
         {/*
           defaultValues.colors is an array but its error message is still string,
@@ -117,19 +118,21 @@ export default function PlainValues() {
       <div>
         <p className="text-lg">Choose occupation</p>
         <div className="mt-2 pl-2 flex gap-4">
-          {OCCUPATIONS.map((occ) => (
-            <label key={occ}>
-              <input
-                className="mr-2"
-                type="radio"
-                {...register("occupation", {
-                  required: "Choose an occupation",
-                })}
-                value={occ}
-              />
-              <span className="capitalize">{occ}</span>
-            </label>
-          ))}
+          {OCCUPATIONS.map((occ) => {
+            return (
+              <label key={occ}>
+                <input
+                  className="mr-2"
+                  type="radio"
+                  {...register("occupation", {
+                    required: "Choose an occupation",
+                  })}
+                  value={occ}
+                />
+                <span className="capitalize">{occ}</span>
+              </label>
+            );
+          })}
         </div>
         <ErrorMsg error={errors.occupation} />
       </div>

@@ -1,0 +1,40 @@
+.pageCaret {
+  position: relative;
+  font-size: 1.75rem;
+  line-height: 1;
+  animation-duration: 300ms;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  &.left {
+    transform: translateX(-2px);
+  }
+  &.right {
+    transform: translateX(2px);
+  }
+}
+.pageBtn:not(:disabled):hover .pageCaret {
+  &.left {
+    animation-name: moving-left;
+  }
+  &.right {
+    animation-name: moving-right;
+  }
+}
+
+@keyframes moving-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-4px);
+  }
+}
+@keyframes moving-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(4px);
+  }
+}

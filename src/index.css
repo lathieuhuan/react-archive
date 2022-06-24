@@ -8,3 +8,12 @@ body {
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
   font-size: 16px !important;
 }
+
+.nav-link.active {
+  @apply text-red-600;
+}
+
+/* overwrite antd */
+svg {
+  @apply !block;
+}
