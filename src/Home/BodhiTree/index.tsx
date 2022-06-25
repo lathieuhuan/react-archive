@@ -24,7 +24,7 @@ const BodhiTree = memo(() => {
   const [openStatus, setOpenStatus] = useState(getOpenStatus(topCluster));
 
   return (
-    <div className="w-full h-full px-2 py-8 bg-myblue-darkest">
+    <div className="w-full h-full px-2 pt-28 pb-8 bg-myblue-darkest">
       <Cluster
         parentPath=""
         openStatus={openStatus}
