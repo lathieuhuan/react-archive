@@ -1,12 +1,12 @@
-import { CaretRightOutlined } from "@ant-design/icons";
 import classNames from "classnames";
+import { CaretRightOutlined } from "@ant-design/icons";
 import { NavLink } from "react-router-dom";
 import { IBranch, IBranchInfo, ICluster } from "../../AppRouter/types";
 import { IBranchStatus, IClusterStatus, SetStatusAction } from "./types";
 import { countOpen, findAndToggle } from "./utils";
 
 interface ClusterProps {
-  parentPath: string,
+  parentPath: string;
   openStatus: IClusterStatus;
   cluster: ICluster;
   setOpenStatus: SetStatusAction;
@@ -29,10 +29,11 @@ export function Cluster(props: ClusterProps) {
   );
 }
 
-const CTRL_STYLES = "px-2 py-1 hover:bg-cyan-300 select-none";
+const CTRL_STYLES =
+  "px-2 py-1 hover:bg-myblue text-white hover:text-white rounded-sm select-none";
 
 interface BranchProps extends IBranch {
-  parentPath: string,
+  parentPath: string;
   openStatus: IBranchStatus;
   setOpenStatus: SetStatusAction;
 }
@@ -46,7 +47,7 @@ function Branch(props: BranchProps): JSX.Element {
   const nestedPath = `${props.parentPath}/${info.path}`;
 
   return (
-    <div className="flex flex-col">
+    <div className={classNames("flex flex-col")}>
       {cluster ? (
         <ClusterCtrl
           info={info}
@@ -54,7 +55,12 @@ function Branch(props: BranchProps): JSX.Element {
           setOpenStatus={setOpenStatus}
         />
       ) : (
-        <NavLink className={CTRL_STYLES} to={nestedPath}>
+        <NavLink
+          className={({ isActive }) =>
+            classNames(CTRL_STYLES, { "!text-yellow-300": isActive })
+          }
+          to={nestedPath}
+        >
           {info.name}
         </NavLink>
       )}

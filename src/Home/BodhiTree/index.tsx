@@ -24,12 +24,14 @@ const BodhiTree = memo(() => {
   const [openStatus, setOpenStatus] = useState(getOpenStatus(topCluster));
 
   return (
-    <Cluster
-      parentPath=""
-      openStatus={openStatus}
-      setOpenStatus={setOpenStatus}
-      cluster={topCluster}
-    />
+    <div className="w-full h-full px-2 py-8 bg-myblue-darkest">
+      <Cluster
+        parentPath=""
+        openStatus={openStatus}
+        setOpenStatus={setOpenStatus}
+        cluster={topCluster}
+      />
+    </div>
   );
 });
 

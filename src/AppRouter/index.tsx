@@ -5,7 +5,6 @@ import Home from "../Home";
 
 function routeCluster(cluster: ICluster) {
   return cluster.map((branch) => {
-    console.log(branch.component);
     return (
       <Route
         key={branch.info.id}
