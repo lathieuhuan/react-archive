@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import { useEffect, useRef } from "react";
 interface TopBarProps {
-  className: string;
+  className?: string;
   tabs: string[];
   selectedIndex: number;
   onSelect?: (index: number) => void;

@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
-import { ICluster, topCluster } from "../../routes";
+import { topCluster } from "../../AppRouter/routes";
+import { ICluster } from "../../AppRouter/types";
 import { Cluster } from "./Cluster";
 import { IBranchStatus, IClusterStatus } from "./types";
 
@@ -24,6 +25,7 @@ const BodhiTree = memo(() => {
 
   return (
     <Cluster
+      parentPath=""
       openStatus={openStatus}
       setOpenStatus={setOpenStatus}
       cluster={topCluster}
