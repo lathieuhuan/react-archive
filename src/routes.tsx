@@ -27,35 +27,58 @@ export const routes: Array<Route> = [
   },
 ];
 
-export interface IBranch {
+let branchID = 0;
+
+export type IBranchInfo = {
+  id: number;
   name: string;
   path: string;
-  branches?: IBranch[];
+}
+export interface IBranch {
+  info: IBranchInfo;
+  cluster?: ICluster;
 }
 
-export const branches: IBranch[] = [
+export type ICluster = Array<IBranch>;
+
+export const topCluster: ICluster = [
   {
-    name: "React Hook Form",
-    path: "react-hook-form",
-    branches: [
+    info: {
+      id: branchID++,
+      name: "React Hook Form",
+      path: "react-hook-form",
+    },
+    cluster: [
       {
-        name: "Basic",
-        path: "basic",
-        branches: [
+        info: {
+          id: branchID++,
+          name: "Basic",
+          path: "basic",
+        },
+        cluster: [
           {
-            name: "Plain Values with Register Options",
-            path: "plain-values-with-register-options"
+            info: {
+              id: branchID++,
+              name: "Plain Values with Register Options",
+              path: "plain-values-with-register-options",
+            },
           },
           {
-            name: "Nested Values with Yup Validation",
-            path: "nested-values-with-yup-validation"
-          }
-        ]
-      }
-    ]
+            info: {
+              id: branchID++,
+              name: "Nested Values with Yup Validation",
+              path: "nested-values-with-yup-validation",
+            },
+          },
+        ],
+      },
+    ],
   },
   {
-    name: "React Query",
-    path: "react-query",
+    info: {
+      id: branchID++,
+      name: "React Query",
+      path: "react-query",
+    },
   },
 ];

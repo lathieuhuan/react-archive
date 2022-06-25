@@ -1,8 +1,3 @@
-import { CaretRightOutlined } from "@ant-design/icons";
-import classNames from "classnames";
-import { ReactNode, useMemo, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import { IBranch, routes } from "../routes";
 import BodhiTree from "./BodhiTree";
 
 export default function Home() {
