@@ -1,6 +1,5 @@
 import { CloseCircleOutlined } from "@ant-design/icons";
 import { notification } from "antd";
-import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Home from "./features";
@@ -38,6 +37,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />}>
             {routeCluster(topCluster)}
+            <Route path="*" element={<Home.NotFound />} />
           </Route>
         </Routes>
       </BrowserRouter>

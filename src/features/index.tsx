@@ -5,33 +5,17 @@ import { Outlet, useLocation } from "react-router-dom";
 import BodhiTree from "./BodhiTree";
 
 import { topCluster } from "../routes/index";
-import { ICluster } from "../routes/types";
 import styles from "./styles.module.scss";
 
-function findBranchName(
-  cluster: ICluster,
-  pathKey: string
-): string | undefined {
-  for (const branch of cluster) {
-    if (branch.info.path === pathKey) {
-      return branch.info.name;
-    } else if (branch.cluster) {
-      const name: string | undefined = findBranchName(branch.cluster, pathKey);
-      if (name) {
-        return name;
-      }
+function Home() {
+  const [sidebarOn, setSidebarOn] = useState(true);
+  const topPath = useLocation().pathname.split("/")[1];
+  let topBranch = "";
+  for (const branch of topCluster) {
+    if (branch.info.path === topPath) {
+      topBranch = branch.info.name;
     }
   }
-  return undefined;
-}
-
-export default function Home() {
-  const [sidebarOn, setSidebarOn] = useState(true);
-  const location = useLocation();
-  const topBranch = findBranchName(
-    topCluster,
-    location.pathname.split("/")[1]
-  );
 
   return (
     <div className="min-h-screen flex relative">
@@ -79,3 +63,14 @@ export default function Home() {
     </div>
   );
 }
+
+Home.NotFound = () => {
+  return (
+    <div className="w-full h-full flex-center flex-col">
+      <h1 className="text-9xl text-red-600">404</h1>
+      <h2 className="text-6xl text-red-600">Page not found</h2>
+    </div>
+  );
+};
+
+export default Home;
