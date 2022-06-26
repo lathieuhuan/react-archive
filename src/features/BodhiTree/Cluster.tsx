@@ -1,11 +1,12 @@
 import { CaretRightOutlined, LinkOutlined } from "@ant-design/icons";
 import classNames from "classnames";
-import { FC } from "react";
 import { NavLink } from "react-router-dom";
-import { IBranch, ICluster } from "../../AppRouter/types";
-import styles from "./styles.module.scss";
+
+import { IBranch, ICluster } from "../../routes/types";
 import { IBranchStatus, IClusterStatus, SetStatusAction } from "./types";
 import { countOpen, findAndToggle } from "./utils";
+
+import styles from "./styles.module.scss";
 
 interface ClusterProps {
   parentPath: string;

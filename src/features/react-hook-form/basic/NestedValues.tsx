@@ -1,7 +1,7 @@
 import { SubmitHandler, useForm } from "react-hook-form";
-import Button from "../../components/Button";
-import InputBox from "../../components/InputBox";
-import { showNotify } from "../../utils";
+import Button from "../../../components/Button";
+import InputBox from "../../../components/InputBox";
+import { showNotify } from "../../../utils";
 import { ErrorMsg } from "../components";
 import { NestedFormField } from "../types";
 

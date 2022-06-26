@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from "react-query";
-import { ICluster } from "./types";
 
-import ReactHookForm from "../react-hook-form";
-import BasicForms from "../react-hook-form/basic";
-import PlainValues from "../react-hook-form/basic/PlainValues";
-import NestedValues from "../react-hook-form/basic/NestedValues";
-import ReactQuery from "../react-query";
+import ReactHookForm from "../features/react-hook-form";
+import BasicForms from "../features/react-hook-form/basic";
+import PlainValues from "../features/react-hook-form/basic/PlainValues";
+import NestedValues from "../features/react-hook-form/basic/NestedValues";
+import ReactQuery from "../features/react-query";
+
+import { ICluster } from "./types";
 
 let branchID = 0;
 const queryClient = new QueryClient();

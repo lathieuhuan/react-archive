@@ -1,11 +1,38 @@
 import classNames from "classnames";
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+
 import BodhiTree from "./BodhiTree";
+
+import { topCluster } from "../routes/index";
+import { ICluster } from "../routes/types";
 import styles from "./styles.module.scss";
+
+function findBranchName(
+  cluster: ICluster,
+  pathKey: string
+): string | undefined {
+  for (const branch of cluster) {
+    if (branch.info.path === pathKey) {
+      return branch.info.name;
+    } else if (branch.cluster) {
+      const name: string | undefined = findBranchName(branch.cluster, pathKey);
+      if (name) {
+        return name;
+      }
+    }
+  }
+  return undefined;
+}
 
 export default function Home() {
   const [sidebarOn, setSidebarOn] = useState(true);
+  const location = useLocation();
+  const topBranch = findBranchName(
+    topCluster,
+    location.pathname.split("/")[1]
+  );
+
   return (
     <div className="min-h-screen flex relative">
       <div
@@ -14,7 +41,7 @@ export default function Home() {
 
       <div
         className={classNames(
-          "absolute left-0",
+          "fixed left-0",
           styles.sidebar,
           sidebarOn && styles.open
         )}
@@ -41,7 +68,12 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grow">
+      <div className="px-8 py-6 grow">
+        {topBranch && (
+          <h1 className="mb-6 text-4xl text-center text-purple-700 font-semibold">
+            {topBranch}
+          </h1>
+        )}
         <Outlet />
       </div>
     </div>

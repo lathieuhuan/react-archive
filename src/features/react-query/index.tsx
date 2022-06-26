@@ -1,11 +1,11 @@
 import { useState } from "react";
+import classNames from "classnames";
 import { QueryFunction, useQuery } from "react-query";
+import { CaretLeftOutlined, CaretRightOutlined } from "@ant-design/icons";
+
+import Button from "../../components/Button";
 import { ApiData } from "./types";
 import styles from "./styles.module.scss";
-
-import { CaretLeftOutlined, CaretRightOutlined } from "@ant-design/icons";
-import Button from "../components/Button";
-import classNames from "classnames";
 
 const buttonStyles = classNames(
   "w-12 h-12 bg-cyan-500 shadow-lg shadow-cyan-500/50 hover:bg-cyan-400 group",
