@@ -9,7 +9,7 @@ import classNames from "classnames";
 
 const buttonStyles = classNames(
   "w-12 h-12 bg-cyan-500 shadow-lg shadow-cyan-500/50 hover:bg-cyan-400 group",
-  "rounded-full flex justify-center items-center",
+  "rounded-full flex-center",
   "disabled:bg-slate-500 disabled:cursor-default disabled:shadow-slate-500/50",
   styles.pageBtn
 );

@@ -1,7 +1,9 @@
+import { CaretRightOutlined, LinkOutlined } from "@ant-design/icons";
 import classNames from "classnames";
-import { CaretRightOutlined } from "@ant-design/icons";
+import { FC } from "react";
 import { NavLink } from "react-router-dom";
-import { IBranch, IBranchInfo, ICluster } from "../../AppRouter/types";
+import { IBranch, ICluster } from "../../AppRouter/types";
+import styles from "./styles.module.scss";
 import { IBranchStatus, IClusterStatus, SetStatusAction } from "./types";
 import { countOpen, findAndToggle } from "./utils";
 
@@ -29,8 +31,7 @@ export function Cluster(props: ClusterProps) {
   );
 }
 
-const CTRL_STYLES =
-  "px-2 py-1 hover:bg-myblue text-white hover:text-white rounded-sm select-none";
+const HEIGHT = 32;
 
 interface BranchProps extends IBranch {
   parentPath: string;
@@ -39,35 +40,56 @@ interface BranchProps extends IBranch {
 }
 function Branch(props: BranchProps): JSX.Element {
   const { info, cluster, openStatus, setOpenStatus } = props;
-
-  let height = 0;
-  if (cluster) {
-    height = (countOpen(openStatus) - 1) * 32;
-  }
   const nestedPath = `${props.parentPath}/${info.path}`;
 
-  return (
-    <div className={classNames("flex flex-col")}>
-      {cluster ? (
-        <ClusterCtrl
-          info={info}
-          open={openStatus.open}
-          setOpenStatus={setOpenStatus}
-        />
-      ) : (
+  if (!cluster) {
+    return (
+      <li className="flex flex-col">
         <NavLink
           className={({ isActive }) =>
-            classNames(CTRL_STYLES, { "!text-yellow-300": isActive })
+            classNames(styles.ctrlBtn, { "!text-yellow-400": isActive })
           }
+          style={{ height: `${HEIGHT}px` }}
           to={nestedPath}
         >
-          {info.name}
+          <span className="z-10">
+            <LinkOutlined className="w-4 mr-1" />
+            {info.name}
+          </span>
         </NavLink>
-      )}
-      {cluster && openStatus.children && (
-        <div
+      </li>
+    );
+  }
+
+  let clusterHeight = (countOpen(openStatus) - 1) * HEIGHT;
+
+  return (
+    <li className="flex flex-col">
+      <p
+        className={styles.ctrlBtn}
+        style={{ height: `${HEIGHT}px` }}
+        onClick={() => {
+          setOpenStatus((prev) => {
+            const newStatus = JSON.parse(JSON.stringify(prev));
+            findAndToggle(newStatus, info.id);
+            return newStatus;
+          });
+        }}
+      >
+        <span className="z-10">
+          <CaretRightOutlined
+            className={classNames("w-4 mr-1 transition-all duration-300", {
+              "rotate-90": openStatus.open,
+            })}
+          />
+          {info.name}
+        </span>
+      </p>
+
+      {openStatus.children && (
+        <ul
           className="pl-3 overflow-hidden transition-all duration-300"
-          style={{ maxHeight: openStatus.open ? `${height}px` : 0 }}
+          style={{ maxHeight: openStatus.open ? `${clusterHeight}px` : 0 }}
         >
           <Cluster
             parentPath={nestedPath}
@@ -75,35 +97,8 @@ function Branch(props: BranchProps): JSX.Element {
             setOpenStatus={setOpenStatus}
             cluster={cluster}
           />
-        </div>
+        </ul>
       )}
-    </div>
-  );
-}
-
-interface FolderTitleProps {
-  info: IBranchInfo;
-  open: boolean;
-  setOpenStatus: SetStatusAction;
-}
-function ClusterCtrl(props: FolderTitleProps) {
-  return (
-    <p
-      className={CTRL_STYLES}
-      onClick={() => {
-        props.setOpenStatus((prev) => {
-          const newStatus = JSON.parse(JSON.stringify(prev));
-          findAndToggle(newStatus, props.info.id);
-          return newStatus;
-        });
-      }}
-    >
-      <CaretRightOutlined
-        className={classNames("mr-2 transition-all duration-300", {
-          "rotate-90": props.open,
-        })}
-      />
-      {props.info.name}
-    </p>
+    </li>
   );
 }

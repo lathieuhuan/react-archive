@@ -30,16 +30,16 @@ export const topCluster: ICluster = [
           {
             info: {
               id: branchID++,
-              name: "Plain Values with Register Options",
-              path: "plain-values-with-register-options",
+              name: "Plain values",
+              path: "plain-values",
             },
             component: PlainValues,
           },
           {
             info: {
               id: branchID++,
-              name: "Nested Values with Yup Validation",
-              path: "nested-values-with-yup-validation",
+              name: "Nested values",
+              path: "nested-values",
             },
             component: NestedValues,
           },

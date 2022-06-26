@@ -1,0 +1,14 @@
+.ctrlBtn {
+  // hover to overwrite antd
+  @apply text-white hover:text-white select-none relative pl-2 flex items-center bg-transparent;
+  &::before {
+    content: '';
+    @apply absolute top-0 left-0 w-0 h-full rounded-sm bg-myblue;
+    transition: width 300ms ease-in-out;
+  }
+}
+.ctrlBtn:hover {
+  &::before {
+    @apply w-full ;
+  }
+}
