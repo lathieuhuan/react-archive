@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 
 import Axios from "../features/axios";
 import AxiosBasic from "../features/axios/Basic";
+import Intermediate from "../features/axios/Intermediate";
 import ReactHookForm from "../features/react-hook-form";
 import BasicForms from "../features/react-hook-form/basic";
 import PlainValues from "../features/react-hook-form/basic/PlainValues";
@@ -29,6 +30,14 @@ export const topCluster: ICluster = [
           path: "basic",
         },
         component: AxiosBasic,
+      },
+      {
+        info: {
+          id: branchID++,
+          name: "Intermediate",
+          path: "intermediate",
+        },
+        component: Intermediate,
       },
     ],
   },

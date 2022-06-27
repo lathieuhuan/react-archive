@@ -52,7 +52,7 @@ function Home() {
         </div>
       </div>
 
-      <div className="px-8 py-6 grow">
+      <div className="px-8 py-6 grow overflow-x-hidden">
         {topBranch && (
           <h1 className="mb-6 text-4xl text-center text-purple-700 font-semibold">
             {topBranch}

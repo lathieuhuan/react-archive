@@ -1,7 +1,3 @@
-import { METHODS, URLS } from "./constant";
-
-export type FetchMethod = typeof METHODS[number];
-
 export interface FetchedPost {
   userId: number;
   id: number;
@@ -65,5 +61,3 @@ export interface FetchedUser {
 export interface GetPostsParams {
   _limit: number;
 }
-
-export type Url = typeof URLS[number];

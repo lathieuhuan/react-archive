@@ -1,24 +1,24 @@
-import { AxiosError, AxiosResponse, AxiosPromise } from "axios";
+import { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { useState } from "react";
 
 import Button from "../../components/Button";
 
 import { METHODS } from "./constant";
-import { axiosService, ServiceArgs } from "./service";
-import { FetchedPost, FetchMethod, GetPostsParams } from "./types";
+import { axiosInstance } from "./service";
 
 export default function Basic() {
-  const [result, setResult] = useState<AxiosResponse<FetchedPost[]>>();
+  const [result, setResult] = useState<AxiosResponse>();
   const [error, setError] = useState<string>("");
 
   const handleError = (error: AxiosError) => {
     setError(error.message);
   };
 
-  const handleClick = async (method: FetchMethod) => {
+  const handleClick = async (method: typeof METHODS[number]) => {
+    setError("");
     const url = "posts";
     const params = { _limit: 12 };
-    let args = { method, url } as ServiceArgs;
+    let args = { method, url } as AxiosRequestConfig;
 
     switch (method) {
       case "get":
@@ -30,6 +30,7 @@ export default function Basic() {
           body: "Lorem ipsum dolor sit amet",
           userId: 2,
         };
+        break;
       case "put":
         args.url += "/1";
         args.data = {
@@ -50,7 +51,7 @@ export default function Basic() {
       default:
         return;
     }
-    axiosService(args).then(setResult).catch(handleError);
+    axiosInstance(args).then(setResult).catch(handleError);
   };
 
   return (
@@ -72,7 +73,7 @@ export default function Basic() {
 
       {error && <p className="text-red-600 mt-4">{error}</p>}
       {result?.data && (
-        <div className="w-full py-4 overflow-hidden whitespace-pre">
+        <div className="w-full py-4 overflow-auto custom-scrollbar whitespace-pre">
           <p>{JSON.stringify(result.data, null, 2)}</p>
         </div>
       )}
