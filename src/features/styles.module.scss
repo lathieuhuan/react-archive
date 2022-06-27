@@ -49,7 +49,8 @@ $ctrl-icon-transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 .sidebarContent {
   height: 100vh;
   transform: translateX(-50%);
-  transition: transform 350ms ease-in-out 100ms;
+  opacity: 0;
+  transition: transform 350ms ease-in-out 100ms, opacity 350ms linear;
 }
 
 .sidebar {
@@ -82,6 +83,7 @@ $ctrl-icon-transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .sidebarContent {
       transform: translateX(0);
+      opacity: 1;
     }
   }
 }
