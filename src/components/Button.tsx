@@ -7,8 +7,9 @@ export default function Button({
   return (
     <button
       className={classNames(
+        "px-4 py-2 rounded bg-blue-700 hover:bg-blue-600 cursor-pointer",
+        "text-white font-semibold disabled:bg-slate-400 disabled:cursor-not-allowed",
         className,
-        "px-4 py-2 rounded bg-blue-700 hover:bg-blue-600 text-white font-semibold cursor-pointer"
       )}
       {...rest}
     />

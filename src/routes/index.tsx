@@ -1,5 +1,7 @@
 import { QueryClient, QueryClientProvider } from "react-query";
 
+import Axios from "../features/axios";
+import AxiosBasic from "../features/axios/Basic";
 import ReactHookForm from "../features/react-hook-form";
 import BasicForms from "../features/react-hook-form/basic";
 import PlainValues from "../features/react-hook-form/basic/PlainValues";
@@ -8,10 +10,28 @@ import ReactQuery from "../features/react-query";
 
 import { ICluster } from "./types";
 
-let branchID = 0;
+let branchID = 1;
 const queryClient = new QueryClient();
 
 export const topCluster: ICluster = [
+  {
+    info: {
+      id: branchID++,
+      name: "Axios",
+      path: "axios",
+    },
+    component: Axios,
+    cluster: [
+      {
+        info: {
+          id: branchID++,
+          name: "Basic",
+          path: "basic",
+        },
+        component: AxiosBasic,
+      },
+    ],
+  },
   {
     info: {
       id: branchID++,
