@@ -8,16 +8,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ant-design/icons": "^4.7.0",
-    "antd": "^4.21.3",
-    "axios": "^0.27.2",
-    "classnames": "^2.3.1",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "react-hook-form": "^7.32.2",
-    "react-query": "^3.39.1",
-    "react-router-dom": "^6.3.0",
-    "vite-tsconfig-paths": "^3.5.0"
+    "@ant-design/icons": "4.7.0",
+    "@hookform/resolvers": "2.9.3",
+    "antd": "4.21.3",
+    "axios": "0.27.2",
+    "classnames": "2.3.1",
+    "react": "18.0.0",
+    "react-dom": "18.0.0",
+    "react-hook-form": "7.32.2",
+    "react-query": "3.39.1",
+    "react-router-dom": "6.3.0",
+    "vite-tsconfig-paths": "3.5.0",
+    "yup": "0.32.11"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^3.1.9",

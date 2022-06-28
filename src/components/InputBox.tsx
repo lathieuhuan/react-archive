@@ -14,7 +14,7 @@ function InputBox(
       type={type}
       className={classNames(
         className,
-        "px-4 py-2 rounded border-slate-500 border-2"
+        "px-4 py-2 rounded border-slate-500 border-1"
       )}
       {...rest}
     />

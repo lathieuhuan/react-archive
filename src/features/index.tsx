@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
 import BodhiTree from "./BodhiTree";
-
 import { topCluster } from "../routes/index";
 import styles from "./styles.module.scss";
 
@@ -42,7 +41,7 @@ function Home() {
             ctrlBtn.classList.remove(styles.hover);
             setTimeout(() => {
               ctrlBtn.classList.add(styles.hover);
-            }, 800);
+            }, 500);
           }}
         >
           <span className={classNames("block relative ", styles.ctrlIcon)} />

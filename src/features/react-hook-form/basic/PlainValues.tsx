@@ -109,8 +109,8 @@ export default function PlainValues() {
           })}
         </ul>
         {/*
-          defaultValues.colors is an array but its error message is still string,
-          dont know why it's typed as FieldError[]
+          defaultValues.colors is an array but its error message is still string
+          see https://github.com/react-hook-form/react-hook-form/issues/7972
         */}
         <ErrorMsg error={errors.colors} />
       </div>

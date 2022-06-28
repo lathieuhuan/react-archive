@@ -12,7 +12,7 @@ export interface PlainFormField {
 
 export interface NestedFormField {
   fullname: {
-    fistname: string;
+    firstname: string;
     lastname: string;
   };
   colors: Color[];

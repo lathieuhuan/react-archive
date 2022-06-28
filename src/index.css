@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  button:disabled {
+    @apply !bg-slate-400 !text-white !cursor-default;
+  }
+}
+
 @layer utilities {
   .flex-center {
     @apply flex justify-center items-center;

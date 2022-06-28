@@ -9,9 +9,8 @@ import styles from "./styles.module.scss";
 import Card from "../../components/Card";
 
 const buttonStyles = classNames(
-  "w-12 h-12 bg-cyan-500 shadow-lg shadow-cyan-500/50 hover:bg-cyan-400 group",
-  "rounded-full flex-center",
-  "disabled:bg-slate-500 disabled:cursor-default disabled:shadow-slate-500/50",
+  "w-12 h-12 bg-cyan-500 shadow-lg shadow-cyan-500/50 hover:bg-cyan-400",
+  "rounded-full flex-center disabled:shadow-slate-500/50",
   styles.pageBtn
 );
 
