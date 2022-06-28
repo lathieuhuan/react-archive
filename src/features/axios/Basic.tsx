@@ -1,10 +1,10 @@
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { useState } from "react";
-
 import Button from "../../components/Button";
-
-import { METHODS } from "./constant";
+import JsonDisplayer from "../../components/JsonDisplayer";
 import { axiosInstance } from "./service";
+
+const METHODS = ["get", "post", "put", "patch", "delete"] as const;
 
 export default function Basic() {
   const [result, setResult] = useState<AxiosResponse>();
@@ -17,7 +17,7 @@ export default function Basic() {
   const handleClick = async (method: typeof METHODS[number]) => {
     setError("");
     const url = "posts";
-    const params = { _limit: 12 };
+    const params = { _limit: 8 };
     let args = { method, url } as AxiosRequestConfig;
 
     switch (method) {
@@ -68,13 +68,18 @@ export default function Basic() {
             </Button>
           );
         })}
-        <span className="place-self-center">url: /posts</span>
       </div>
 
       {error && <p className="text-red-600 mt-4">{error}</p>}
-      {result?.data && (
-        <div className="w-full py-4 overflow-auto custom-scrollbar whitespace-pre">
-          <p>{JSON.stringify(result.data, null, 2)}</p>
+      {result && (
+        <div className="mt-4 flex flex-col gap-4">
+          <JsonDisplayer title="Headers" body={result.headers} />
+          <JsonDisplayer
+            title="Data"
+            body={result.data}
+            bodyStyle={{ maxHeight: "600px", overflow: "auto" }}
+          />
+          <JsonDisplayer title="Config" body={result.config} />
         </div>
       )}
     </div>

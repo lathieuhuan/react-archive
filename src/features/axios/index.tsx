@@ -5,7 +5,7 @@ export default function Axios() {
   return (
     <div>
       <p className="mb-2 block text-right text-sm italic">
-        Base URL: <Link to={BASE_URL}>{BASE_URL}</Link>
+        URL: <Link to={BASE_URL}>{BASE_URL}</Link>/posts
       </p>
       <Outlet />
     </div>
