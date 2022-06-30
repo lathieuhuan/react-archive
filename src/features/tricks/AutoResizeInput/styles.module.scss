@@ -1,0 +1,27 @@
+.inputWrapper1 {
+  display: inline-grid;
+  align-items: center;
+
+  &::after,
+  input {
+    min-width: 1em;
+    grid-area: 1 / 2;
+  }
+
+  &::after {
+    content: attr(data-value) " ";
+    visibility: hidden;
+    white-space: pre-wrap;
+  }
+}
+
+.inputWrapper2 {
+  &,
+  input {
+    padding: 0.25rem 0.5rem;
+  }
+  &::after {
+    content: attr(data-value) ".";
+    visibility: hidden;
+  }
+}
