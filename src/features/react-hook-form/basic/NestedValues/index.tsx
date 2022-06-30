@@ -2,19 +2,20 @@ import {
   SubmitHandler,
   useFieldArray,
   useForm,
-  useFormState,
+  // useFormState,
 } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-import Button from "../../../components/Button";
-import InputBox from "../../../components/InputBox";
-import { showNotify } from "../../../utils";
-import { ErrorMsg } from "../components";
+import Button from "../../../../components/Button";
+import InputBox from "../../../../components/InputBox";
+import { showNotify } from "../../../../utils";
+import { ErrorMsg } from "../../components";
 
-import { NestedFormField } from "../types";
-import { COLORS } from "../constant";
+import { NestedFormField } from "../../types";
+import { COLORS } from "../../constant";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
+import FieldArrayPitfall from "./FieldArrayPitfall";
 
 const MIN_NUM_OF_SOCIALS = 2;
 
@@ -41,23 +42,25 @@ export default function NestedValues() {
     watch,
     control,
     reset,
+    clearErrors,
     // trigger,
-    formState: { errors },
+    formState: { errors, isSubmitted },
   } = useForm<NestedFormField>({
     mode: "onTouched",
+    reValidateMode: "onChange", // default is "onChange"
     // shouldFocusError: false,
     criteriaMode: "all",
     defaultValues: {
       fullname: {
-        firstname: "",
-        lastname: "",
+        firstname: "ab",
+        lastname: "abc",
       },
-      colors: [],
+      colors: ["blue"],
       socials: [{ type: "", url: "" }],
     },
     resolver: yupResolver(schema),
   });
-  const formState = useFormState({ control });
+  // const formState = useFormState({ control });
   // const socialsTouched = formState.touchedFields.socials;
 
   const { fields, append, prepend, remove, swap, move, insert } = useFieldArray(
@@ -67,21 +70,33 @@ export default function NestedValues() {
     }
   );
 
+  let socialsNotAddable = false;
   const socials = watch("socials");
-  const lastSocial = socials[socials.length - 1];
-  const socialsNotAddable = !lastSocial.type || !lastSocial.url;
+  for (const social of socials) {
+    if (!social.type || !social.url) {
+      socialsNotAddable = true;
+      break;
+    }
+  }
 
   const onSubmit: SubmitHandler<NestedFormField> = (data) => {
     showNotify({
       message: "Submitted Info",
-      description: data,
+      description: JSON.stringify(data, null, 2),
+      style: {
+        height: "600px",
+        whiteSpace: "pre",
+        overflow: "auto"
+      },
     });
   };
 
   return (
-    <div className="max-w-xl">
-      <p className="mb-2 italic text-right text-slate-400">Validate with Yup</p>
+    <div className="flex gap-8">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+        <p className="mb-2 italic text-right text-slate-400">
+          Validate with Yup
+        </p>
         <div>
           <div className="grid grid-cols-2 gap-2">
             <InputBox
@@ -140,7 +155,10 @@ export default function NestedValues() {
                     />
                     <button
                       className="w-10 min-w-[40px] bg-red-200 hover:bg-red-300 text-black rounded"
-                      onClick={() => remove(i)}
+                      onClick={() => {
+                        remove(i);
+                        clearErrors(`socials.${i}`)
+                      }}
                       disabled={socials.length === 1}
                     >
                       <MinusOutlined />
@@ -166,7 +184,7 @@ export default function NestedValues() {
           >
             <PlusOutlined />
           </Button>
-          {socials.length < MIN_NUM_OF_SOCIALS && formState.isSubmitted && (
+          {socials.length < MIN_NUM_OF_SOCIALS && isSubmitted && (
             <p className="mt-2 text-red-500">
               Require atleast {MIN_NUM_OF_SOCIALS} fields.
             </p>
@@ -185,66 +203,7 @@ export default function NestedValues() {
         </div>
       </form>
 
-      <Pitfall />
-    </div>
-  );
-}
-
-function Pitfall() {
-  return (
-    <div className="mt-6">
-      <h4 className="text-xl text-purple-700">
-        Pitfall: display errors on socials
-      </h4>
-      <div className="mt-2 px-4 py-2 rounded border-1 border-slate-300 flex flex-col gap-2">
-        <div>
-          <h5 className="text-blue-600 font-bold">Case:</h5>
-          <ul className="list-disc list-inside">
-            <li>Require atleast n fields.</li>
-            <li>Required type & url on each field.</li>
-            <li>Number of default fields is less than n.</li>
-          </ul>
-        </div>
-
-        <p>
-          <b className="text-blue-600">Behaviour:</b> Submit and get error about
-          number of fields on socials. Add more field to reach n but error does
-          not change.
-        </p>
-
-        <div>
-          <h5 className="text-red-600">Try 1:</h5>
-          <p className="indent-4">
-            Manually re-validate socials (with trigger) when adding new field,
-            but doing so will validate the newly added field which has not been
-            touched.
-          </p>
-          <p className="indent-4">
-            Check socialsTouched before render error will not show error in case
-            user has not touched the field but submit with less than n fields.
-          </p>
-        </div>
-
-        <p>
-          <b className="text-green-600">Final Solution:</b> Check socials.length{" "}
-          {"<"} n && formState.isSubmitted to render error.
-        </p>
-      </div>
-
-      <div className="mt-2 px-4 py-2 rounded border-1 border-slate-300 flex flex-col gap-2">
-        <div>
-          <p>
-            <b className="text-blue-600">Case:</b> like above
-          </p>
-        </div>
-
-        <p>
-          <b className="text-blue-600">Behaviour:</b> Change type or url of a
-          field, these values will not be validated when number of fields is
-          less than n. Resolver validates that criteria first and stop there on
-          error, although criteriaMode is "all".
-        </p>
-      </div>
+      <FieldArrayPitfall />
     </div>
   );
 }
