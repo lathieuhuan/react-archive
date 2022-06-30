@@ -1,6 +1,6 @@
 import { COLORS, GENDERS, OCCUPATIONS } from "./constant";
 
-type Color = typeof COLORS[number];
+export type Color = typeof COLORS[number];
 
 export interface PlainFormField {
   name: string;

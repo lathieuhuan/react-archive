@@ -24,7 +24,10 @@ const methods = [
   { text: Method.TRANSFORM_REQUEST },
   { text: Method.TRANSFORM_RESPONSE },
   { text: Method.WITH_TIMEOUT },
-  { text: Method.VALIDATE_STATUS },
+  {
+    text: Method.VALIDATE_STATUS,
+    tooltip: "decide which status will be caught as error",
+  },
   { text: Method.CANCEL_REQUEST },
 ];
 
@@ -146,6 +149,7 @@ export default function Intermediate() {
       case Method.VALIDATE_STATUS:
         axiosInstance({
           ...defaultConfigForGet,
+          url: defaultConfigForGet.url + "err",
           validateStatus: (status) => {
             return status < 500;
             // responses with status < 500 will trigger then(), others trigger catch()
