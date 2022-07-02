@@ -18,9 +18,9 @@ import AutoResizeInput from "../features/tricks/AutoResizeInput";
 
 import Processors from "../features/processors";
 import InputProcessors from "../features/processors/InputProcessors";
+import FormatAndLimitNumber from "../features/processors/InputProcessors/FormatAndLimitNumber";
 
 import { ICluster } from "./types";
-import FormatAndLimitNumber from "../features/processors/InputProcessors/FormatAndLimitNumber";
 
 let branchID = 1;
 const queryClient = new QueryClient();

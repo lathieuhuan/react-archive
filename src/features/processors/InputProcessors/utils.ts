@@ -3,27 +3,34 @@ export const CONFIGS = {
   groupingSeparator: ".",
 };
 
-type Splitter = (strValue: string) => never | [number, number, number | undefined];
-
-export const stringToNumber: Splitter = (strValue) => {
+export const stringToNumber = (strValue: string) => {
   //
-  const stringToInteger = (strInteger: string): never | number => {
-    let result = +strInteger.replaceAll(CONFIGS.groupingSeparator, "");
+  const parts = strValue.split(CONFIGS.decimalSeparator);
+  let integer = 0;
+  let decimal;
+  let separatorsRemoved = 0;
 
-    if (isNaN(result)) {
+  const stringToInteger = (strInteger: string): never | number => {
+    let result = "";
+    for (const char of strInteger) {
+      if (char === CONFIGS.groupingSeparator) {
+        separatorsRemoved++;
+      } else {
+        result += char;
+      }
+    }
+    if (result === "-") {
+      result = "";
+    }
+    if (isNaN(+result)) {
       throw new Error("Cannot convert this string to integer");
     }
-    return result;
+    return +result;
   };
-
-  const parts = strValue.split(CONFIGS.decimalSeparator);
 
   if (parts.length > 2) {
     throw new Error("There're atleast 2 decimal separators");
   }
-
-  let integer = 0;
-  let decimal;
 
   if (parts.length === 1) {
     integer = stringToInteger(strValue);
@@ -36,21 +43,29 @@ export const stringToNumber: Splitter = (strValue) => {
   }
   const result = Number(`${integer}.${decimal || 0}`);
 
-  return [result, integer, decimal];
+  return {
+    result,
+    integer,
+    decimal,
+    separatorsRemoved,
+  };
 };
 
 //
-export function integerToString(integer: number): string {
+export function integerToString(integer: number) {
   let integerAsString = integer.toString();
-  let strInteger = "";
+  let result = "";
+  let separatorsAdded = 0;
   for (let i = integerAsString.length - 1, j = 0; i >= 0; i--, j++) {
     let leftDigit = integerAsString[i];
     if (j && j % 3 === 0) {
       leftDigit += CONFIGS.groupingSeparator;
+      separatorsAdded++;
     }
-    strInteger = leftDigit + strInteger;
+    result = leftDigit + result;
   }
-  return strInteger;
+  return { result, separatorsAdded };
+  // return integer.toLocaleString("vi-VN");
 }
 
 //
@@ -58,7 +73,7 @@ export function numberToString(numValue: number): string {
   const integer = Math.floor(numValue);
   const decimal = numValue - integer;
 
-  let strInteger = integerToString(integer);
+  let { result: strInteger } = integerToString(integer);
   if (decimal) {
     return strInteger + CONFIGS.decimalSeparator + decimal;
   }
