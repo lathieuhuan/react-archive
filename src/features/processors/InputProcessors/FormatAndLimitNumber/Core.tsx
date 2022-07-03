@@ -25,7 +25,7 @@ interface UpdateArgs {
   separatorsAdded: number;
 }
 
-interface ProcessAndDisplayProps {
+interface CoreProps {
   value: number;
   maxValue?: number;
   minValue?: number;
@@ -38,7 +38,8 @@ export default function Core({
   minValue,
   onChangeValue,
   testSignal,
-}: ProcessAndDisplayProps) {
+}: CoreProps) {
+  //
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const runAfterPaint = useRunAfterPaint();
@@ -207,6 +208,5 @@ const useRunAfterPaint = () => {
       afterPaintRef.current = null;
     }
   });
-
   return (fn: () => void) => (afterPaintRef.current = fn);
 };
