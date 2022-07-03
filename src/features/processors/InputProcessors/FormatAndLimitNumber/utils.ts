@@ -1,6 +1,12 @@
 export const CONFIGS = {
   decimalSeparator: ",",
   groupingSeparator: ".",
+  maxDecimalDigits: 1,
+};
+
+const roundDecimal = (n: number) => {
+  const roundPow = Math.pow(10, CONFIGS.maxDecimalDigits);
+  return Math.round(n * roundPow);
 };
 
 export const stringToNumber = (strValue: string) => {
@@ -14,7 +20,7 @@ export const stringToNumber = (strValue: string) => {
     if (strInteger === "-") {
       return 0;
     }
-    
+
     let result = "";
     for (const char of strInteger) {
       if (char === CONFIGS.groupingSeparator) {
@@ -33,7 +39,7 @@ export const stringToNumber = (strValue: string) => {
     throw new Error("There're atleast 2 decimal separators");
   }
   if (parts.length === 2) {
-    if (parts[1].includes(".")) {
+    if (parts[1].includes(".") || isNaN(+parts[1])) {
       throw new Error("Invalid decimal part");
     }
     decimal = +parts[1];
@@ -71,10 +77,12 @@ export function integerToString(integer: number) {
 
 export function numberToString(numValue: number): string {
   const integer = Math.floor(numValue);
-  const decimal = numValue - integer;
+  let decimal = numValue - integer;
 
   let { result: strInteger } = integerToString(integer);
   if (decimal) {
+    const roundPow = Math.pow(10, CONFIGS.maxDecimalDigits);
+    decimal = Math.round(decimal * roundPow);
     return strInteger + CONFIGS.decimalSeparator + decimal;
   }
   return strInteger;

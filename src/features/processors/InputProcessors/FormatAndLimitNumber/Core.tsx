@@ -56,8 +56,13 @@ export default function Core({
     separatorsAdded,
   }: UpdateArgs) => {
     //
-    if (decimal) {
-      newInputValue += CONFIGS.decimalSeparator + decimal;
+    if (decimal !== undefined) {
+      // input ends with decimalSeparator
+      let decimalPart = CONFIGS.decimalSeparator;
+      if (decimal !== 0) {
+        decimalPart += decimal;
+      }
+      newInputValue += decimalPart;
     }
 
     setInputValue(newInputValue);
@@ -65,7 +70,7 @@ export default function Core({
     if (onChangeValue) {
       onChangeValue(newValue);
     }
-
+    
     // update cursor
     runAfterPaint(() => {
       if (newCursor !== null) {
@@ -108,7 +113,7 @@ export default function Core({
     }
   };
 
-  const onFocus: FocusEventHandler<HTMLInputElement> = (e) => {
+  const onFocus: FocusEventHandler<HTMLInputElement> = () => {
     if (inputValue === "0") {
       setInputValue("");
     }
@@ -122,7 +127,7 @@ export default function Core({
 
     try {
       let { result } = stringToNumber(inputValue);
-
+      
       if (maxValue !== undefined && result > maxValue) {
         result = maxValue;
       }
