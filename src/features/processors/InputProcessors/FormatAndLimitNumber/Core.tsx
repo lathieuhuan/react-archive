@@ -14,7 +14,7 @@ import {
   integerToString,
   numberToString,
   stringToNumber,
-} from "../utils";
+} from "./utils";
 
 interface UpdateArgs {
   decimal: number | undefined;
@@ -28,12 +28,14 @@ interface UpdateArgs {
 interface ProcessAndDisplayProps {
   value: number;
   maxValue?: number;
+  minValue?: number;
   onChangeValue?: (value: number) => void;
   testSignal: boolean;
 }
 export default function Core({
   value,
   maxValue,
+  minValue,
   onChangeValue,
   testSignal,
 }: ProcessAndDisplayProps) {
@@ -42,7 +44,7 @@ export default function Core({
   const runAfterPaint = useRunAfterPaint();
 
   useEffect(() => {
-    setInputValue(numberToString(value));
+    setInputValue(numberToString(minValue || value));
   }, [testSignal]);
 
   const update = ({
@@ -64,9 +66,10 @@ export default function Core({
       onChangeValue(newValue);
     }
 
+    // update cursor
     runAfterPaint(() => {
       if (newCursor !== null) {
-        newCursor = newCursor - separatorsRemoved + separatorsAdded;
+        newCursor += separatorsAdded - separatorsRemoved;
         inputRef.current?.setSelectionRange(newCursor, newCursor);
       }
     });
@@ -74,16 +77,21 @@ export default function Core({
 
   const onChangeInputValue: ChangeEventHandler<HTMLInputElement> = (e) => {
     try {
+      const { value } = e.target;
       const {
         result: newValue,
         integer,
         decimal,
         separatorsRemoved,
-      } = stringToNumber(e.target.value);
+      } = stringToNumber(value);
 
       let { result: newInputValue, separatorsAdded } = integerToString(integer);
 
-      if (newInputValue === "0") {
+      if (value === "-") {
+        newInputValue = "-";
+      }
+      // prevent typing "0", if not zero is always there instead of ""
+      else if (newInputValue === "0") {
         newInputValue = "";
       }
 
@@ -96,7 +104,7 @@ export default function Core({
         separatorsAdded,
       });
     } catch (error) {
-      console.log(error);
+      //
     }
   };
 
@@ -108,19 +116,24 @@ export default function Core({
 
   const onBlur: FocusEventHandler<HTMLInputElement> = () => {
     if (inputValue === "") {
-      setInputValue("0");
+      setInputValue(minValue ? numberToString(minValue) : "0");
       return;
     }
 
     try {
-      const { result } = stringToNumber(inputValue);
+      let { result } = stringToNumber(inputValue);
 
-      if (maxValue !== undefined && (isNaN(result) || result > maxValue)) {
-        setInputValue(numberToString(maxValue));
+      if (maxValue !== undefined && result > maxValue) {
+        result = maxValue;
+      }
+      if (minValue !== undefined && result < minValue) {
+        result = minValue;
+      }
 
-        if (onChangeValue) {
-          onChangeValue(maxValue);
-        }
+      setInputValue(numberToString(result));
+
+      if (onChangeValue) {
+        onChangeValue(result);
       }
     } catch (error) {
       //
@@ -149,8 +162,7 @@ export default function Core({
           integer--;
           newValue--;
         }
-        let { result: newInputValue, separatorsAdded } =
-          integerToString(integer);
+        const newInputValue = integerToString(integer).result;
 
         update({
           decimal,
@@ -158,7 +170,7 @@ export default function Core({
           newValue,
           newInputValue,
           separatorsRemoved,
-          separatorsAdded,
+          separatorsAdded: 999999,
         });
       } catch (error) {
         //
