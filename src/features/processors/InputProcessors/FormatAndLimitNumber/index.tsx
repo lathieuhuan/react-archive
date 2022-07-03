@@ -1,6 +1,6 @@
 import { ChangeEventHandler, useState } from "react";
-import Button from "../../../../components/Button";
-import InputBox from "../../../../components/InputBox";
+import Button from "@Components/Button";
+import InputBox from "@Components/InputBox";
 import Core from "./Core";
 
 export default function FormatAndLimitNumber() {

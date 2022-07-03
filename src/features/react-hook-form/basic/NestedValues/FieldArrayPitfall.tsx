@@ -1,4 +1,4 @@
-import Pitfall from "../../../../components/Pitfall";
+import Pitfall from "@Components/Pitfall";
 
 export default function FieldArrayPitfall() {
   return (

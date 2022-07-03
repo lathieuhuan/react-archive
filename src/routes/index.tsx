@@ -1,24 +1,24 @@
 import { QueryClient, QueryClientProvider } from "react-query";
 
-import Axios from "../features/axios";
-import AxiosBasic from "../features/axios/Basic";
-import Intermediate from "../features/axios/Intermediate";
+import Axios from "@Features/axios";
+import AxiosBasic from "@Features/axios/Basic";
+import Intermediate from "@Features/axios/Intermediate";
 
-import ReactHookForm from "../features/react-hook-form";
-import BasicForms from "../features/react-hook-form/basic";
-import PlainValues from "../features/react-hook-form/basic/PlainValues";
-import NestedValues from "../features/react-hook-form/basic/NestedValues";
-import IntermediateForms from "../features/react-hook-form/intermediate/";
-import UseController from "../features/react-hook-form/intermediate/UseController";
+import ReactHookForm from "@Features/react-hook-form";
+import BasicForms from "@Features/react-hook-form/basic";
+import PlainValues from "@Features/react-hook-form/basic/PlainValues";
+import NestedValues from "@Features/react-hook-form/basic/NestedValues";
+import IntermediateForms from "@Features/react-hook-form/intermediate/";
+import UseController from "@Features/react-hook-form/intermediate/UseController";
 
-import ReactQuery from "../features/react-query";
+import ReactQuery from "@Features/react-query";
 
-import Tricks from "../features/tricks";
-import AutoResizeInput from "../features/tricks/AutoResizeInput";
+import Tricks from "@Features/tricks";
+import AutoResizeInput from "@Features/tricks/AutoResizeInput";
 
-import Processors from "../features/processors";
-import InputProcessors from "../features/processors/InputProcessors";
-import FormatAndLimitNumber from "../features/processors/InputProcessors/FormatAndLimitNumber";
+import Processors from "@Features/processors";
+import InputProcessors from "@Features/processors/InputProcessors";
+import FormatAndLimitNumber from "@Features/processors/InputProcessors/FormatAndLimitNumber";
 
 import { ICluster } from "./types";
 

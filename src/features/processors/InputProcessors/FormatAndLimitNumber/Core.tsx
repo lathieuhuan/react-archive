@@ -7,8 +7,8 @@ import {
   useRef,
   useState,
 } from "react";
-import InputBox from "../../../../components/InputBox";
-import { KEY } from "../../../../constant";
+import InputBox from "@Components/InputBox";
+import { KEY } from "@Src/constant";
 import {
   CONFIGS,
   integerToString,

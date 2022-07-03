@@ -2,7 +2,7 @@ import { CaretRightOutlined, LinkOutlined } from "@ant-design/icons";
 import classNames from "classnames";
 import { NavLink } from "react-router-dom";
 
-import { IBranch, ICluster } from "../../routes/types";
+import { IBranch, ICluster } from "@Routes/types";
 import { IBranchStatus, IClusterStatus, SetStatusAction } from "./types";
 import { countOpen, findAndToggle } from "./utils";
 

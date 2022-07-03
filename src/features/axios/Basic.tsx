@@ -1,7 +1,7 @@
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { useState } from "react";
-import Button from "../../components/Button";
-import JsonDisplayer from "../../components/JsonDisplayer";
+import Button from "@Components/Button";
+import JsonDisplayer from "@Components/JsonDisplayer";
 import { axiosInstance } from "./service";
 
 const METHODS = ["get", "post", "put", "patch", "delete"] as const;

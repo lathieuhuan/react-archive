@@ -2,8 +2,8 @@ import classNames from "classnames";
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
+import { topCluster } from "@Src/routes";
 import BodhiTree from "./BodhiTree";
-import { topCluster } from "../routes/index";
 import styles from "./styles.module.scss";
 
 function Home() {

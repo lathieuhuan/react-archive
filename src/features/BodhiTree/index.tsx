@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
-import { topCluster } from "../../routes";
-import { ICluster } from "../../routes/types";
+import { topCluster } from "@Src/routes";
+import { ICluster } from "@Routes/types";
 import { Cluster } from "./Cluster";
 import { IBranchStatus, IClusterStatus } from "./types";
 

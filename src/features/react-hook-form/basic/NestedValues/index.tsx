@@ -6,15 +6,15 @@ import {
 } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 
-import Button from "../../../../components/Button";
-import InputBox from "../../../../components/InputBox";
-import { showNotify } from "../../../../utils";
+import Button from "@Components/Button";
+import InputBox from "@Components/InputBox";
+import { showNotify } from "@Src/utils";
 import { ErrorMsg } from "../../components";
 
 import { NestedFormField } from "../../types";
 import { COLORS } from "../../constant";
-import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import FieldArrayPitfall from "./FieldArrayPitfall";
 
 const MIN_NUM_OF_SOCIALS = 2;

@@ -1,7 +1,7 @@
 import { SubmitHandler, useForm } from "react-hook-form";
-import Button from "../../../components/Button";
-import InputBox from "../../../components/InputBox";
-import { showNotify } from "../../../utils";
+import Button from "@Components/Button";
+import InputBox from "@Components/InputBox";
+import { showNotify } from "@Src/utils";
 import { ErrorMsg } from "../components";
 import { COLORS, GENDERS, OCCUPATIONS } from "../constant";
 import { PlainFormField } from "../types";

@@ -1,8 +1,9 @@
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { Button, Input } from "antd";
-import JsonDisplayer from "../../../components/JsonDisplayer";
+import JsonDisplayer from "@Components/JsonDisplayer";
+import { showNotify } from "@Src/utils";
+
 import { COLORS } from "../constant";
-import { showNotify } from "../../../utils";
 import { UseControllerFormData } from "./types";
 import customResolver from "./custom-resolver";
 

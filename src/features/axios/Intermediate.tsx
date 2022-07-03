@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { useState } from "react";
-import Button from "../../components/Button";
-import JsonDisplayer from "../../components/JsonDisplayer";
-import Tooltip from "../../components/Tooltip";
+import Button from "@Components/Button";
+import JsonDisplayer from "@Components/JsonDisplayer";
+import Tooltip from "@Components/Tooltip";
 import { axiosInstance, axiosServiceWithInterceptor } from "./service";
 
 enum Method {
