@@ -1,0 +1,9 @@
+{
+  "title": "Title",
+  "choose your language": "Choose your language",
+  "translate and add markups": "Translate and add <b><i>Markups<i/></b>",
+  "<Trans /> with reusable components property": "<custom><Trans /></custom> with reusable components property",
+  "it can replace markups in translation with react component": "<p>It can replace markups in translation with React Component:</p> <RC />",
+  "pass values to translation_one": "Pass values to translation: Receive {{count}} egg, ({{string}})",
+  "pass values to translation_other": "Pass values to translation: Receive {{ count }} eggs, ({{string}})"
+}

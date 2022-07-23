@@ -1,5 +1,11 @@
 import classNames from "classnames";
-import { ReactNode, useState } from "react";
+import {
+  type InputHTMLAttributes,
+  ReactNode,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { Link } from "react-router-dom";
 import styles from "./styles.module.scss";
 
@@ -86,18 +92,34 @@ function UseDatasetAndCss2() {
       <Note>A different approach.</Note>
       <div className="mt-2 flex items-center">
         <label className="mr-2">Label:</label>
-        <div className={classNames("relative", styles.inputWrapper2)}>
-          <input
-            className="absolute top-0 bottom-0 left-0 right-0 rounded-sm border-1 border-slate-300 outline-none"
-            value={value}
-            onChange={(e) => {
-              const { value } = e.target;
-              setValue(value);
-              (e.target.parentNode as HTMLDivElement).dataset.value = value;
-            }}
-          />
-        </div>
+        <ValueFitInput
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
       </div>
+    </div>
+  );
+}
+
+interface ValueFitInputProps extends InputHTMLAttributes<HTMLInputElement> {
+  wrapperClassName?: string;
+}
+export function ValueFitInput(props: ValueFitInputProps) {
+  const { className, wrapperClassName, value, onChange, ...rest } = props;
+  return (
+    <div
+      className={classNames("relative", styles.inputWrapper2, wrapperClassName)}
+      data-value={value}
+    >
+      <input
+        className={classNames(
+          "absolute top-0 bottom-0 left-0 right-0 rounded-sm border-1 border-slate-300 outline-none",
+          className
+        )}
+        value={value}
+        onChange={onChange}
+        {...rest}
+      />
     </div>
   );
 }

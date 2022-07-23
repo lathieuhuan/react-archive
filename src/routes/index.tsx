@@ -21,11 +21,20 @@ import InputProcessors from "@Features/processors/InputProcessors";
 import FormatAndLimitNumber from "@Features/processors/InputProcessors/FormatAndLimitNumber";
 
 import { ICluster } from "./types";
+import I18next from "@Src/features/i18next";
 
 let branchID = 1;
 const queryClient = new QueryClient();
 
 export const topCluster: ICluster = [
+  {
+    info: {
+      id: branchID++,
+      name: "React i18next",
+      path: "i18next",
+    },
+    component: I18next,
+  },
   {
     info: {
       id: branchID++,

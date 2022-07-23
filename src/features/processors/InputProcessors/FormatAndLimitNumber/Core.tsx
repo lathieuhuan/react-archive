@@ -71,7 +71,7 @@ export default function Core({
     if (onChangeValue) {
       onChangeValue(newValue);
     }
-    
+
     // update cursor
     runAfterPaint(() => {
       if (newCursor !== null) {
@@ -83,7 +83,7 @@ export default function Core({
 
   const onChangeInputValue: ChangeEventHandler<HTMLInputElement> = (e) => {
     try {
-      const { value } = e.target;
+      let { value } = e.target;
       const {
         result: newValue,
         integer,
@@ -128,7 +128,7 @@ export default function Core({
 
     try {
       let { result } = stringToNumber(inputValue);
-      
+
       if (maxValue !== undefined && result > maxValue) {
         result = maxValue;
       }
