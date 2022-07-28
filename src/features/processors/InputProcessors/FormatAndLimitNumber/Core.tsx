@@ -9,15 +9,11 @@ import {
 } from "react";
 import InputBox from "@Components/InputBox";
 import { KEY } from "@Src/constant";
-import {
-  CONFIGS,
-  integerToString,
-  numberToString,
-  stringToNumber,
-} from "./utils";
+import { wholeToString, numberToString, stringToNumber } from "./utils";
+import { FormatConfig, KeydownConfig } from "./types";
 
 interface UpdateArgs {
-  decimal: number | undefined;
+  fraction: number | undefined;
   newValue: number;
   newInputValue: string;
   newCursor: number | null;
@@ -29,27 +25,51 @@ interface CoreProps {
   value: number;
   maxValue?: number;
   minValue?: number;
-  onChangeValue?: (value: number) => void;
+  formatConfig?: Partial<FormatConfig>;
+  keydownConfig?: KeydownConfig;
+  changeMode?: "onChange" | "onBlur";
+  validateMode?: "onChange" | "onBlur";
   testSignal: boolean;
+  onChangeValue?: (value: number) => void;
 }
 export default function Core({
   value,
   maxValue,
   minValue,
-  onChangeValue,
+  formatConfig = {},
+  keydownConfig,
+  changeMode = "onChange",
+  validateMode = "onChange",
   testSignal,
+  onChangeValue,
 }: CoreProps) {
   //
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const runAfterPaint = useRunAfterPaint();
 
+  const finalFormatConfig: FormatConfig = {
+    groupingSeparator: ".",
+    decimalSeparator: ",",
+    maxFractionalDigits: 1,
+    ...formatConfig,
+  };
+
+  // change separator in case they're the same
+  if (finalFormatConfig.decimalSeparator === finalFormatConfig.groupingSeparator) {
+    finalFormatConfig.decimalSeparator = finalFormatConfig.decimalSeparator === "." ? "," : ".";
+  }
+
   useEffect(() => {
-    setInputValue(numberToString(minValue || value));
+    setInputValue(numberToString(minValue || value, finalFormatConfig));
   }, [testSignal]);
 
+  const validateValue = () => {
+    
+  }
+
   const update = ({
-    decimal,
+    fraction,
     newValue,
     newInputValue,
     newCursor,
@@ -57,18 +77,18 @@ export default function Core({
     separatorsAdded,
   }: UpdateArgs) => {
     //
-    if (decimal !== undefined) {
+    if (fraction !== undefined) {
       // input ends with decimalSeparator
-      let decimalPart = CONFIGS.decimalSeparator;
-      if (decimal !== 0) {
-        decimalPart += decimal;
+      let fractionalPart = finalFormatConfig.decimalSeparator;
+      if (fraction !== 0) {
+        fractionalPart += fraction;
       }
-      newInputValue += decimalPart;
+      newInputValue += fractionalPart;
     }
 
     setInputValue(newInputValue);
 
-    if (onChangeValue) {
+    if (changeMode === "onChange" && onChangeValue) {
       onChangeValue(newValue);
     }
 
@@ -76,6 +96,7 @@ export default function Core({
     runAfterPaint(() => {
       if (newCursor !== null) {
         newCursor += separatorsAdded - separatorsRemoved;
+        // inputRef.current?.setSelectionRange(newCursor, newCursor);
         inputRef.current?.setSelectionRange(newCursor, newCursor);
       }
     });
@@ -86,12 +107,12 @@ export default function Core({
       let { value } = e.target;
       const {
         result: newValue,
-        integer,
-        decimal,
+        whole,
+        fraction,
         separatorsRemoved,
-      } = stringToNumber(value);
+      } = stringToNumber(value, finalFormatConfig);
 
-      let { result: newInputValue, separatorsAdded } = integerToString(integer);
+      let { result: newInputValue, separatorsAdded } = wholeToString(whole, finalFormatConfig);
 
       if (value === "-") {
         newInputValue = "-";
@@ -102,7 +123,7 @@ export default function Core({
       }
 
       update({
-        decimal,
+        fraction,
         newCursor: e.target.selectionStart,
         newValue,
         newInputValue,
@@ -110,7 +131,11 @@ export default function Core({
         separatorsAdded,
       });
     } catch (error) {
-      //
+      console.log((error as Error).message);
+      // need to manually track cursor
+      // setTimeout(() => {
+      //   inputRef.current?.setSelectionRange(trackedCursor, trackedCursor);
+      // }, 0);
     }
   };
 
@@ -122,12 +147,12 @@ export default function Core({
 
   const onBlur: FocusEventHandler<HTMLInputElement> = () => {
     if (inputValue === "") {
-      setInputValue(minValue ? numberToString(minValue) : "0");
+      setInputValue(minValue ? numberToString(minValue, finalFormatConfig) : "0");
       return;
     }
 
     try {
-      let { result } = stringToNumber(inputValue);
+      let { result } = stringToNumber(inputValue, finalFormatConfig);
 
       if (maxValue !== undefined && result > maxValue) {
         result = maxValue;
@@ -136,7 +161,7 @@ export default function Core({
         result = minValue;
       }
 
-      setInputValue(numberToString(result));
+      setInputValue(numberToString(result, finalFormatConfig));
 
       if (onChangeValue) {
         onChangeValue(result);
@@ -147,31 +172,35 @@ export default function Core({
   };
 
   const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (!keydownConfig) {
+      return;
+    }
+
+    const { upDownStep } = keydownConfig;
     let { value } = e.currentTarget;
     if (value === "") {
       value = "0";
     }
-    if (value && [KEY.ArrowDown, KEY.ArrowUp].includes(e.key)) {
+
+    if (upDownStep && [KEY.ArrowDown, KEY.ArrowUp].includes(e.key)) {
+      // prevent cursor from moving to first/last index on ArrowUp/ArrowDown
       e.preventDefault();
+
       try {
         let {
           result: newValue,
-          integer,
-          decimal,
+          whole,
+          fraction,
           separatorsRemoved,
-        } = stringToNumber(value);
+        } = stringToNumber(value, finalFormatConfig);
 
-        if (e.key === KEY.ArrowUp) {
-          integer++;
-          newValue++;
-        } else if (e.key === KEY.ArrowDown) {
-          integer--;
-          newValue--;
-        }
-        const newInputValue = integerToString(integer).result;
+        whole += e.key === KEY.ArrowUp ? upDownStep : -upDownStep;
+        newValue += e.key === KEY.ArrowUp ? upDownStep : -upDownStep;
+
+        const newInputValue = wholeToString(whole, finalFormatConfig).result;
 
         update({
-          decimal,
+          fraction,
           newCursor: e.currentTarget.selectionStart,
           newValue,
           newInputValue,

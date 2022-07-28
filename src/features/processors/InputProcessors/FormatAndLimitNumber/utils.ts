@@ -1,72 +1,75 @@
-export const CONFIGS = {
-  decimalSeparator: ",",
-  groupingSeparator: ".",
-  maxDecimalDigits: 1,
-};
+import type { FormatConfig } from "./types";
 
-const roundDecimal = (n: number) => {
-  const roundPow = Math.pow(10, CONFIGS.maxDecimalDigits);
+const roundDecimal = (n: number, maxFractionalDigits: number) => {
+  const roundPow = Math.pow(10, maxFractionalDigits);
   return Math.round(n * roundPow);
 };
 
-export const stringToNumber = (strValue: string) => {
+export const stringToNumber = (strValue: string, config: FormatConfig) => {
   //
-  const parts = strValue.split(CONFIGS.decimalSeparator);
-  let integer = 0;
-  let decimal;
+  const parts = strValue.split(config.decimalSeparator);
+  const [wholePart, fractionPart] = parts;
+
+  let whole = 0;
+  let fraction;
   let separatorsRemoved = 0;
 
-  const stringToInteger = (strInteger: string): never | number => {
-    if (strInteger === "-") {
+  if (parts.length > 2) {
+    throw new Error(`There're atleast 2 decimal separators [${config.decimalSeparator}]`);
+  }
+  if (parts.length === 2) {
+    if (fractionPart.includes(config.groupingSeparator)) {
+      throw new Error(
+        `Fractional part [${fractionPart}] has grouping separator [${config.groupingSeparator}]`
+      );
+    }
+    if (isNaN(+fractionPart)) {
+      throw new Error(`Fractional part [${fractionPart}] cannot be converted to number`);
+    }
+    fraction = +fractionPart;
+  }
+
+  const stringToWhole = (strWhole: string): never | number => {
+    if (strWhole === "-") {
       return 0;
     }
 
     let result = "";
-    for (const char of strInteger) {
-      if (char === CONFIGS.groupingSeparator) {
+    for (const char of strWhole) {
+      if (char === config.groupingSeparator) {
         separatorsRemoved++;
       } else {
         result += char;
       }
     }
     if (isNaN(+result)) {
-      throw new Error("Cannot convert this string to integer");
+      throw new Error(`Cannot convert this string [${result}] to whole number`);
     }
     return +result;
   };
+  whole = stringToWhole(wholePart);
 
-  if (parts.length > 2) {
-    throw new Error("There're atleast 2 decimal separators");
-  }
-  if (parts.length === 2) {
-    if (parts[1].includes(".") || isNaN(+parts[1])) {
-      throw new Error("Invalid decimal part");
-    }
-    decimal = +parts[1];
-  }
-  integer = stringToInteger(parts[0]);
-
-  const result = Number(`${integer}.${decimal || 0}`);
+  const result = Number(`${whole}.${fraction || 0}`);
 
   return {
     result,
-    integer,
-    decimal,
+    whole,
+    fraction, // undefined when there's no fraction
     separatorsRemoved,
   };
 };
 
-export function integerToString(integer: number) {
-  let integerAsString = integer.toString();
+export function wholeToString(whole: number, config: FormatConfig) {
+  let wholeAsString = whole.toString();
   let result = "";
   let separatorsAdded = 0;
 
-  for (let i = integerAsString.length - 1, j = 0; i >= 0; i--, j++) {
-    let leftDigit = integerAsString[i];
+  for (let i = wholeAsString.length - 1, j = 0; i >= 0; i--, j++) {
+    let leftDigit = wholeAsString[i];
 
     if (leftDigit !== "-") {
       if (j && j % 3 === 0) {
-        leftDigit += CONFIGS.groupingSeparator;
+        leftDigit += config.groupingSeparator;
         separatorsAdded++;
       }
     }
@@ -75,15 +78,15 @@ export function integerToString(integer: number) {
   return { result, separatorsAdded };
 }
 
-export function numberToString(numValue: number): string {
-  const integer = Math.floor(numValue);
-  let decimal = numValue - integer;
+export function numberToString(numValue: number, config: FormatConfig): string {
+  const whole = Math.floor(numValue);
+  let fraction = numValue - whole;
 
-  let { result: strInteger } = integerToString(integer);
-  if (decimal) {
-    const roundPow = Math.pow(10, CONFIGS.maxDecimalDigits);
-    decimal = Math.round(decimal * roundPow);
-    return strInteger + CONFIGS.decimalSeparator + decimal;
+  let { result: strWhole } = wholeToString(whole, config);
+  if (fraction) {
+    const roundPow = Math.pow(10, config.maxFractionalDigits);
+    fraction = Math.round(fraction * roundPow);
+    return strWhole + config.decimalSeparator + fraction;
   }
-  return strInteger;
+  return strWhole;
 }
