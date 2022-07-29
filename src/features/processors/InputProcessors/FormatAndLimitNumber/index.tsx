@@ -1,99 +1,150 @@
 import { ChangeEventHandler, useState } from "react";
+import cn from "classnames";
 import Button from "@Components/Button";
 import InputBox from "@Components/InputBox";
 import Core from "./Core";
+import JsonDisplayer from "@Src/components/JsonDisplayer";
+import { TesterState } from "./types";
+import Select from "@Src/components/Select";
+
+const styles = {
+  line: "flex justify-between items-center gap-2",
+};
+
+const initialState: TesterState = {
+  value: 0,
+  maxValue: 100,
+  minValue: 0,
+  groupingSeparator: ".",
+  decimalSeparator: ",",
+  maxFractionalDigits: 2,
+  upDownStep: 1,
+  changeMode: "onChange",
+  validateMode: "onChangePrevent",
+  exceedMaxDigitsAction: "prevent",
+};
+
+const lines: Array<{
+  label: string;
+  key: keyof TesterState;
+  type: string;
+  options?: string[];
+}> = [
+  { label: "Value", key: "value", type: "number" },
+  { label: "Maximum", key: "maxValue", type: "number" },
+  { label: "Minimum", key: "minValue", type: "number" },
+  { label: "Grouping Separator", key: "groupingSeparator", type: "text" },
+  { label: "Decimal Separator", key: "decimalSeparator", type: "text" },
+  { label: "Max Decimal Digits", key: "maxFractionalDigits", type: "number" },
+  { label: "Increase / Decrease Step", key: "upDownStep", type: "number" },
+  {
+    label: "Change Mode",
+    key: "changeMode",
+    type: "select",
+    options: ["onChange", "onBlur"],
+  },
+  {
+    label: "Validate Mode",
+    key: "validateMode",
+    type: "select",
+    options: ["onChangePrevent", "onChangeSetBack", "onBlur"],
+  },
+  {
+    label: "Exceed Max Digits Action",
+    key: "exceedMaxDigitsAction",
+    type: "select",
+    options: ["prevent", "round"],
+  },
+];
 
 export default function FormatAndLimitNumber() {
-  const [test, setTest] = useState({
-    value: 0,
-    maxValue: 100,
-    minValue: 0,
-    groupingSeparator: ".",
-    decimalSeparator: ",",
-    maxFractionalDigits: 2,
-    upDownStep: 1,
-  });
+  const [test, setTest] = useState(initialState);
   const [signal, setSignal] = useState(false);
 
-  const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+  const onChange: ChangeEventHandler<HTMLInputElement | HTMLSelectElement> = (e) => {
     setTest((prev) => {
       let { name, value } = e.target;
+      const { type } = lines.find((line) => line.key === name) || {};
 
       return {
         ...prev,
-        [name]: ["groupingSeparator", "decimalSeparator"].includes(name) ? value : +value,
+        [name]: type === "number" ? +value : value,
       };
     });
   };
 
+  const onClickRemoveButton = (key: keyof typeof test) => {
+    setTest((prev) => ({
+      ...prev,
+      [key]: prev[key] === undefined ? initialState[key] : undefined,
+    }));
+  };
+
   return (
-    <div className="flex items-start gap-4">
-      <div className="mb-4 flex flex-col gap-2">
-        <h3 className="text-xl font-semibold">Test configs</h3>
-
-        <div className="flex justify-between items-center gap-2">
-          <label>Value</label>
-          <InputBox type="number" name="value" value={test.value} onChange={onChange} />
-        </div>
-
-        <div className="flex justify-between items-center gap-2">
-          <label>Maximum</label>
-          <InputBox type="number" name="maxValue" value={test.maxValue} onChange={onChange} />
-        </div>
-
-        <div className="flex justify-between items-center gap-2">
-          <label>Minimum</label>
-          <InputBox type="number" name="minValue" value={test.minValue} onChange={onChange} />
-        </div>
-
-        <div className="flex justify-between items-center gap-2">
-          <label>Grouping Separator</label>
-          <InputBox
-            type="text"
-            name="groupingSeparator"
-            value={test.groupingSeparator}
-            onChange={onChange}
-          />
-        </div>
-
-        <div className="flex justify-between items-center gap-2">
-          <label>Decimal Separator</label>
-          <InputBox
-            type="text"
-            name="decimalSeparator"
-            value={test.decimalSeparator}
-            onChange={onChange}
-          />
-        </div>
-
-        <div className="flex justify-between items-center gap-2">
-          <label>Max Decimal Digits</label>
-          <InputBox
-            type="number"
-            name="maxFractionalDigits"
-            value={test.maxFractionalDigits}
-            onChange={onChange}
-          />
-        </div>
-
-        <div className="flex justify-between items-center gap-2">
-          <label>Increase / Decrease Step</label>
-          <InputBox type="number" name="upDownStep" value={test.upDownStep} onChange={onChange} />
-        </div>
-
-        <Button onClick={() => setSignal((prev) => !prev)}>Begin Testing</Button>
-      </div>
-
+    <div className="flex flex-col items-center">
       <Core
         {...test}
-        changeMode="onChange"
-        // validateMode="onChangeGoBack"
-        // exceedMaxDigitsAction="round"
         testSignal={signal}
         onChangeValue={(value) => {
           setTest((prev) => ({ ...prev, value }));
         }}
       />
+
+      <div className="mt-4 w-full flex items-start gap-4">
+        <div className="mb-4 flex flex-col gap-2">
+          {/*  */}
+          <h3 className="text-xl font-semibold">Test configs</h3>
+
+          {lines.map(({ label, key, type, options }, index) => {
+            const isDisabledInput = test[key] === undefined;
+
+            if (type === "select") {
+            }
+
+            return (
+              <div key={key} className={styles.line}>
+                <label>{label}</label>
+                <div className="flex">
+                  {type === "select" ? (
+                    <Select
+                      options={options || []}
+                      name={key}
+                      value={isDisabledInput ? options?.[0] : test[key]}
+                      onChange={onChange}
+                      disabled={isDisabledInput}
+                    />
+                  ) : (
+                    <InputBox
+                      type={type}
+                      name={key}
+                      value={isDisabledInput ? (type === "number" ? 0 : "") : test[key]}
+                      onChange={onChange}
+                      disabled={isDisabledInput}
+                    />
+                  )}
+                  <Button
+                    className={cn("ml-2", !isDisabledInput && "bg-red-600 hover:bg-red-500")}
+                    disabled={index === 0}
+                    onClick={() => onClickRemoveButton(key)}
+                  >
+                    {isDisabledInput ? "O" : "X"}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="grow flex flex-col">
+          <JsonDisplayer title="Props passed down" body={test} />
+          <Button
+            className="mt-4 mx-auto bg-yellow-400 hover:bg-yellow-300 text-black"
+            onClick={() => setSignal((prev) => !prev)}
+          >
+            Update Value to Input
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

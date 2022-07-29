@@ -12,7 +12,7 @@ const InputBox = forwardRef(
         ref={ref}
         type={type}
         className={classNames(
-          "px-4 py-2 rounded border-slate-500 border-1",
+          "px-4 py-2 rounded border-slate-500 border-1 disabled:bg-slate-300",
           className
         )}
         {...rest}

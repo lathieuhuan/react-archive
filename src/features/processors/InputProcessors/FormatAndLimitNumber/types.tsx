@@ -1,4 +1,21 @@
-export type ValidateMode = "onChangePrevent" | "onChangeGoBack" | "onBlur";
+export type TesterState = {
+  value: number,
+  maxValue: number,
+  minValue: number,
+  groupingSeparator: string,
+  decimalSeparator: string,
+  maxFractionalDigits: number,
+  upDownStep: number,
+  changeMode: ChangeMode,
+  validateMode: ValidateMode,
+  exceedMaxDigitsAction: ExceedMaxDigitsAction
+}
+
+export type ChangeMode = "onChange" | "onBlur";
+
+export type ValidateMode = "onChangePrevent" | "onChangeSetBack" | "onBlur";
+
+type ExceedMaxDigitsAction = "prevent" | "round";
 
 export type FormatConfig = {
   groupingSeparator: string;
@@ -6,10 +23,10 @@ export type FormatConfig = {
 };
 
 export type ValidateConfig = {
-  maxValue?: number;
-  minValue?: number;
+  maxValue: number;
+  minValue: number;
   maxFractionalDigits: number;
-  exceedMaxDigitsAction: "cutoff" | "round";
+  exceedMaxDigitsAction: ExceedMaxDigitsAction;
   validateMode: ValidateMode;
 };
 

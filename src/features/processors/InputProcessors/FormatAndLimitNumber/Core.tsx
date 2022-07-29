@@ -9,8 +9,11 @@ import {
 } from "react";
 import InputBox from "@Components/InputBox";
 import { KEY } from "@Src/constant";
-import { wholeToString, numberToString, stringToNumber } from "./utils";
+import { wholeToString, numberToString, stringToNumber, limitFractionDigits } from "./utils";
 import { FormatConfig, ValidateConfig, Fraction, ValidateMode } from "./types";
+
+export const GROUPING_SEPARATOR = ".";
+export const DECIMAL_SEPARATOR = ",";
 
 interface UpdateArgs {
   newValue: number;
@@ -18,8 +21,8 @@ interface UpdateArgs {
   fraction: Fraction;
   withDecimalSeparator: boolean;
   newCursor: number | null;
-  separatorsRemoved: number;
-  separatorsAdded: number;
+  leftMoves: number;
+  rightMoves: number;
 }
 
 interface CoreProps extends Partial<FormatConfig>, Partial<ValidateConfig> {
@@ -36,8 +39,8 @@ export default function Core({
   minValue,
   groupingSeparator,
   decimalSeparator,
-  maxFractionalDigits,
-  exceedMaxDigitsAction,
+  maxFractionalDigits = 0,
+  exceedMaxDigitsAction = "prevent",
   upDownStep,
   changeMode = "onChange",
   validateMode = "onChangePrevent",
@@ -50,25 +53,36 @@ export default function Core({
   const runAfterPaint = useRunAfterPaint();
 
   const format = {
-    groupingSeparator: groupingSeparator || ".",
-    decimalSeparator: decimalSeparator || ",",
+    groupingSeparator: groupingSeparator || GROUPING_SEPARATOR,
+    decimalSeparator: decimalSeparator || DECIMAL_SEPARATOR,
   };
   const validate = {
-    minValue,
-    maxValue,
-    maxFractionalDigits: maxFractionalDigits || 0,
-    exceedMaxDigitsAction: exceedMaxDigitsAction || "cutoff",
+    minValue: minValue ? limitFractionDigits(minValue, maxFractionalDigits) : -Infinity,
+    maxValue: maxValue ? limitFractionDigits(maxValue, maxFractionalDigits) : Infinity,
+    maxFractionalDigits,
+    exceedMaxDigitsAction,
     validateMode,
   };
-  const isValidateOnChange = ["onChangePrevent", "onChangeGoBack"].includes(validateMode);
+  const isValidateOnBlur = validateMode === "onBlur";
 
   // change separator in case they're the same
   if (format.decimalSeparator === format.groupingSeparator) {
-    format.decimalSeparator = format.decimalSeparator === "." ? "," : ".";
+    format.decimalSeparator =
+      format.decimalSeparator === GROUPING_SEPARATOR ? DECIMAL_SEPARATOR : GROUPING_SEPARATOR;
+  }
+
+  // make sure min is smaller than max
+  if (validate.maxValue < validate.minValue) {
+    [validate.minValue, validate.maxValue] = [validate.maxValue, validate.minValue];
   }
 
   useEffect(() => {
-    setInputValue(numberToString(value, format, validate));
+    setInputValue(
+      numberToString(value, format, {
+        ...validate,
+        validateMode: "onChangeSetBack", // prevent value out of range
+      })
+    );
   }, [testSignal]);
 
   const update = ({
@@ -77,8 +91,8 @@ export default function Core({
     fraction,
     withDecimalSeparator,
     newCursor,
-    separatorsRemoved,
-    separatorsAdded,
+    leftMoves,
+    rightMoves,
   }: UpdateArgs) => {
     // input ends with decimalSeparator
     if (withDecimalSeparator) {
@@ -97,16 +111,16 @@ export default function Core({
     // update cursor position
     runAfterPaint(() => {
       if (newCursor !== null) {
-        newCursor += separatorsAdded - separatorsRemoved;
+        newCursor += rightMoves - leftMoves;
         inputRef.current?.setSelectionRange(newCursor, newCursor);
       }
     });
   };
 
   const onChangeInputValue: ChangeEventHandler<HTMLInputElement> = (e) => {
-    try {
-      let { value } = e.target;
+    let { value, selectionStart } = e.target;
 
+    try {
       if (value === "-") {
         setInputValue("-");
         return;
@@ -116,10 +130,10 @@ export default function Core({
         whole,
         fraction,
         withDecimalSeparator,
-        separatorsRemoved,
-      } = stringToNumber(value, format, isValidateOnChange ? validate : undefined);
+        leftMoves,
+      } = stringToNumber(value, format, isValidateOnBlur ? undefined : validate);
 
-      const { result: wholeAsString, separatorsAdded } = wholeToString(whole, format);
+      const { result: wholeAsString, rightMoves } = wholeToString(whole, format);
 
       update({
         newValue,
@@ -127,15 +141,16 @@ export default function Core({
         wholeAsString: wholeAsString === "0" ? "" : wholeAsString,
         fraction,
         withDecimalSeparator,
-        newCursor: e.target.selectionStart,
-        separatorsRemoved,
-        separatorsAdded,
+        newCursor: selectionStart,
+        leftMoves,
+        rightMoves,
       });
     } catch (error) {
-      // console.log(error);
       // need to manually track cursor
       // setTimeout(() => {
-      //   inputRef.current?.setSelectionRange(trackedCursor, trackedCursor);
+      //   if (selectionStart) {
+      //     inputRef.current?.setSelectionRange(selectionStart - 1, selectionStart - 1);
+      //   }
       // }, 0);
     }
   };
@@ -147,23 +162,29 @@ export default function Core({
   };
 
   const onBlur: FocusEventHandler<HTMLInputElement> = () => {
-    if (inputValue === "") {
-      setInputValue(minValue ? numberToString(minValue, format, validate) : "0");
-      return;
-    }
+    /**
+     * run even if changeMode === "onChange" to cover case
+     * inputValue === "" => show "0"
+     * need format and validate if min > 0
+     */
     try {
-      if (changeMode === "onBlur") {
-        let { result } = stringToNumber(
-          inputValue,
-          format,
-          !isValidateOnChange ? validate : undefined
-        );
+      let result = validate.minValue === -Infinity ? 0 : validate.minValue;
 
-        setInputValue(numberToString(result, format));
+      result = stringToNumber(
+        inputValue === "" ? "0" : inputValue,
+        format,
+        isValidateOnBlur
+          ? {
+              ...validate,
+              validateMode: "onChangeSetBack", // set back when out of range
+            }
+          : undefined
+      ).result;
 
-        if (typeof onChangeValue === "function") {
-          onChangeValue(result);
-        }
+      setInputValue(numberToString(result, format));
+
+      if (typeof onChangeValue === "function") {
+        onChangeValue(result);
       }
     } catch (error) {
       //
@@ -185,8 +206,8 @@ export default function Core({
           result: newValue,
           whole,
           fraction,
-          separatorsRemoved,
-        } = stringToNumber(value, format, isValidateOnChange ? validate : undefined);
+          leftMoves,
+        } = stringToNumber(value, format, isValidateOnBlur ? validate : undefined);
 
         // #to-do handle case upDownStep is decimal
         whole += e.key === KEY.ArrowUp ? upDownStep : -upDownStep;
@@ -199,8 +220,8 @@ export default function Core({
         //   newCursor: e.currentTarget.selectionStart,
         //   newValue,
         //   wholeAsString,
-        //   separatorsRemoved,
-        //   separatorsAdded: 999999,
+        //   leftMoves,
+        //   rightMoves: 999999,
         // });
       } catch (error) {
         //

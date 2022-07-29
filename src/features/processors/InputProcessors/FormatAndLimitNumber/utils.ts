@@ -1,10 +1,5 @@
 import { FormatConfig, ValidateConfig } from "./types";
 
-const roundDecimal = (n: number, maxFractionalDigits: number) => {
-  const roundPow = Math.pow(10, maxFractionalDigits);
-  return Math.round(n * roundPow);
-};
-
 const joinDecimal = (whole: number, fraction: number) => Number(`${whole}.${fraction}`);
 
 const splitDecimal = (num: number) => {
@@ -12,74 +7,91 @@ const splitDecimal = (num: number) => {
   return [Math.floor(num), fractionPart ? +fractionPart : 0];
 };
 
+export const limitFractionDigits = (num: number, limit: number) => {
+  let [whole, fraction] = splitDecimal(num);
+  const fractionAsString = fraction.toString();
+
+  if (fraction && fractionAsString.length > limit) {
+    fraction = +fractionAsString.slice(0, limit);
+  }
+
+  return joinDecimal(whole, fraction);
+};
+
 const validateValue = (num: number, whole: number, fraction: number, validate: ValidateConfig) => {
   /**
    * intended behavior:
    * validate fraction => validate max, min => get whole, fraction again
    */
-  let result = num;
-  let {
-    minValue = -Infinity,
-    maxValue = Infinity,
-    // maxFractionalDigits,
-    // exceedMaxDigitsAction,
-    validateMode,
-  } = validate;
+  let { minValue, maxValue, maxFractionalDigits, exceedMaxDigitsAction, validateMode } = validate;
 
-  if (maxValue < minValue) {
-    [minValue, maxValue] = [maxValue, minValue];
-  }
-
-  const [validatedFraction, wholeIncrement] = fractionAfterValidate(fraction, validate);
-
-  result = joinDecimal(whole + wholeIncrement, validatedFraction);
-
-  if (validateMode === "onChangePrevent") {
-    if (result > maxValue) {
-      throw new Error(`Result ${result} is larger than max ${maxValue}`);
-    }
-    if (result < minValue) {
-      throw new Error(`Result ${result} is smaller than min ${minValue}`);
-    }
-  } else if (validateMode === "onChangeGoBack") {
-    result = Math.min(maxValue, Math.max(minValue, result));
-  }
-
-  return result;
-};
-
-const fractionAfterValidate = (fraction: number, validate: ValidateConfig) => {
-  const { maxFractionalDigits, exceedMaxDigitsAction } = validate;
   /**
    * for case:
-   * exceedMaxDigitsAction === "round"
-   * fraction >= 5 rounded to 10, or fraction >= 95 rounded to 100...
-   * maxFractionalDigits > 0
+   * exceedMaxDigitsAction = "round"
+   * & fraction >= 5 rounded to 10, or fraction >= 95 rounded to 100...
+   * & maxFractionalDigits > 0
    */
   let wholeIncrement = 0;
 
+  // VALIDATE FRACTION
   if (maxFractionalDigits === 0) {
-    return [0, 0];
+    fraction = 0;
   } //
   else if (maxFractionalDigits > 0 && fraction) {
     const fractionAsString = fraction.toString();
     const fractionLength = fractionAsString.length;
 
     if (fractionLength > maxFractionalDigits) {
-      fraction = +fractionAsString.slice(0, fractionLength - 1);
-      const nextDigit = +fractionAsString.slice(fractionLength - 1, fractionLength);
+      fraction = +fractionAsString.slice(0, maxFractionalDigits);
+      const nextDigit = +fractionAsString.slice(maxFractionalDigits, maxFractionalDigits + 1);
 
       if (exceedMaxDigitsAction === "round" && !isNaN(nextDigit) && nextDigit >= 5) {
         fraction++;
 
-        if (fraction % 10 === 0) {
+        while (fraction % 10 === 0) {
+          fraction /= 10;
+        }
+        if (fraction === 1) {
           fraction = 0;
           wholeIncrement++;
         }
       }
     }
   }
-  return [fraction, wholeIncrement];
+
+  num = joinDecimal(whole + wholeIncrement, fraction);
+  let rightMoves = 0;
+
+  if (validateMode === "onChangePrevent") {
+    if (num > maxValue) {
+      throw new Error(`Result ${num} is larger than max ${maxValue}`);
+    }
+    if (num < minValue) {
+      throw new Error(`Result ${num} is smaller than min ${minValue}`);
+    }
+  } else if (validateMode === "onChangeSetBack") {
+    const numDigits = num.toString().length;
+
+    if (num > maxValue) {
+      rightMoves = maxValue.toString().length - numDigits;
+      num = maxValue;
+    } //
+    else if (num < minValue) {
+      rightMoves = minValue.toString().length - numDigits;
+      num = minValue;
+    }
+  }
+
+  /**
+   * for case
+   * validateMode = "onChangeSetBack" & max = 100 && input = 10,3
+   * input a number to exceed max
+   */
+  if (fraction !== 0) {
+    rightMoves++;
+  }
+
+  return [num, rightMoves];
 };
 
 export const stringToNumber = (
@@ -96,7 +108,7 @@ export const stringToNumber = (
 
   let whole = 0;
   let fraction = 0;
-  let separatorsRemoved = 0;
+  let leftMoves = 0;
   let withDecimalSeparator = false;
   const [wholePart, fractionPart] = parts;
 
@@ -126,7 +138,7 @@ export const stringToNumber = (
 
     for (const char of wholePart) {
       if (char === format.groupingSeparator) {
-        separatorsRemoved++;
+        leftMoves++;
       } else {
         result += char;
       }
@@ -138,9 +150,10 @@ export const stringToNumber = (
   })();
 
   let result = joinDecimal(whole, fraction);
+  let rightMoves = 0;
 
   if (validate) {
-    result = validateValue(result, whole, fraction, validate);
+    [result, rightMoves] = validateValue(result, whole, fraction, validate);
     [whole, fraction] = splitDecimal(result);
   }
 
@@ -149,14 +162,14 @@ export const stringToNumber = (
     whole,
     fraction,
     withDecimalSeparator,
-    separatorsRemoved,
+    leftMoves: leftMoves - rightMoves,
   };
 };
 
 export function wholeToString(whole: number, format: FormatConfig) {
   let wholeAsString = whole.toString();
   let result = "";
-  let separatorsAdded = 0;
+  let rightMoves = 0;
 
   for (let i = wholeAsString.length - 1, j = 0; i >= 0; i--, j++) {
     let leftDigit = wholeAsString[i];
@@ -164,12 +177,12 @@ export function wholeToString(whole: number, format: FormatConfig) {
     if (leftDigit !== "-") {
       if (j && j % 3 === 0) {
         leftDigit += format.groupingSeparator;
-        separatorsAdded++;
+        rightMoves++;
       }
     }
     result = leftDigit + result;
   }
-  return { result, separatorsAdded };
+  return { result, rightMoves };
 }
 
 export function numberToString(
@@ -179,17 +192,15 @@ export function numberToString(
 ): string {
   //
   let [whole, fraction] = splitDecimal(numValue);
-  let { result: strWhole } = wholeToString(whole, format);
   let frationPart = "";
 
+  if (validate) {
+    [numValue] = validateValue(numValue, whole, fraction, validate);
+    [whole, fraction] = splitDecimal(numValue);
+  }
   if (fraction) {
-    if (validate) {
-      // const roundPow = Math.pow(10, validate.maxFractionalDigits);
-      // fraction = Math.round(fraction * roundPow);
-      const validatedNumValue = validateValue(numValue, whole, fraction, validate);
-      [whole, fraction] = splitDecimal(validatedNumValue);
-    }
     frationPart += format.decimalSeparator + fraction;
   }
-  return strWhole + frationPart;
+
+  return wholeToString(whole, format).result + frationPart;
 }
