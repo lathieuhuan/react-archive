@@ -2,8 +2,7 @@ export type FormatConfig = {
   groupingSeparator: string;
   decimalSeparator: string;
   maxFractionalDigits: number;
+  exceedMaxDigitsAction: "cutoff" | "round"
 }
 
-export type KeydownConfig = {
-  upDownStep: number
-}
+export type Fraction = number | undefined;

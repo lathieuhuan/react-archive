@@ -6,8 +6,8 @@ import Core from "./Core";
 export default function FormatAndLimitNumber() {
   const [test, setTest] = useState({
     value: 0,
-    max: 100,
-    min: 0,
+    maxValue: 100,
+    minValue: 0,
     groupingSeparator: ".",
     decimalSeparator: ",",
     maxFractionalDigits: 1,
@@ -38,12 +38,12 @@ export default function FormatAndLimitNumber() {
 
         <div className="flex justify-between items-center gap-2">
           <label>Maximum</label>
-          <InputBox type="number" name="max" value={test.max} onChange={onChange} />
+          <InputBox type="number" name="maxValue" value={test.maxValue} onChange={onChange} />
         </div>
 
         <div className="flex justify-between items-center gap-2">
           <label>Minimum</label>
-          <InputBox type="number" name="min" value={test.min} onChange={onChange} />
+          <InputBox type="number" name="minValue" value={test.minValue} onChange={onChange} />
         </div>
 
         <div className="flex justify-between items-center gap-2">
@@ -90,18 +90,9 @@ export default function FormatAndLimitNumber() {
       </div>
 
       <Core
-        value={test.value}
-        maxValue={test.max}
-        minValue={test.min}
-        formatConfig={{
-          groupingSeparator: test.groupingSeparator,
-          decimalSeparator: test.decimalSeparator,
-          maxFractionalDigits: test.maxFractionalDigits,
-        }}
-        keydownConfig={{
-          upDownStep: test.upDownStep
-        }}
-        // changeMode="onBlur"
+        {...test}
+        changeMode="onBlur"
+        // exceedMaxDigitsAction="round"
         testSignal={signal}
         onChangeValue={(value) => setTest((prev) => ({ ...prev, value }))}
       />
