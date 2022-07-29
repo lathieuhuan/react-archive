@@ -87,8 +87,8 @@ export default function FormatAndLimitNumber() {
       <Core
         {...test}
         changeMode="onChange"
-        validateMode="onChangeGoBack"
-        exceedMaxDigitsAction="round"
+        // validateMode="onChangeGoBack"
+        // exceedMaxDigitsAction="round"
         testSignal={signal}
         onChangeValue={(value) => {
           setTest((prev) => ({ ...prev, value }));

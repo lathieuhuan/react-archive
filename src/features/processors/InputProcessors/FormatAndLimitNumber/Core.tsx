@@ -24,13 +24,7 @@ interface UpdateArgs {
 
 interface CoreProps extends Partial<FormatConfig>, Partial<ValidateConfig> {
   value: number;
-  /**
-   * keydown config
-   */
   upDownStep?: number;
-  /**
-   * behavior config
-   */
   changeMode?: "onChange" | "onBlur";
   validateMode?: ValidateMode;
   testSignal: boolean;
@@ -74,7 +68,7 @@ export default function Core({
   }
 
   useEffect(() => {
-    setInputValue(numberToString(minValue || value, format));
+    setInputValue(numberToString(value, format, validate));
   }, [testSignal]);
 
   const update = ({
@@ -138,7 +132,7 @@ export default function Core({
         separatorsAdded,
       });
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       // need to manually track cursor
       // setTimeout(() => {
       //   inputRef.current?.setSelectionRange(trackedCursor, trackedCursor);
@@ -154,20 +148,22 @@ export default function Core({
 
   const onBlur: FocusEventHandler<HTMLInputElement> = () => {
     if (inputValue === "") {
-      setInputValue(minValue ? numberToString(minValue, format) : "0");
+      setInputValue(minValue ? numberToString(minValue, format, validate) : "0");
       return;
     }
     try {
-      let { result } = stringToNumber(
-        inputValue,
-        format,
-        !isValidateOnChange ? validate : undefined
-      );
+      if (changeMode === "onBlur") {
+        let { result } = stringToNumber(
+          inputValue,
+          format,
+          !isValidateOnChange ? validate : undefined
+        );
 
-      setInputValue(numberToString(result, format));
+        setInputValue(numberToString(result, format));
 
-      if (changeMode === "onBlur" && typeof onChangeValue === "function") {
-        onChangeValue(result);
+        if (typeof onChangeValue === "function") {
+          onChangeValue(result);
+        }
       }
     } catch (error) {
       //
