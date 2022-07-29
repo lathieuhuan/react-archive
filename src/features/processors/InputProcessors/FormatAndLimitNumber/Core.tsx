@@ -10,21 +10,20 @@ import {
 import InputBox from "@Components/InputBox";
 import { KEY } from "@Src/constant";
 import { wholeToString, numberToString, stringToNumber } from "./utils";
-import { FormatConfig, Fraction } from "./types";
+import { FormatConfig, ValidateConfig, Fraction, ValidateMode } from "./types";
 
 interface UpdateArgs {
-  fraction: Fraction;
   newValue: number;
-  newInputValue: string;
+  wholeAsString: string;
+  fraction: Fraction;
+  withDecimalSeparator: boolean;
   newCursor: number | null;
   separatorsRemoved: number;
   separatorsAdded: number;
 }
 
-interface CoreProps extends Partial<FormatConfig> {
+interface CoreProps extends Partial<FormatConfig>, Partial<ValidateConfig> {
   value: number;
-  maxValue?: number;
-  minValue?: number;
   /**
    * keydown config
    */
@@ -33,7 +32,7 @@ interface CoreProps extends Partial<FormatConfig> {
    * behavior config
    */
   changeMode?: "onChange" | "onBlur";
-  validateMode?: "onChange" | "onBlur";
+  validateMode?: ValidateMode;
   testSignal: boolean;
   onChangeValue?: (value: number) => void;
 }
@@ -47,7 +46,7 @@ export default function Core({
   exceedMaxDigitsAction,
   upDownStep,
   changeMode = "onChange",
-  validateMode = "onChange",
+  validateMode = "onChangePrevent",
   testSignal,
   onChangeValue,
 }: CoreProps) {
@@ -59,9 +58,15 @@ export default function Core({
   const format = {
     groupingSeparator: groupingSeparator || ".",
     decimalSeparator: decimalSeparator || ",",
-    maxFractionalDigits: maxFractionalDigits || 0,
-    exceedMaxDigitsAction: exceedMaxDigitsAction || "cutoff"
   };
+  const validate = {
+    minValue,
+    maxValue,
+    maxFractionalDigits: maxFractionalDigits || 0,
+    exceedMaxDigitsAction: exceedMaxDigitsAction || "cutoff",
+    validateMode,
+  };
+  const isValidateOnChange = ["onChangePrevent", "onChangeGoBack"].includes(validateMode);
 
   // change separator in case they're the same
   if (format.decimalSeparator === format.groupingSeparator) {
@@ -72,45 +77,24 @@ export default function Core({
     setInputValue(numberToString(minValue || value, format));
   }, [testSignal]);
 
-  const valueAfterValidate = (value: number) => {
-    if (minValue !== undefined && maxValue !== undefined) {
-      if (maxValue < minValue) {
-        return value;
-      }
-      return Math.min(maxValue, Math.max(minValue, value));
-    } //
-    else if (maxValue !== undefined) {
-      if (value > maxValue) {
-        return maxValue;
-      }
-    } //
-    else if (minValue !== undefined) {
-      if (value < minValue) {
-        return minValue;
-      }
-    }
-    return value;
-  };
-
   const update = ({
-    fraction,
     newValue,
-    newInputValue,
+    wholeAsString,
+    fraction,
+    withDecimalSeparator,
     newCursor,
     separatorsRemoved,
     separatorsAdded,
   }: UpdateArgs) => {
     // input ends with decimalSeparator
-    if (fraction !== undefined) {
-      let fractionalPart = format.decimalSeparator;
-
-      if (fraction !== 0) {
-        fractionalPart += fraction;
-      }
-      newInputValue += fractionalPart;
+    if (withDecimalSeparator) {
+      wholeAsString += format.decimalSeparator;
+    }
+    if (fraction !== 0) {
+      wholeAsString += fraction;
     }
 
-    setInputValue(newInputValue);
+    setInputValue(wholeAsString);
 
     if (changeMode === "onChange" && typeof onChangeValue === "function") {
       onChangeValue(newValue);
@@ -128,33 +112,33 @@ export default function Core({
   const onChangeInputValue: ChangeEventHandler<HTMLInputElement> = (e) => {
     try {
       let { value } = e.target;
+
+      if (value === "-") {
+        setInputValue("-");
+        return;
+      }
       const {
         result: newValue,
         whole,
         fraction,
+        withDecimalSeparator,
         separatorsRemoved,
-      } = stringToNumber(value, format);
+      } = stringToNumber(value, format, isValidateOnChange ? validate : undefined);
 
-      let { result: newInputValue, separatorsAdded } = wholeToString(whole, format);
-
-      if (value === "-") {
-        newInputValue = "-";
-      }
-      // prevent typing "0", if not zero is always there instead of ""
-      else if (newInputValue === "0") {
-        newInputValue = "";
-      }
+      const { result: wholeAsString, separatorsAdded } = wholeToString(whole, format);
 
       update({
-        fraction,
-        newCursor: e.target.selectionStart,
         newValue,
-        newInputValue,
+        // prevent typing "0", if not zero is always there instead of ""
+        wholeAsString: wholeAsString === "0" ? "" : wholeAsString,
+        fraction,
+        withDecimalSeparator,
+        newCursor: e.target.selectionStart,
         separatorsRemoved,
         separatorsAdded,
       });
     } catch (error) {
-      console.log((error as Error).message);
+      console.log(error);
       // need to manually track cursor
       // setTimeout(() => {
       //   inputRef.current?.setSelectionRange(trackedCursor, trackedCursor);
@@ -173,16 +157,17 @@ export default function Core({
       setInputValue(minValue ? numberToString(minValue, format) : "0");
       return;
     }
-
     try {
-      let { result } = stringToNumber(inputValue, format);
+      let { result } = stringToNumber(
+        inputValue,
+        format,
+        !isValidateOnChange ? validate : undefined
+      );
 
-      const validatedResult = valueAfterValidate(result);
+      setInputValue(numberToString(result, format));
 
-      setInputValue(numberToString(validatedResult, format));
-
-      if (typeof onChangeValue === "function") {
-        onChangeValue(validatedResult);
+      if (changeMode === "onBlur" && typeof onChangeValue === "function") {
+        onChangeValue(result);
       }
     } catch (error) {
       //
@@ -205,22 +190,22 @@ export default function Core({
           whole,
           fraction,
           separatorsRemoved,
-        } = stringToNumber(value, format);
+        } = stringToNumber(value, format, isValidateOnChange ? validate : undefined);
 
         // #to-do handle case upDownStep is decimal
         whole += e.key === KEY.ArrowUp ? upDownStep : -upDownStep;
         newValue += e.key === KEY.ArrowUp ? upDownStep : -upDownStep;
 
-        const newInputValue = wholeToString(whole, format).result;
+        const wholeAsString = wholeToString(whole, format).result;
 
-        update({
-          fraction,
-          newCursor: e.currentTarget.selectionStart,
-          newValue,
-          newInputValue,
-          separatorsRemoved,
-          separatorsAdded: 999999,
-        });
+        // update({
+        //   fraction,
+        //   newCursor: e.currentTarget.selectionStart,
+        //   newValue,
+        //   wholeAsString,
+        //   separatorsRemoved,
+        //   separatorsAdded: 999999,
+        // });
       } catch (error) {
         //
       }

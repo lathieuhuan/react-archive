@@ -10,8 +10,8 @@ export default function FormatAndLimitNumber() {
     minValue: 0,
     groupingSeparator: ".",
     decimalSeparator: ",",
-    maxFractionalDigits: 1,
-    upDownStep: 1
+    maxFractionalDigits: 2,
+    upDownStep: 1,
   });
   const [signal, setSignal] = useState(false);
 
@@ -78,12 +78,7 @@ export default function FormatAndLimitNumber() {
 
         <div className="flex justify-between items-center gap-2">
           <label>Increase / Decrease Step</label>
-          <InputBox
-            type="number"
-            name="upDownStep"
-            value={test.upDownStep}
-            onChange={onChange}
-          />
+          <InputBox type="number" name="upDownStep" value={test.upDownStep} onChange={onChange} />
         </div>
 
         <Button onClick={() => setSignal((prev) => !prev)}>Begin Testing</Button>
@@ -91,10 +86,13 @@ export default function FormatAndLimitNumber() {
 
       <Core
         {...test}
-        changeMode="onBlur"
-        // exceedMaxDigitsAction="round"
+        changeMode="onChange"
+        validateMode="onChangeGoBack"
+        exceedMaxDigitsAction="round"
         testSignal={signal}
-        onChangeValue={(value) => setTest((prev) => ({ ...prev, value }))}
+        onChangeValue={(value) => {
+          setTest((prev) => ({ ...prev, value }));
+        }}
       />
     </div>
   );
