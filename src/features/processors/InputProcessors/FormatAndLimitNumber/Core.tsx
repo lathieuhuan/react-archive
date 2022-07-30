@@ -10,29 +10,20 @@ import {
 import InputBox from "@Components/InputBox";
 import { KEY } from "@Src/constant";
 import {
-  wholeToString,
-  numberToString,
-  stringToNumber,
   limitFractionDigits,
-  validateValue,
-  digitCount,
+  initInputInfo,
+  validateInputInfo,
+  wholeToString,
+  joinDecimal,
+  splitDecimal,
 } from "./utils";
-import { FormatConfig, ValidateConfig, ValidateMode } from "./types";
+import { FormatConfig, InputInfo, ValidateConfig, ValidateMode } from "./types";
 import Button from "@Src/components/Button";
 import Tooltip from "@Src/components/Tooltip";
 
-export const GROUPING_SEPARATOR = ".";
-export const DECIMAL_SEPARATOR = ",";
-
-interface UpdateArgs {
-  newValue: number;
-  wholeAsString: string;
-  fraction: number;
-  withDecimalSeparator: boolean;
-  newCursor: number | null;
-  leftMoves: number;
-  rightMoves: number;
-}
+const GROUPING_SEPARATOR = ".";
+const DECIMAL_SEPARATOR = ",";
+const MAXIMUM = Math.pow(10, 12);
 
 interface CoreProps extends Partial<FormatConfig>, Partial<ValidateConfig> {
   value: number;
@@ -70,8 +61,8 @@ export default function Core({
     exceedMaxDigitsAction,
   };
   const validate = {
-    minValue: minValue !== undefined ? limitFractionDigits(minValue, validateFraction) : -Infinity,
-    maxValue: maxValue !== undefined ? limitFractionDigits(maxValue, validateFraction) : Infinity,
+    minValue: minValue !== undefined ? limitFractionDigits(minValue, validateFraction) : -MAXIMUM,
+    maxValue: maxValue !== undefined ? limitFractionDigits(maxValue, validateFraction) : MAXIMUM,
     ...validateFraction,
     validateMode,
   };
@@ -89,30 +80,51 @@ export default function Core({
   }
 
   useEffect(() => {
-    setInputValue(
-      numberToString(value, format, {
-        ...validate,
-        validateMode: "onChangeSetBack", // prevent value out of range
-      })
-    );
+    const [whole, fraction] = splitDecimal(value);
+
+    const inputInfo: InputInfo = {
+      whole,
+      fraction,
+      isNegative: value < 0,
+      withDecimalSeparator: fraction !== 0,
+      cursorMoves: 999999999,
+    };
+
+    validateInputInfo(inputInfo, {
+      ...validate,
+      validateMode: "onChangeSetBack", // set back when out of range
+    });
+
+    const [newInputValue, newValue] = getResult(inputInfo);
+
+    setInputValue(newInputValue);
+
+    if (typeof onChangeValue === "function") {
+      onChangeValue(newValue);
+    }
   }, [testSignal]);
 
-  const update = ({
-    newValue,
-    wholeAsString: newInputValue,
-    fraction,
-    withDecimalSeparator,
-    newCursor,
-    leftMoves,
-    rightMoves,
-  }: UpdateArgs) => {
-    // input ends with decimalSeparator
-    if (withDecimalSeparator) {
+  const getResult = (inputInfo: InputInfo) => {
+    let newInputValue = wholeToString(inputInfo, format);
+
+    if (inputInfo.isNegative) {
+      newInputValue = "-" + newInputValue;
+    }
+    if (validate.maxFractionalDigits && inputInfo.withDecimalSeparator && newInputValue !== "-") {
       newInputValue += format.decimalSeparator;
+      if (inputInfo.fraction !== 0) {
+        newInputValue += inputInfo.fraction;
+      }
     }
-    if (fraction !== 0) {
-      newInputValue += fraction;
-    }
+
+    return [
+      newInputValue,
+      joinDecimal(inputInfo.whole, inputInfo.fraction, inputInfo.isNegative),
+    ] as const;
+  };
+
+  const update = (inputInfo: InputInfo, newCursor: number | null) => {
+    const [newInputValue, newValue] = getResult(inputInfo);
 
     setInputValue(newInputValue);
 
@@ -123,8 +135,15 @@ export default function Core({
     // update cursor position
     runAfterPaint(() => {
       if (newCursor !== null) {
-        // newCursor = 0 only when removing first digit
-        newCursor += newCursor === 0 ? 0 : rightMoves - leftMoves;
+        // keep cursor after 0 (0 is intended to not be removed)
+        if (["0", "-0"].includes(newInputValue)) {
+          newCursor++;
+        } //
+        else {
+          newCursor += inputInfo.cursorMoves;
+        }
+        newCursor = Math.max(newCursor, 0);
+
         inputRef.current?.setSelectionRange(newCursor, newCursor);
       }
     });
@@ -134,31 +153,25 @@ export default function Core({
     let { value, selectionStart } = e.target;
 
     try {
-      if (value === "-") {
-        setInputValue("-");
-        return;
+      const inputInfo = initInputInfo(value, format);
+
+      if (isValidateOnBlur) {
+        // default validate
+        validateInputInfo(inputInfo, {
+          maxValue: MAXIMUM,
+          minValue: -MAXIMUM,
+          maxFractionalDigits: 12,
+          exceedMaxDigitsAction: "prevent",
+          validateMode: "onChangePrevent",
+        });
+      } else {
+        validateInputInfo(inputInfo, validate);
       }
-      const {
-        result: newValue,
-        whole,
-        fraction,
-        withDecimalSeparator,
-        leftMoves,
-      } = stringToNumber(value, format, isValidateOnBlur ? undefined : validate);
 
-      const { result: wholeAsString, rightMoves } = wholeToString(whole, format);
-
-      update({
-        newValue,
-        // prevent typing "0", if not zero is always there instead of ""
-        wholeAsString: wholeAsString === "0" ? "" : wholeAsString,
-        fraction,
-        withDecimalSeparator,
-        newCursor: selectionStart,
-        leftMoves,
-        rightMoves,
-      });
+      update(inputInfo, selectionStart);
     } catch (error) {
+      console.log((error as Error).message);
+
       // it blinks
       setTimeout(() => {
         if (selectionStart) {
@@ -175,29 +188,24 @@ export default function Core({
   };
 
   const onBlur: FocusEventHandler<HTMLInputElement> = () => {
-    /**
-     * run even if changeMode === "onChange" to cover case
-     * inputValue === "" => show "0"
-     * need format and validate if min > 0
-     */
     try {
-      let result = validate.minValue === -Infinity ? 0 : validate.minValue;
+      const inputInfo = initInputInfo(inputValue, format);
 
-      result = stringToNumber(
-        inputValue === "" ? "0" : inputValue,
-        format,
-        isValidateOnBlur
-          ? {
-              ...validate,
-              validateMode: "onChangeSetBack", // set back when out of range
-            }
-          : undefined
-      ).result;
+      if (isValidateOnBlur) {
+        validateInputInfo(inputInfo, {
+          ...validate,
+          validateMode: "onChangeSetBack", // set back when out of range
+        });
+      }
+      const [newInputValue, newValue] = getResult({
+        ...inputInfo,
+        withDecimalSeparator: inputInfo.fraction !== 0,
+      });
 
-      setInputValue(numberToString(result, format));
+      setInputValue(newInputValue);
 
       if (typeof onChangeValue === "function") {
-        onChangeValue(result);
+        onChangeValue(newValue);
       }
     } catch (error) {
       //
@@ -213,47 +221,28 @@ export default function Core({
     if (upDownStep && [KEY.ArrowUp, KEY.ArrowDown].includes(e.key)) {
       // prevent cursor from moving to the first/last position on ArrowUp/ArrowDown
       e.preventDefault();
-      const isArrowUp = e.key === KEY.ArrowUp;
 
       try {
-        let {
-          result: newValue,
-          whole,
-          fraction,
-          withDecimalSeparator,
-          leftMoves,
-        } = stringToNumber(value, format, isValidateOnBlur ? undefined : validate);
+        const isArrowUp = e.key === KEY.ArrowUp;
+        const inputInfo = initInputInfo(inputValue, format);
+        let validatedStep = Math.min(upDownStep, 0);
+        let value = joinDecimal(inputInfo.whole, inputInfo.fraction, inputInfo.isNegative);
 
-        // #to-do handle case upDownStep is decimal
-        whole += isArrowUp ? upDownStep : -upDownStep;
-        newValue += isArrowUp ? upDownStep : -upDownStep;
-
-        let rightMoves = 0;
-
-        ({ validatedValue: newValue, whole, fraction, rightMoves, withDecimalSeparator } = validateValue(
-          newValue,
-          whole,
-          fraction,
-          validate
-        ));
-        
-        let { result: wholeAsString, rightMoves: extraRightMoves } = wholeToString(whole, format);
-
-        const diffNumOfDigits = digitCount(newValue) - value.length;
-
-        if (diffNumOfDigits) {
-          rightMoves += isArrowUp ? 1 : -1;
+        if (Math.floor(upDownStep) !== upDownStep) {
+          validatedStep = limitFractionDigits(upDownStep, validateFraction);
         }
 
-        update({
-          newValue,
-          wholeAsString,
-          fraction,
-          withDecimalSeparator,
-          newCursor: selectionStart,
-          leftMoves,
-          rightMoves,
-        });
+        value += isArrowUp ? validatedStep : -validatedStep;
+
+        [inputInfo.whole, inputInfo.fraction] = splitDecimal(value);
+        inputInfo.isNegative = value < 0;
+        inputInfo.withDecimalSeparator = Math.floor(value) !== value;
+
+        if (!isValidateOnBlur) {
+          validateInputInfo(inputInfo, validate);
+        }
+
+        update(inputInfo, selectionStart);
       } catch (error) {
         //
       }

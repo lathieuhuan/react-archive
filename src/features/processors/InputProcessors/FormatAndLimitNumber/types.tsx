@@ -35,11 +35,10 @@ export type ValidateFractionConfig = Pick<
   "maxFractionalDigits" | "exceedMaxDigitsAction"
 >;
 
-export type InputState = {
-  newValue: number;
-  wholeAsString: string;
+export type InputInfo = {
+  whole: number;
   fraction: number;
   withDecimalSeparator: boolean;
-  newCursor: number | null;
+  isNegative: boolean;
   cursorMoves: number;
 };
