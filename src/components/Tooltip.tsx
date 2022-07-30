@@ -10,7 +10,7 @@ interface TooltipProps {
 export default function Tooltip(props: TooltipProps) {
   const classNameByPlacement: Record<Placement, string> = {
     top: "tooltip-top bottom-full left-0 right-0 mb-2 origin-[bottom_center] after:top-full after:left-1/2 after:-translate-x-1/2",
-    bottom: "",
+    bottom: "tooltip-bottom top-full left-0 right-0 mt-2 origin-[top_center] after:bottom-full after:left-1/2 after:-translate-x-1/2",
     right: "",
     left: "",
   };

@@ -9,8 +9,17 @@ import {
 } from "react";
 import InputBox from "@Components/InputBox";
 import { KEY } from "@Src/constant";
-import { wholeToString, numberToString, stringToNumber, limitFractionDigits } from "./utils";
-import { FormatConfig, ValidateConfig, Fraction, ValidateMode } from "./types";
+import {
+  wholeToString,
+  numberToString,
+  stringToNumber,
+  limitFractionDigits,
+  validateValue,
+  digitCount,
+} from "./utils";
+import { FormatConfig, ValidateConfig, ValidateMode } from "./types";
+import Button from "@Src/components/Button";
+import Tooltip from "@Src/components/Tooltip";
 
 export const GROUPING_SEPARATOR = ".";
 export const DECIMAL_SEPARATOR = ",";
@@ -18,7 +27,7 @@ export const DECIMAL_SEPARATOR = ",";
 interface UpdateArgs {
   newValue: number;
   wholeAsString: string;
-  fraction: Fraction;
+  fraction: number;
   withDecimalSeparator: boolean;
   newCursor: number | null;
   leftMoves: number;
@@ -56,11 +65,14 @@ export default function Core({
     groupingSeparator: groupingSeparator || GROUPING_SEPARATOR,
     decimalSeparator: decimalSeparator || DECIMAL_SEPARATOR,
   };
-  const validate = {
-    minValue: minValue ? limitFractionDigits(minValue, maxFractionalDigits) : -Infinity,
-    maxValue: maxValue ? limitFractionDigits(maxValue, maxFractionalDigits) : Infinity,
+  const validateFraction = {
     maxFractionalDigits,
     exceedMaxDigitsAction,
+  };
+  const validate = {
+    minValue: minValue !== undefined ? limitFractionDigits(minValue, validateFraction) : -Infinity,
+    maxValue: maxValue !== undefined ? limitFractionDigits(maxValue, validateFraction) : Infinity,
+    ...validateFraction,
     validateMode,
   };
   const isValidateOnBlur = validateMode === "onBlur";
@@ -87,7 +99,7 @@ export default function Core({
 
   const update = ({
     newValue,
-    wholeAsString,
+    wholeAsString: newInputValue,
     fraction,
     withDecimalSeparator,
     newCursor,
@@ -96,13 +108,13 @@ export default function Core({
   }: UpdateArgs) => {
     // input ends with decimalSeparator
     if (withDecimalSeparator) {
-      wholeAsString += format.decimalSeparator;
+      newInputValue += format.decimalSeparator;
     }
     if (fraction !== 0) {
-      wholeAsString += fraction;
+      newInputValue += fraction;
     }
 
-    setInputValue(wholeAsString);
+    setInputValue(newInputValue);
 
     if (changeMode === "onChange" && typeof onChangeValue === "function") {
       onChangeValue(newValue);
@@ -111,7 +123,8 @@ export default function Core({
     // update cursor position
     runAfterPaint(() => {
       if (newCursor !== null) {
-        newCursor += rightMoves - leftMoves;
+        // newCursor = 0 only when removing first digit
+        newCursor += newCursor === 0 ? 0 : rightMoves - leftMoves;
         inputRef.current?.setSelectionRange(newCursor, newCursor);
       }
     });
@@ -146,12 +159,12 @@ export default function Core({
         rightMoves,
       });
     } catch (error) {
-      // need to manually track cursor
-      // setTimeout(() => {
-      //   if (selectionStart) {
-      //     inputRef.current?.setSelectionRange(selectionStart - 1, selectionStart - 1);
-      //   }
-      // }, 0);
+      // it blinks
+      setTimeout(() => {
+        if (selectionStart) {
+          inputRef.current?.setSelectionRange(selectionStart - 1, selectionStart - 1);
+        }
+      }, 0);
     }
   };
 
@@ -192,37 +205,55 @@ export default function Core({
   };
 
   const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
-    let { value } = e.currentTarget;
+    let { value, selectionStart } = e.currentTarget;
     if (value === "") {
       value = "0";
     }
 
-    if (upDownStep && [KEY.ArrowDown, KEY.ArrowUp].includes(e.key)) {
-      // prevent cursor from moving to first/last index on ArrowUp/ArrowDown
+    if (upDownStep && [KEY.ArrowUp, KEY.ArrowDown].includes(e.key)) {
+      // prevent cursor from moving to the first/last position on ArrowUp/ArrowDown
       e.preventDefault();
+      const isArrowUp = e.key === KEY.ArrowUp;
 
       try {
         let {
           result: newValue,
           whole,
           fraction,
+          withDecimalSeparator,
           leftMoves,
-        } = stringToNumber(value, format, isValidateOnBlur ? validate : undefined);
+        } = stringToNumber(value, format, isValidateOnBlur ? undefined : validate);
 
         // #to-do handle case upDownStep is decimal
-        whole += e.key === KEY.ArrowUp ? upDownStep : -upDownStep;
-        newValue += e.key === KEY.ArrowUp ? upDownStep : -upDownStep;
+        whole += isArrowUp ? upDownStep : -upDownStep;
+        newValue += isArrowUp ? upDownStep : -upDownStep;
 
-        const wholeAsString = wholeToString(whole, format).result;
+        let rightMoves = 0;
 
-        // update({
-        //   fraction,
-        //   newCursor: e.currentTarget.selectionStart,
-        //   newValue,
-        //   wholeAsString,
-        //   leftMoves,
-        //   rightMoves: 999999,
-        // });
+        ({ validatedValue: newValue, whole, fraction, rightMoves, withDecimalSeparator } = validateValue(
+          newValue,
+          whole,
+          fraction,
+          validate
+        ));
+        
+        let { result: wholeAsString, rightMoves: extraRightMoves } = wholeToString(whole, format);
+
+        const diffNumOfDigits = digitCount(newValue) - value.length;
+
+        if (diffNumOfDigits) {
+          rightMoves += isArrowUp ? 1 : -1;
+        }
+
+        update({
+          newValue,
+          wholeAsString,
+          fraction,
+          withDecimalSeparator,
+          newCursor: selectionStart,
+          leftMoves,
+          rightMoves,
+        });
       } catch (error) {
         //
       }
@@ -240,6 +271,14 @@ export default function Core({
         onBlur={onBlur}
         onKeyDown={onKeyDown}
       />
+      <Button className="bg-orange-500 hover:bg-orange-400 rounded-full group relative">
+        <Tooltip
+          className="w-80 h-60 -translate-x-1/2 left-1/2 whitespace-pre text-left"
+          placement="bottom"
+          text={JSON.stringify({ ...format, ...validate }, null, 2)}
+        />
+        <span className="text-xl">?</span>
+      </Button>
     </div>
   );
 }

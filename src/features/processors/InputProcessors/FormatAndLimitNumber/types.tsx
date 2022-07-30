@@ -1,21 +1,21 @@
 export type TesterState = {
-  value: number,
-  maxValue: number,
-  minValue: number,
-  groupingSeparator: string,
-  decimalSeparator: string,
-  maxFractionalDigits: number,
-  upDownStep: number,
-  changeMode: ChangeMode,
-  validateMode: ValidateMode,
-  exceedMaxDigitsAction: ExceedMaxDigitsAction
-}
+  value: number;
+  maxValue: number;
+  minValue: number;
+  groupingSeparator: string;
+  decimalSeparator: string;
+  maxFractionalDigits: number;
+  upDownStep: number;
+  changeMode: ChangeMode;
+  validateMode: ValidateMode;
+  exceedMaxDigitsAction: ExceedMaxDigitsAction;
+};
 
 export type ChangeMode = "onChange" | "onBlur";
 
 export type ValidateMode = "onChangePrevent" | "onChangeSetBack" | "onBlur";
 
-type ExceedMaxDigitsAction = "prevent" | "round";
+export type ExceedMaxDigitsAction = "prevent" | "round";
 
 export type FormatConfig = {
   groupingSeparator: string;
@@ -30,4 +30,16 @@ export type ValidateConfig = {
   validateMode: ValidateMode;
 };
 
-export type Fraction = number | undefined;
+export type ValidateFractionConfig = Pick<
+  ValidateConfig,
+  "maxFractionalDigits" | "exceedMaxDigitsAction"
+>;
+
+export type InputState = {
+  newValue: number;
+  wholeAsString: string;
+  fraction: number;
+  withDecimalSeparator: boolean;
+  newCursor: number | null;
+  cursorMoves: number;
+};

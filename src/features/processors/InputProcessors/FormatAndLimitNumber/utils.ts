@@ -1,4 +1,6 @@
-import { FormatConfig, ValidateConfig } from "./types";
+import type { FormatConfig, ValidateConfig, ValidateFractionConfig } from "./types";
+
+export const digitCount = (num: number) => num.toString().length;
 
 const joinDecimal = (whole: number, fraction: number) => Number(`${whole}.${fraction}`);
 
@@ -7,56 +9,65 @@ const splitDecimal = (num: number) => {
   return [Math.floor(num), fractionPart ? +fractionPart : 0];
 };
 
-export const limitFractionDigits = (num: number, limit: number) => {
-  let [whole, fraction] = splitDecimal(num);
+const checkAndHandleExceedMaxFractionDigits = (
+  fraction: number,
+  validateFraction: ValidateFractionConfig
+) => {
+  const { maxFractionalDigits, exceedMaxDigitsAction } = validateFraction;
+
+  let wholeIncrement = 0;
   const fractionAsString = fraction.toString();
 
-  if (fraction && fractionAsString.length > limit) {
-    fraction = +fractionAsString.slice(0, limit);
-  }
+  if (fractionAsString.length > maxFractionalDigits) {
+    fraction = +fractionAsString.slice(0, maxFractionalDigits);
+    const rightDigit = +fractionAsString.slice(maxFractionalDigits, maxFractionalDigits + 1);
 
-  return joinDecimal(whole, fraction);
+    if (exceedMaxDigitsAction === "round" && !isNaN(rightDigit) && rightDigit >= 5) {
+      fraction++;
+      /**
+       * case: fraction >= 5 rounded to 10, or fraction >= 95 rounded to 100...
+       */
+      while (fraction % 10 === 0) {
+        fraction /= 10;
+      }
+      if (fraction === 1) {
+        fraction = 0;
+        wholeIncrement++;
+      }
+    }
+  }
+  return [fraction, wholeIncrement];
 };
 
-const validateValue = (num: number, whole: number, fraction: number, validate: ValidateConfig) => {
+export const limitFractionDigits = (num: number, validateFraction: ValidateFractionConfig) => {
+  let [whole, fraction] = splitDecimal(num);
+  let wholeIncrement = 0;
+
+  [fraction, wholeIncrement] = checkAndHandleExceedMaxFractionDigits(fraction, validateFraction);
+
+  return joinDecimal(whole + wholeIncrement, fraction);
+};
+
+export const validateValue = (
+  num: number,
+  whole: number,
+  fraction: number,
+  validate: ValidateConfig
+) => {
   /**
    * intended behavior:
    * validate fraction => validate max, min => get whole, fraction again
    */
-  let { minValue, maxValue, maxFractionalDigits, exceedMaxDigitsAction, validateMode } = validate;
-
-  /**
-   * for case:
-   * exceedMaxDigitsAction = "round"
-   * & fraction >= 5 rounded to 10, or fraction >= 95 rounded to 100...
-   * & maxFractionalDigits > 0
-   */
+  let { minValue, maxValue, maxFractionalDigits, validateMode } = validate;
   let wholeIncrement = 0;
+  let withDecimalSeparator = false;
 
   // VALIDATE FRACTION
   if (maxFractionalDigits === 0) {
     fraction = 0;
   } //
   else if (maxFractionalDigits > 0 && fraction) {
-    const fractionAsString = fraction.toString();
-    const fractionLength = fractionAsString.length;
-
-    if (fractionLength > maxFractionalDigits) {
-      fraction = +fractionAsString.slice(0, maxFractionalDigits);
-      const nextDigit = +fractionAsString.slice(maxFractionalDigits, maxFractionalDigits + 1);
-
-      if (exceedMaxDigitsAction === "round" && !isNaN(nextDigit) && nextDigit >= 5) {
-        fraction++;
-
-        while (fraction % 10 === 0) {
-          fraction /= 10;
-        }
-        if (fraction === 1) {
-          fraction = 0;
-          wholeIncrement++;
-        }
-      }
-    }
+    [fraction, wholeIncrement] = checkAndHandleExceedMaxFractionDigits(fraction, validate);
   }
 
   num = joinDecimal(whole + wholeIncrement, fraction);
@@ -70,20 +81,27 @@ const validateValue = (num: number, whole: number, fraction: number, validate: V
       throw new Error(`Result ${num} is smaller than min ${minValue}`);
     }
   } else if (validateMode === "onChangeSetBack") {
-    const numDigits = num.toString().length;
+    const numDigitCount = digitCount(num);
+    /**
+     * withDecimalSeparator case:
+     * min/max is decimal
+     */
 
     if (num > maxValue) {
-      rightMoves = maxValue.toString().length - numDigits;
       num = maxValue;
+      rightMoves = digitCount(maxValue) - numDigitCount;
+      withDecimalSeparator = true;
     } //
     else if (num < minValue) {
-      rightMoves = minValue.toString().length - numDigits;
       num = minValue;
+      rightMoves = digitCount(minValue) - numDigitCount;
+      withDecimalSeparator = true;
     }
+    console.log(rightMoves);
   }
 
   /**
-   * for case
+   * case:
    * validateMode = "onChangeSetBack" & max = 100 && input = 10,3
    * input a number to exceed max
    */
@@ -91,7 +109,15 @@ const validateValue = (num: number, whole: number, fraction: number, validate: V
     rightMoves++;
   }
 
-  return [num, rightMoves];
+  [whole, fraction] = splitDecimal(num);
+
+  return {
+    validatedValue: num,
+    whole,
+    fraction,
+    rightMoves,
+    withDecimalSeparator,
+  };
 };
 
 export const stringToNumber = (
@@ -153,8 +179,12 @@ export const stringToNumber = (
   let rightMoves = 0;
 
   if (validate) {
-    [result, rightMoves] = validateValue(result, whole, fraction, validate);
-    [whole, fraction] = splitDecimal(result);
+    ({
+      validatedValue: result,
+      whole,
+      fraction,
+      rightMoves,
+    } = validateValue(result, whole, fraction, validate));
   }
 
   return {
@@ -195,8 +225,11 @@ export function numberToString(
   let frationPart = "";
 
   if (validate) {
-    [numValue] = validateValue(numValue, whole, fraction, validate);
-    [whole, fraction] = splitDecimal(numValue);
+    ({
+      validatedValue: numValue,
+      whole,
+      fraction,
+    } = validateValue(numValue, whole, fraction, validate));
   }
   if (fraction) {
     frationPart += format.decimalSeparator + fraction;
