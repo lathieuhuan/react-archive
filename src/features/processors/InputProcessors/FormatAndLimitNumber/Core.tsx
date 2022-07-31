@@ -13,9 +13,7 @@ import {
   limitFractionDigits,
   initInputInfo,
   validateInputInfo,
-  wholeToString,
-  joinDecimal,
-  splitDecimal,
+  convertToInputValue,
 } from "./utils";
 import { FormatConfig, InputInfo, ValidateConfig, ValidateMode } from "./types";
 import Button from "@Src/components/Button";
@@ -57,12 +55,13 @@ export default function Core({
     decimalSeparator: decimalSeparator || DECIMAL_SEPARATOR,
   };
   const validateFraction = {
-    maxFractionalDigits,
+    maxFractionalDigits: Math.max(maxFractionalDigits, 0),
     exceedMaxDigitsAction,
   };
   const validate = {
-    minValue: minValue !== undefined ? limitFractionDigits(minValue, validateFraction) : -MAXIMUM,
-    maxValue: maxValue !== undefined ? limitFractionDigits(maxValue, validateFraction) : MAXIMUM,
+    minValue:
+      minValue !== undefined ? limitFractionDigits(minValue, validateFraction)[0] : -MAXIMUM,
+    maxValue: maxValue !== undefined ? limitFractionDigits(maxValue, validateFraction)[0] : MAXIMUM,
     ...validateFraction,
     validateMode,
   };
@@ -80,72 +79,59 @@ export default function Core({
   }
 
   useEffect(() => {
-    const [whole, fraction] = splitDecimal(value);
+    const newInputValue = convertToInputValue(
+      {
+        value,
+        trailingZeroDigits: 0,
+        withDecimalSeparator: false,
+        cursorMoves: MAXIMUM,
+      },
+      format,
+      validate
+    );
 
-    const inputInfo: InputInfo = {
-      whole,
-      fraction,
-      isNegative: value < 0,
-      withDecimalSeparator: fraction !== 0,
-      cursorMoves: 999999999,
-    };
+    const inputInfo = initInputInfo(newInputValue, format);
 
     validateInputInfo(inputInfo, {
       ...validate,
       validateMode: "onChangeSetBack", // set back when out of range
     });
 
-    const [newInputValue, newValue] = getResult(inputInfo);
+    setInputValue(convertToInputValue(inputInfo, format, validate));
 
-    setInputValue(newInputValue);
-
-    if (typeof onChangeValue === "function") {
-      onChangeValue(newValue);
+    // sync value with inputValue (?)
+    if (inputInfo.value !== value && typeof onChangeValue === "function") {
+      onChangeValue(inputInfo.value);
     }
   }, [testSignal]);
 
-  const getResult = (inputInfo: InputInfo) => {
-    let newInputValue = wholeToString(inputInfo, format);
-
-    if (inputInfo.isNegative) {
-      newInputValue = "-" + newInputValue;
-    }
-    if (validate.maxFractionalDigits && inputInfo.withDecimalSeparator && newInputValue !== "-") {
-      newInputValue += format.decimalSeparator;
-      if (inputInfo.fraction !== 0) {
-        newInputValue += inputInfo.fraction;
-      }
-    }
-
-    return [
-      newInputValue,
-      joinDecimal(inputInfo.whole, inputInfo.fraction, inputInfo.isNegative),
-    ] as const;
-  };
-
   const update = (inputInfo: InputInfo, newCursor: number | null) => {
-    const [newInputValue, newValue] = getResult(inputInfo);
+    let newInputValue = convertToInputValue(inputInfo, format, validate);
+
+    if (newCursor !== null) {
+      // keep cursor after 0 (0 is intended to not be removed)
+      if (["0", "-0"].includes(newInputValue)) {
+        newCursor++;
+      } //
+      else {
+        newCursor += inputInfo.cursorMoves;
+      }
+      newCursor = Math.max(newCursor, 0);
+    }
+
+    if (newInputValue === "0") {
+      newInputValue = "";
+    }
 
     setInputValue(newInputValue);
 
     if (changeMode === "onChange" && typeof onChangeValue === "function") {
-      onChangeValue(newValue);
+      onChangeValue(inputInfo.value);
     }
 
     // update cursor position
     runAfterPaint(() => {
-      if (newCursor !== null) {
-        // keep cursor after 0 (0 is intended to not be removed)
-        if (["0", "-0"].includes(newInputValue)) {
-          newCursor++;
-        } //
-        else {
-          newCursor += inputInfo.cursorMoves;
-        }
-        newCursor = Math.max(newCursor, 0);
-
-        inputRef.current?.setSelectionRange(newCursor, newCursor);
-      }
+      inputRef.current?.setSelectionRange(newCursor, newCursor);
     });
   };
 
@@ -153,6 +139,15 @@ export default function Core({
     let { value, selectionStart } = e.target;
 
     try {
+      if (value === "-") {
+        setInputValue("-");
+
+        if (changeMode === "onChange" && typeof onChangeValue === "function") {
+          onChangeValue(0);
+        }
+        return;
+      }
+
       const inputInfo = initInputInfo(value, format);
 
       if (isValidateOnBlur) {
@@ -197,26 +192,28 @@ export default function Core({
           validateMode: "onChangeSetBack", // set back when out of range
         });
       }
-      const [newInputValue, newValue] = getResult({
-        ...inputInfo,
-        withDecimalSeparator: inputInfo.fraction !== 0,
-      });
+      if (changeMode === "onBlur" && typeof onChangeValue === "function") {
+        onChangeValue(inputInfo.value);
+      }
+
+      const newInputValue = convertToInputValue(
+        {
+          ...inputInfo,
+          trailingZeroDigits: 0,
+          withDecimalSeparator: false,
+        },
+        format,
+        validate
+      );
 
       setInputValue(newInputValue);
-
-      if (typeof onChangeValue === "function") {
-        onChangeValue(newValue);
-      }
     } catch (error) {
       //
     }
   };
 
   const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
-    let { value, selectionStart } = e.currentTarget;
-    if (value === "") {
-      value = "0";
-    }
+    let { selectionStart } = e.currentTarget;
 
     if (upDownStep && [KEY.ArrowUp, KEY.ArrowDown].includes(e.key)) {
       // prevent cursor from moving to the first/last position on ArrowUp/ArrowDown
@@ -225,18 +222,22 @@ export default function Core({
       try {
         const isArrowUp = e.key === KEY.ArrowUp;
         const inputInfo = initInputInfo(inputValue, format);
-        let validatedStep = Math.min(upDownStep, 0);
-        let value = joinDecimal(inputInfo.whole, inputInfo.fraction, inputInfo.isNegative);
+        let validatedStep = Math.max(upDownStep, 0);
 
-        if (Math.floor(upDownStep) !== upDownStep) {
-          validatedStep = limitFractionDigits(upDownStep, validateFraction);
+        if (Math.floor(validatedStep) !== validatedStep) {
+          [validatedStep] = limitFractionDigits(upDownStep, validate);
         }
 
-        value += isArrowUp ? validatedStep : -validatedStep;
+        inputInfo.value = inputInfo.value + (isArrowUp ? validatedStep : -validatedStep);
 
-        [inputInfo.whole, inputInfo.fraction] = splitDecimal(value);
-        inputInfo.isNegative = value < 0;
-        inputInfo.withDecimalSeparator = Math.floor(value) !== value;
+        if (inputInfo.value > Math.floor(inputInfo.value) && validate.maxFractionalDigits) {
+          const roundPow = Math.pow(10, validate.maxFractionalDigits);
+          inputInfo.value = Math.round(inputInfo.value * roundPow) / roundPow;
+        }
+
+        if (inputInfo.value === Math.floor(inputInfo.value)) {
+          inputInfo.withDecimalSeparator = false;
+        }
 
         if (!isValidateOnBlur) {
           validateInputInfo(inputInfo, validate);
@@ -244,7 +245,7 @@ export default function Core({
 
         update(inputInfo, selectionStart);
       } catch (error) {
-        //
+        console.log((error as Error).message);
       }
     }
   };

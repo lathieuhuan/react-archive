@@ -35,10 +35,17 @@ export type ValidateFractionConfig = Pick<
   "maxFractionalDigits" | "exceedMaxDigitsAction"
 >;
 
+// assume decimalSeparator is "."
 export type InputInfo = {
-  whole: number;
-  fraction: number;
+  value: number;
+  /**
+   * number of zeroes at the end of the fraction,
+   * only for inputValue "0.30" when value is 0.3
+   */
+  trailingZeroDigits: number;
+  /**
+   * only for inputValue "3." when value is 3
+   */
   withDecimalSeparator: boolean;
-  isNegative: boolean;
   cursorMoves: number;
 };
