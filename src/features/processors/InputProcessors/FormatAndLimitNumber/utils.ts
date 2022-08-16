@@ -179,26 +179,34 @@ export function convertToInputValue(
     wholeAsString = wholeAsString.slice(1);
   }
 
-  for (let i = wholeAsString.length - 1, j = 0; i >= 0; i--, j++) {
-    let leftDigit = wholeAsString[i];
+  // for (let i = wholeAsString.length - 1, j = 0; i >= 0; i--, j++) {
+  //   let leftDigit = wholeAsString[i];
 
-    if (j && j % 3 === 0) {
-      leftDigit += format.groupingSeparator;
-      inputInfo.cursorMoves++;
-    }
-    resultAsString = leftDigit + resultAsString;
-  }
+  //   if (j && j % 3 === 0) {
+  //     leftDigit += format.groupingSeparator;
+  //     inputInfo.cursorMoves++;
+  //   }
+  //   resultAsString = leftDigit + resultAsString;
+  // }
 
-  if (isNegative) {
-    resultAsString = "-" + resultAsString;
-  }
+  // if (isNegative) {
+  //   resultAsString = "-" + resultAsString;
+  // }
 
-  if (fractionAsString) {
-    resultAsString += format.decimalSeparator + fractionAsString;
-  } //
-  else if (inputInfo.withDecimalSeparator) {
-    resultAsString += format.decimalSeparator;
-  }
+  // if (fractionAsString) {
+  //   resultAsString += format.decimalSeparator + fractionAsString;
+  // } //
+  // else if (inputInfo.withDecimalSeparator) {
+  //   resultAsString += format.decimalSeparator;
+  // }
+
+  const digits = inputInfo.value.toString().match(/[0-9]/g);
+
+  const numOfDigits = digits?.length || 0;
+
+  inputInfo.cursorMoves += Math.floor((numOfDigits + 1) / 3);
+
+  resultAsString = new Intl.NumberFormat("vi-VN").format(inputInfo.value);
 
   if (inputInfo.trailingZeroDigits) {
     const freeSlots = validate.maxFractionalDigits - (fractionAsString?.length || 0);

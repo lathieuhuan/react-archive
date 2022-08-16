@@ -137,7 +137,7 @@ export default function Core({
 
   const onChangeInputValue: ChangeEventHandler<HTMLInputElement> = (e) => {
     let { value, selectionStart } = e.target;
-
+    
     try {
       if (value === "-") {
         setInputValue("-");

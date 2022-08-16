@@ -15,6 +15,7 @@ import ReactQuery from "@Features/react-query";
 
 import Tricks from "@Features/tricks";
 import AutoResizeInput from "@Features/tricks/AutoResizeInput";
+import TableWithAfter from "@Features/tricks/TableWithAfter";
 
 import Processors from "@Features/processors";
 import InputProcessors from "@Features/processors/InputProcessors";
@@ -170,6 +171,14 @@ export const topCluster: ICluster = [
           path: "auto-resize-input",
         },
         component: AutoResizeInput,
+      },
+      {
+        info: {
+          id: branchID++,
+          name: "Table with ::after",
+          path: "table-with-after",
+        },
+        component: TableWithAfter,
       },
     ],
   },

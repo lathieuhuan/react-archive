@@ -98,9 +98,6 @@ export default function FormatAndLimitNumber() {
           {lines.map(({ label, key, type, options }, index) => {
             const isDisabledInput = test[key] === undefined;
 
-            if (type === "select") {
-            }
-
             return (
               <div key={key} className={styles.line}>
                 <label>{label}</label>
