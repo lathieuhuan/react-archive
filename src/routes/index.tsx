@@ -7,7 +7,7 @@ import Intermediate from "@Features/axios/Intermediate";
 import ReactHookForm from "@Features/react-hook-form";
 import BasicForms from "@Features/react-hook-form/basic";
 import PlainValues from "@Features/react-hook-form/basic/PlainValues";
-import NestedValues from "@Features/react-hook-form/basic/NestedValues";
+import RHFNestedValues from "@Features/react-hook-form/basic/NestedValues";
 import IntermediateForms from "@Features/react-hook-form/intermediate/";
 import UseController from "@Features/react-hook-form/intermediate/UseController";
 
@@ -20,6 +20,10 @@ import TableWithAfter from "@Features/tricks/TableWithAfter";
 import Processors from "@Features/processors";
 import InputProcessors from "@Features/processors/InputProcessors";
 import FormatAndLimitNumber from "@Features/processors/InputProcessors/FormatAndLimitNumber";
+
+import Formik from "@Features/formik";
+import BasicFormik from "@Features/formik/basic";
+import FormikNestedValues from "@Features/formik/basic/NestedValues";
 
 import { ICluster } from "./types";
 import I18next from "@Src/features/i18next";
@@ -65,6 +69,34 @@ export const topCluster: ICluster = [
   {
     info: {
       id: branchID++,
+      name: "Formik",
+      path: "formik",
+    },
+    component: Formik,
+    cluster: [
+      {
+        info: {
+          id: branchID++,
+          name: "Basic",
+          path: "basic",
+        },
+        component: BasicFormik,
+        cluster: [
+          {
+            info: {
+              id: branchID++,
+              name: "Nested values",
+              path: "nested-values",
+            },
+            component: FormikNestedValues,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    info: {
+      id: branchID++,
       name: "React Hook Form",
       path: "react-hook-form",
     },
@@ -92,7 +124,7 @@ export const topCluster: ICluster = [
               name: "Nested values",
               path: "nested-values",
             },
-            component: NestedValues,
+            component: RHFNestedValues,
           },
         ],
       },
