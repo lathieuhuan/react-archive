@@ -38,6 +38,8 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(({
     loading,
     disabled,
     allowClear = false,
+    allowEmpty = false,
+    shouldFitValue = false,
     controllers = [],
     style,
     renderSuffix,
@@ -81,6 +83,13 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(({
 
     // sync with value and validate
     useEffect(() => {
+        if (value === undefined || validate === null || isNaN(value)) {
+            return;
+        }
+        if (value === 0 && inputValue === '' && inputRef.current === document.activeElement) {
+            return;
+        }
+
         let newInputValue = convertToInputValue(
             {
                 value,
@@ -180,14 +189,18 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(({
         const {value, selectionStart} = e.target;
 
         try {
-            if (value === '-') {
-                setInputValue('-');
+            if (['-', ''].includes(value)) {
+                setInputValue(value);
 
                 if (changeMode === 'onChange' && typeof onChangeValue === 'function') {
                     onChangeValue(0);
                 }
                 return;
             }
+            // if (value === '') {
+            //     setInputValue('');
+            //     return;
+            // }
 
             const inputInfo = initInputInfo(value, format);
 
@@ -238,7 +251,7 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(({
                 updateValue(inputInfo.value);
             }
 
-            const newInputValue = convertToInputValue(
+            let newInputValue = convertToInputValue(
                 {
                     ...inputInfo,
                     trailingZeroDigits: 0,
@@ -247,6 +260,10 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(({
                 format,
                 validate
             );
+
+            if (newInputValue === '0' && allowEmpty) {
+                newInputValue = '';
+            }
 
             setInputValue(newInputValue);
         } catch (error) {
@@ -348,9 +365,7 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(({
 
     return (
         <div className='relative flex'>
-            <div className={classNames('absolute z-10 w-full h-full flex items-center justify-center bg-zinc-100/40', {
-                'hidden' : !loading
-            })}>
+            <div className={classNames('absolute z-10 w-full h-full items-center justify-center bg-zinc-100/40', loading ? 'flex' : 'hidden' )}>
                 <LoadingOutlined />
             </div>
             {
@@ -366,14 +381,14 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(({
             }
             <div className="flex flex-row flex-grow items-center">
                 <div
-                    className={classNames('flex-grow', styles['input-wrapper'], className)}
+                    className={classNames('flex-grow', shouldFitValue && styles['input-wrapper'], shouldFitValue && className)}
                     data-value={inputValue || '0'}
-                    style={style}
+                    style={shouldFitValue ? style : undefined}
                 >
                     <input
                         ref={mergeRefs(inputRef, ref)}
                         // class input-number for targeting in cart-container
-                        className='input-number outline-0'
+                        className={classNames('input-number outline-0', !shouldFitValue && className)}
                         value={inputValue}
                         disabled={disabled}
                         {...rest}
@@ -381,6 +396,7 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(({
                         onFocus={onFocusInput}
                         onBlur={onBlurInput}
                         onKeyDown={onKeyDownInput}
+                        style={shouldFitValue ? undefined : style}
                     />
                 </div>
                 {allowClear && <CloseCircleFilled className='ml-1 text-ink-300' onClick={onClickClearIcon} />}

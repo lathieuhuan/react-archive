@@ -38,17 +38,26 @@ export interface IInputNumberProps extends Partial<FormatConfig>, Partial<Valida
   upDownStep?: number;
   changeMode?: 'onChange' | 'onBlur';
   /**
-   * for now:
-   * validate: only works when validateMode 'onBlur', validate inputValue onChangeSetBack.
-   * changeValue: only works when changeMode 'onBlur', 'validate' then change value.
-   * blur: validate and change value according to validateMode and changeMode.
+   * For now:
+   * Validate: only works when validateMode 'onBlur', validate inputValue onChangeSetBack.
+   * ChangeValue: only works when changeMode 'onBlur', 'validate' then change value.
+   * Blur: validate and change value according to validateMode and changeMode.
    */
   enterActions?: ('validate' | 'changeValue' | 'blur')[];
   loading?: boolean;
   /**
-   * default to false, no clear icon at the end
+   * Default to false, no clear icon at the end
    */
   allowClear?: boolean;
+  /**
+   * Show '' instead of '0' onBlur. Default to false.
+   * To be improved: validate, check if minValue > 0, what's expected behavior?
+   */
+  allowEmpty?: boolean;
+  /**
+   * Input box shrink and stretch with value length. Default to false.
+   */
+  shouldFitValue?: boolean;
   controllers?: Array<{ disabled: boolean }>;
   style?: CSSProperties;
   renderSuffix?: () => ReactNode;
@@ -68,12 +77,12 @@ export type OnValidateFailedHandler = (args: ErrorReport) => void;
 export type InputInfo = {
   value: number;
   /**
-   * number of zeroes at the end of the fraction,
+   * Number of zeroes at the end of the fraction,
    * only for inputValue "0.30" when value is 0.3
    */
   trailingZeroDigits: number;
   /**
-   * only for inputValue "3." when value is 3
+   * Only for inputValue "3." when value is 3
    */
   withDecimalSeparator: boolean;
   cursorMoves: number;
