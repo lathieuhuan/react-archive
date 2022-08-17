@@ -2,7 +2,7 @@ import { ChangeEventHandler, useState } from "react";
 import cn from "classnames";
 import Button from "@Components/Button";
 import InputBox from "@Components/InputBox";
-import Core from "./Core";
+import { InputNumber } from "./Core";
 import JsonDisplayer from "@Src/components/JsonDisplayer";
 import { TesterState } from "./types";
 import Select from "@Src/components/Select";
@@ -82,9 +82,9 @@ export default function FormatAndLimitNumber() {
 
   return (
     <div className="flex flex-col items-center">
-      <Core
+      <InputNumber
+        className="px-4 py-2 border border-slate-300 rounded"
         {...test}
-        testSignal={signal}
         onChangeValue={(value) => {
           setTest((prev) => ({ ...prev, value }));
         }}

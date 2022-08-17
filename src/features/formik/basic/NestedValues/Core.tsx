@@ -4,6 +4,7 @@ import { Payment, PaymentMethod } from "./types";
 import InputBox from "@Src/components/InputBox";
 import { PAYMENT_METHODS } from "./constants";
 import Button from "@Src/components/Button";
+import { Button as AntdButton } from "antd";
 
 interface CoreProps {
   amountToPay: number;
@@ -98,10 +99,11 @@ export default function Core(props: CoreProps) {
       <div className="flex gap-2">
         {PAYMENT_METHODS.map((method, i) => {
           return (
-            <button
+            <AntdButton
               key={i}
+              type="default"
               className={cn(
-                "px-4 py-2 font-medium rounded-full border border-blue-500",
+                "px-4 py-2 h-full font-medium rounded-full border border-blue-500",
                 payments.map((payment) => payment.method).includes(method)
                   ? "bg-blue-500 text-white"
                   : "text-blue-500"
@@ -109,7 +111,7 @@ export default function Core(props: CoreProps) {
               onClick={() => onClickPaymentMethod(method)}
             >
               {method}
-            </button>
+            </AntdButton>
           );
         })}
       </div>

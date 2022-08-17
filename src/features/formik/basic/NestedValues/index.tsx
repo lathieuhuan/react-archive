@@ -4,6 +4,7 @@ import JsonDisplayer from "@Src/components/JsonDisplayer";
 import { useState } from "react";
 import Core from "./Core";
 import { Payment } from "./types";
+import { Modal } from "antd";
 
 export default function NestedValues() {
   const [payments, setPayments] = useState<Payment[]>([]);

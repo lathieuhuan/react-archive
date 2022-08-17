@@ -1,286 +1,414 @@
-import {
-  ChangeEventHandler,
-  FocusEventHandler,
-  KeyboardEventHandler,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import InputBox from "@Components/InputBox";
-import { KEY } from "@Src/constant";
-import {
-  limitFractionDigits,
-  initInputInfo,
-  validateInputInfo,
-  convertToInputValue,
-} from "./utils";
-import { FormatConfig, InputInfo, ValidateConfig, ValidateMode } from "./types";
-import Button from "@Src/components/Button";
-import Tooltip from "@Src/components/Tooltip";
+import {ChangeEventHandler, FocusEventHandler, forwardRef, KeyboardEventHandler, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {LoadingOutlined, MinusOutlined, PlusOutlined, CloseCircleFilled} from '@ant-design/icons';
+import classNames from 'classnames';
 
-const GROUPING_SEPARATOR = ".";
-const DECIMAL_SEPARATOR = ",";
+import {InputInfo, IInputNumberProps} from './types';
+
+import {
+    limitFractionDigits,
+    initInputInfo,
+    validateInputInfo,
+    convertToInputValue,
+    mergeRefs
+} from './utils';
+
+import styles from './styles.module.scss';
+
 const MAXIMUM = Math.pow(10, 12);
+const ALLOWED_KEYS = ['Backspace', 'Delete', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Shift'];
 
-interface CoreProps extends Partial<FormatConfig>, Partial<ValidateConfig> {
-  value: number;
-  upDownStep?: number;
-  changeMode?: "onChange" | "onBlur";
-  validateMode?: ValidateMode;
-  testSignal: boolean;
-  onChangeValue?: (value: number) => void;
+const CONFIG_DECIMAL_NUMBER = {
+  decimalSeparator: '.',
+  groupingSeparator: ',',
 }
-export default function Core({
-  value,
-  maxValue,
-  minValue,
-  groupingSeparator,
-  decimalSeparator,
-  maxFractionalDigits = 0,
-  exceedMaxDigitsAction = "prevent",
-  upDownStep,
-  changeMode = "onChange",
-  validateMode = "onChangePrevent",
-  testSignal,
-  onChangeValue,
-}: CoreProps) {
-  //
-  const [inputValue, setInputValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-  const runAfterPaint = useRunAfterPaint();
 
-  const format = {
-    groupingSeparator: groupingSeparator || GROUPING_SEPARATOR,
-    decimalSeparator: decimalSeparator || DECIMAL_SEPARATOR,
-  };
-  const validateFraction = {
-    maxFractionalDigits: Math.max(maxFractionalDigits, 0),
-    exceedMaxDigitsAction,
-  };
-  const validate = {
-    minValue:
-      minValue !== undefined ? limitFractionDigits(minValue, validateFraction)[0] : -MAXIMUM,
-    maxValue: maxValue !== undefined ? limitFractionDigits(maxValue, validateFraction)[0] : MAXIMUM,
-    ...validateFraction,
-    validateMode,
-  };
-  const isValidateOnBlur = validateMode === "onBlur";
+export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(({
+    value,
+    maxValue,
+    minValue,
+    groupingSeparator,
+    decimalSeparator,
+    maxFractionalDigits = 0,
+    exceedMaxDigitsAction = 'prevent',
+    upDownStep = 0,
+    changeMode = 'onChange',
+    validateMode = 'onChangePrevent',
+    enterActions = [],
+    className,
+    loading,
+    disabled,
+    allowClear = false,
+    controllers = [],
+    style,
+    renderSuffix,
+    onBlur,
+    onFocus,
+    onKeyDown,
+    onChangeValue,
+    onValidateFailed,
+    ...rest
+}, ref) => {
+    const [inputValue, setInputValue] = useState('');
 
-  // change separator in case they're the same
-  if (format.decimalSeparator === format.groupingSeparator) {
-    format.decimalSeparator =
-      format.decimalSeparator === GROUPING_SEPARATOR ? DECIMAL_SEPARATOR : GROUPING_SEPARATOR;
-  }
+    const inputRef = useRef<HTMLInputElement>(null);
+    const runAfterPaint = useRunAfterPaint();
 
-  // make sure min is smaller than max
-  if (validate.maxValue < validate.minValue) {
-    [validate.minValue, validate.maxValue] = [validate.maxValue, validate.minValue];
-  }
+    const format = {
+        groupingSeparator: groupingSeparator || CONFIG_DECIMAL_NUMBER.groupingSeparator,
+        decimalSeparator: decimalSeparator || CONFIG_DECIMAL_NUMBER.decimalSeparator
+    };
+    const validateFraction = {
+        maxFractionalDigits: Math.max(maxFractionalDigits, 0),
+        exceedMaxDigitsAction
+    };
+    const validate = {
+        minValue: minValue !== undefined ? limitFractionDigits(minValue, validateFraction).newValue : 0,
+        maxValue: maxValue !== undefined ? limitFractionDigits(maxValue, validateFraction).newValue : MAXIMUM,
+        ...validateFraction,
+        validateMode
+    };
+    const isValidateOnBlur = validateMode === 'onBlur';
 
-  useEffect(() => {
-    const newInputValue = convertToInputValue(
-      {
-        value,
-        trailingZeroDigits: 0,
-        withDecimalSeparator: false,
-        cursorMoves: MAXIMUM,
-      },
-      format,
-      validate
-    );
-
-    const inputInfo = initInputInfo(newInputValue, format);
-
-    validateInputInfo(inputInfo, {
-      ...validate,
-      validateMode: "onChangeSetBack", // set back when out of range
-    });
-
-    setInputValue(convertToInputValue(inputInfo, format, validate));
-
-    // sync value with inputValue (?)
-    if (inputInfo.value !== value && typeof onChangeValue === "function") {
-      onChangeValue(inputInfo.value);
-    }
-  }, [testSignal]);
-
-  const update = (inputInfo: InputInfo, newCursor: number | null) => {
-    let newInputValue = convertToInputValue(inputInfo, format, validate);
-
-    if (newCursor !== null) {
-      // keep cursor after 0 (0 is intended to not be removed)
-      if (["0", "-0"].includes(newInputValue)) {
-        newCursor++;
-      } //
-      else {
-        newCursor += inputInfo.cursorMoves;
-      }
-      newCursor = Math.max(newCursor, 0);
+    if (validate.maxValue < validate.minValue) {
+        validate.maxValue = validate.minValue;
     }
 
-    if (newInputValue === "0") {
-      newInputValue = "";
-    }
+    const updateValue = (newValue: number) => {
+        if (newValue !== value && typeof onChangeValue === 'function') {
+            onChangeValue(newValue);
+        }
+    };
 
-    setInputValue(newInputValue);
+    // sync with value and validate
+    useEffect(() => {
+        let newInputValue = convertToInputValue(
+            {
+                value,
+                trailingZeroDigits: 0,
+                withDecimalSeparator: false,
+                cursorMoves: MAXIMUM
+            },
+            format,
+            validate
+        );
 
-    if (changeMode === "onChange" && typeof onChangeValue === "function") {
-      onChangeValue(inputInfo.value);
-    }
+        const inputInfo = initInputInfo(newInputValue, format);
 
-    // update cursor position
-    runAfterPaint(() => {
-      inputRef.current?.setSelectionRange(newCursor, newCursor);
-    });
-  };
+        validateInputInfo(inputInfo, {
+            ...validate,
+            validateMode: 'onChangeSetBack' // set back when out of range
+        });
 
-  const onChangeInputValue: ChangeEventHandler<HTMLInputElement> = (e) => {
-    let { value, selectionStart } = e.target;
+        newInputValue = convertToInputValue(inputInfo, format, validate);
+
+        if (newInputValue !== inputValue) {
+            setInputValue(convertToInputValue(inputInfo, format, validate));
     
-    try {
-      if (value === "-") {
-        setInputValue("-");
-
-        if (changeMode === "onChange" && typeof onChangeValue === "function") {
-          onChangeValue(0);
+            // sync value with inputValue (?)
+            updateValue(inputInfo.value);
         }
-        return;
-      }
+    }, [value, validate.minValue, validate.maxValue, validate.maxFractionalDigits]);
 
-      const inputInfo = initInputInfo(value, format);
+    const update = (inputInfo: InputInfo, newCursor: number | null) => {
+        const newInputValue = convertToInputValue(inputInfo, format, validate);
+      
+        if (newInputValue !== inputValue) {
+            setInputValue(newInputValue);
+  
+            if (changeMode === 'onChange') {
+                updateValue(inputInfo.value);
+            }
 
-      if (isValidateOnBlur) {
-        // default validate
-        validateInputInfo(inputInfo, {
-          maxValue: MAXIMUM,
-          minValue: -MAXIMUM,
-          maxFractionalDigits: 12,
-          exceedMaxDigitsAction: "prevent",
-          validateMode: "onChangePrevent",
-        });
-      } else {
-        validateInputInfo(inputInfo, validate);
-      }
-
-      update(inputInfo, selectionStart);
-    } catch (error) {
-      console.log((error as Error).message);
-
-      // it blinks
-      setTimeout(() => {
-        if (selectionStart) {
-          inputRef.current?.setSelectionRange(selectionStart - 1, selectionStart - 1);
+            // update cursor position
+            runAfterPaint(() => {
+                if (newCursor !== null) {
+                    // keep cursor after 0 (0 is intended to not be removed)
+                    if (['0', '-0'].includes(newInputValue)) {
+                        newCursor++;
+                    }
+                    else {
+                        newCursor += inputInfo.cursorMoves;
+                    }
+                    newCursor = Math.max(newCursor, 0);
+                }
+                inputRef.current?.setSelectionRange(newCursor, newCursor);
+            });
         }
-      }, 0);
-    }
-  };
+    };
 
-  const onFocus: FocusEventHandler<HTMLInputElement> = () => {
-    if (inputValue === "0") {
-      setInputValue("");
-    }
-  };
+    const changeInputValueByStep = (isIncrease: boolean) => {
+        if (!upDownStep) {
+            return;
+        }
+        try {
+            const inputInfo = initInputInfo(inputValue, format);
+            let validatedStep = Math.max(upDownStep, 0);
 
-  const onBlur: FocusEventHandler<HTMLInputElement> = () => {
-    try {
-      const inputInfo = initInputInfo(inputValue, format);
+            if (Math.floor(validatedStep) !== validatedStep) {
+                validatedStep = limitFractionDigits(upDownStep, validate).newValue;
+            }
 
-      if (isValidateOnBlur) {
-        validateInputInfo(inputInfo, {
-          ...validate,
-          validateMode: "onChangeSetBack", // set back when out of range
-        });
-      }
-      if (changeMode === "onBlur" && typeof onChangeValue === "function") {
-        onChangeValue(inputInfo.value);
-      }
+            inputInfo.value = inputInfo.value + (isIncrease ? validatedStep : -validatedStep);
 
-      const newInputValue = convertToInputValue(
-        {
-          ...inputInfo,
-          trailingZeroDigits: 0,
-          withDecimalSeparator: false,
-        },
-        format,
-        validate
-      );
+            if (inputInfo.value > Math.floor(inputInfo.value) && validate.maxFractionalDigits) {
+                const roundPow = Math.pow(10, validate.maxFractionalDigits);
 
-      setInputValue(newInputValue);
-    } catch (error) {
-      //
-    }
-  };
+                inputInfo.value = Math.round(inputInfo.value * roundPow) / roundPow;
+            }
 
-  const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
-    let { selectionStart } = e.currentTarget;
+            if (inputInfo.value === Math.floor(inputInfo.value)) {
+                inputInfo.withDecimalSeparator = false;
+            }
 
-    if (upDownStep && [KEY.ArrowUp, KEY.ArrowDown].includes(e.key)) {
-      // prevent cursor from moving to the first/last position on ArrowUp/ArrowDown
-      e.preventDefault();
+            // prevent on all validateModes
+            validateInputInfo(inputInfo, {
+                ...validate,
+                validateMode: 'onChangePrevent'
+            });
 
-      try {
-        const isArrowUp = e.key === KEY.ArrowUp;
-        const inputInfo = initInputInfo(inputValue, format);
-        let validatedStep = Math.max(upDownStep, 0);
+            const newInputValue = convertToInputValue(inputInfo, format, validate);
 
-        if (Math.floor(validatedStep) !== validatedStep) {
-          [validatedStep] = limitFractionDigits(upDownStep, validate);
+            setInputValue(newInputValue);
+            updateValue(inputInfo.value);
+            
+        } catch (error) {
+            //
+        }
+    };
+  
+    const onChangeInputValue: ChangeEventHandler<HTMLInputElement> = (e) => {
+        const {value, selectionStart} = e.target;
+
+        try {
+            if (value === '-') {
+                setInputValue('-');
+
+                if (changeMode === 'onChange' && typeof onChangeValue === 'function') {
+                    onChangeValue(0);
+                }
+                return;
+            }
+
+            const inputInfo = initInputInfo(value, format);
+
+            if (isValidateOnBlur) {
+                // default validate
+                validateInputInfo(inputInfo, {
+                    maxValue: MAXIMUM,
+                    minValue: -MAXIMUM,
+                    maxFractionalDigits: validate.maxFractionalDigits,
+                    exceedMaxDigitsAction: 'prevent',
+                    validateMode: 'onChangePrevent'
+                });
+            } else {
+                validateInputInfo(inputInfo, validate, format, onValidateFailed);
+            }
+            
+            update(inputInfo, selectionStart);
+        } catch (error) {
+            //
+        }
+    };
+
+    const onFocusInput: FocusEventHandler<HTMLInputElement> = (e) => {
+        if (typeof onFocus === 'function') {
+            onFocus(e);
+        }
+        if (inputValue === '0') {
+            setInputValue('');
+        } else {
+            inputRef.current?.setSelectionRange(0, 20);
+        }
+    };
+
+    const onBlurInput: FocusEventHandler<HTMLInputElement> = (e) => {
+        if (typeof onBlur === 'function') {
+            onBlur(e);
+        }
+        try {
+            const inputInfo = initInputInfo(inputValue, format);
+
+            if (isValidateOnBlur) {
+                validateInputInfo(inputInfo, {
+                    ...validate,
+                    validateMode: 'onChangeSetBack' // set back when out of range
+                });
+            }
+            if (changeMode === 'onBlur') {
+                updateValue(inputInfo.value);
+            }
+
+            const newInputValue = convertToInputValue(
+                {
+                    ...inputInfo,
+                    trailingZeroDigits: 0,
+                    withDecimalSeparator: false
+                },
+                format,
+                validate
+            );
+
+            setInputValue(newInputValue);
+        } catch (error) {
+            //
+        }
+    };
+
+    // fired before onChangeInputValue, preventDefault will not lead to onChangeInputValue
+    const onKeyDownInput: KeyboardEventHandler<HTMLInputElement> = (e) => {
+        if (typeof onKeyDown === 'function') {
+            onKeyDown(e);
         }
 
-        inputInfo.value = inputInfo.value + (isArrowUp ? validatedStep : -validatedStep);
-
-        if (inputInfo.value > Math.floor(inputInfo.value) && validate.maxFractionalDigits) {
-          const roundPow = Math.pow(10, validate.maxFractionalDigits);
-          inputInfo.value = Math.round(inputInfo.value * roundPow) / roundPow;
+        if (['ArrowUp', 'ArrowDown'].includes(e.key)) {
+            changeInputValueByStep(e.key === 'ArrowUp');
+            return;
         }
+        if (e.key === 'Enter' && enterActions.length) {
+            const inputInfo = initInputInfo(inputValue, format);
 
-        if (inputInfo.value === Math.floor(inputInfo.value)) {
-          inputInfo.withDecimalSeparator = false;
+            const validateOnEnter = () => {
+                validateInputInfo(inputInfo, {
+                    ...validate,
+                    validateMode: 'onChangeSetBack'
+                });
+
+                const newInputValue = convertToInputValue(inputInfo, format, validate);
+    
+                if (newInputValue !== inputValue) {
+                    setInputValue(newInputValue);
+                }
+            };
+
+            if (enterActions.includes('changeValue')) {
+                if (changeMode === 'onBlur') {
+                    validateOnEnter();
+                    updateValue(inputInfo.value);
+                }
+            }
+            else if (enterActions.includes('validate')) {
+                if (isValidateOnBlur) {
+                    validateOnEnter();
+                }
+            }
+            else if (enterActions.includes('blur')) {
+                inputRef.current?.blur();
+            }
+
+            return;
         }
-
-        if (!isValidateOnBlur) {
-          validateInputInfo(inputInfo, validate);
+        // allow all ctrl + key
+        if (e.ctrlKey) {
+            return;
         }
+        // selectionStart, selectionEnd when before any action
+        const {value: beforeInputValue, selectionStart, selectionEnd} = e.currentTarget;
 
-        update(inputInfo, selectionStart);
-      } catch (error) {
-        console.log((error as Error).message);
-      }
-    }
-  };
+        if (e.key === '-') {
+            // only allow '-' at the start when min is negative
+            if (validate.minValue < 0 && selectionStart === 0) {
+                return;
+            }
+        }
+        else if (e.key === format.decimalSeparator) {
+            if (validate.maxFractionalDigits > 0) {
+                return;
+            }
+        }
+        else if ((/[0-9]/g).test(e.key) || ALLOWED_KEYS.includes(e.key)) {
+            if (selectionStart) {
+                // prevent removing groupingSeparator
+                if (
+                    (e.key === 'Backspace' && beforeInputValue.slice(selectionStart - 1, selectionStart) === format.groupingSeparator) ||
+                    (e.key === 'Delete' && beforeInputValue.slice(selectionStart, selectionStart + 1) === format.groupingSeparator) ||
+                    (selectionEnd && e.key === 'Backspace' && beforeInputValue.slice(selectionStart, selectionEnd) === format.groupingSeparator)
+                ) {
+                    e.preventDefault();
+                }
+            }
+            return;
+        }
+        e.preventDefault();
+    };
 
-  return (
-    <div className="flex items-center gap-2">
-      <label>Input</label>
-      <InputBox
-        ref={inputRef}
-        value={inputValue}
-        onChange={onChangeInputValue}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        onKeyDown={onKeyDown}
-      />
-      <Button className="bg-orange-500 hover:bg-orange-400 rounded-full group relative">
-        <Tooltip
-          className="w-80 h-60 -translate-x-1/2 left-1/2 whitespace-pre text-left"
-          placement="bottom"
-          text={JSON.stringify({ ...format, ...validate }, null, 2)}
-        />
-        <span className="text-xl">?</span>
-      </Button>
-    </div>
-  );
-}
+    const onClickClearIcon = () => {
+        const inputInfo = {
+            value: 0,
+            trailingZeroDigits: 0,
+            withDecimalSeparator: false,
+            cursorMoves: 0
+        };
+
+        validateInputInfo(inputInfo, validate, format, onValidateFailed);
+
+        update(inputInfo, null);
+    };
+
+    const ctrlersDisabled = [disabled || controllers[0]?.disabled, disabled || controllers[1]?.disabled];
+
+    return (
+        <div className='relative flex'>
+            <div className={classNames('absolute z-10 w-full h-full flex items-center justify-center bg-zinc-100/40', {
+                'hidden' : !loading
+            })}>
+                <LoadingOutlined />
+            </div>
+            {
+                controllers[0] ? (
+                    <button
+                        className='mr-1 flex flex-none items-center justify-center w-7 h-7 rounded bg-black-100 disabled:bg-ink-100'
+                        disabled={ctrlersDisabled[0]}
+                        onClick={() => changeInputValueByStep(false)}
+                    >
+                        <MinusOutlined className={classNames({'opacity-40': ctrlersDisabled[0]})} />
+                    </button>
+                ) : null
+            }
+            <div className="flex flex-row flex-grow items-center">
+                <div
+                    className={classNames('flex-grow', styles['input-wrapper'], className)}
+                    data-value={inputValue || '0'}
+                    style={style}
+                >
+                    <input
+                        ref={mergeRefs(inputRef, ref)}
+                        // class input-number for targeting in cart-container
+                        className='input-number outline-0'
+                        value={inputValue}
+                        disabled={disabled}
+                        {...rest}
+                        onChange={onChangeInputValue}
+                        onFocus={onFocusInput}
+                        onBlur={onBlurInput}
+                        onKeyDown={onKeyDownInput}
+                    />
+                </div>
+                {allowClear && <CloseCircleFilled className='ml-1 text-ink-300' onClick={onClickClearIcon} />}
+                {typeof renderSuffix === 'function' && renderSuffix()}
+            </div>
+            {
+                controllers[1] ? (
+                    <button
+                        onClick={() => changeInputValueByStep(true)}
+                        disabled={ctrlersDisabled[1]}
+                        className='ml-1 flex flex-none items-center justify-center w-7 h-7 rounded bg-black-100 disabled:bg-ink-100'
+                    >
+                        <PlusOutlined className={classNames({'opacity-40': ctrlersDisabled[1]})} />
+                    </button>
+                ) : null
+            }
+        </div>
+    );
+});
 
 const useRunAfterPaint = () => {
-  const afterPaintRef = useRef<(() => void) | null>(null);
+    const afterPaintRef = useRef<(() => void) | null>(null);
 
-  useLayoutEffect(() => {
-    if (afterPaintRef.current) {
-      afterPaintRef.current();
-      afterPaintRef.current = null;
-    }
-  });
-  return (fn: () => void) => (afterPaintRef.current = fn);
+    useLayoutEffect(() => {
+        if (afterPaintRef.current) {
+            afterPaintRef.current();
+            afterPaintRef.current = null;
+        }
+    });
+    return (fn: () => void) => (afterPaintRef.current = fn);
 };
