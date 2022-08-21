@@ -61,23 +61,23 @@ const lines: Array<{
 
 export default function FormatAndLimitNumber() {
   const [test, setTest] = useState(initialState);
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
-  const {control,register,getValues} = useForm({
-    mode: 'onChange',
-    reValidateMode: 'onChange',
+  const { control, register, getValues } = useForm({
+    mode: "onChange",
+    reValidateMode: "onChange",
   });
 
   const inputConfig = {
-    money: register('money', {
+    money: register("money", {
       required: {
         value: true,
-        message: t('Required', {field: t('Amount from previous shift'), ns: 'validation'})
-    },
-    min: {value: 0, message: t('Min value', {value: 0, ns: 'validation'})},
-    max: {value: 999999, message: t('Max value', {value: 999999, ns: 'validation'})}
-    })
-  }
+        message: t("Required", { field: t("Amount from previous shift"), ns: "validation" }),
+      },
+      min: { value: 0, message: t("Min value", { value: 0, ns: "validation" }) },
+      max: { value: 999999, message: t("Max value", { value: 999999, ns: "validation" }) },
+    }),
+  };
 
   const onChange: ChangeEventHandler<HTMLInputElement | HTMLSelectElement> = (e) => {
     setTest((prev) => {
@@ -98,21 +98,19 @@ export default function FormatAndLimitNumber() {
     }));
   };
 
-
-
   return (
     <div className="flex flex-col items-center">
       <div className="pr-4 border border-slate-300 rounded-lg">
-      <InputNumber
-        className="px-4 py-2 rounded-lg"
-        {...test}
-        // fitValue
-        allowClear
-        allowEmpty
-        onChangeValue={(value) => {
-          setTest(prev => ({...prev, value}));
-        }}
-      />
+        <InputNumber
+          className="px-4 py-2 rounded-lg"
+          {...test}
+          // fitValue
+          allowClear
+          allowEmpty
+          onChangeValue={(value) => {
+            setTest((prev) => ({ ...prev, value }));
+          }}
+        />
       </div>
       {/* <Controller 
         control={control}

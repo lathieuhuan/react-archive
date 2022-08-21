@@ -1,0 +1,18 @@
+.content-wrapper {
+  width: 90vw;
+  height: 90vh;
+  // #to-check
+  @media (min-width: 440px) {
+    width: 398.45px;
+  }
+  @media (min-width: 610px) {
+    width: 586px;
+  }
+  @media (min-width: 769px) {
+    width: 722px;
+  }
+  @media (min-width: 1025px) {
+    height: 85vh;
+    width: 944px;
+  }
+}

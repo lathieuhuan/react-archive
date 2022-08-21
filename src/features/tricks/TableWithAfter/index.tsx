@@ -1,5 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { ProductTable } from "./Core";
+import Button from "@Src/components/Button";
+import { KeyboardEventHandler, useState } from "react";
+import { Modal } from "@Src/components/Modal";
+import { useInputNumberFactory, ValidateConfig } from "@Src/hooks/useInputNumberFactory";
+import InputBox from "@Src/components/InputBox";
+import { useForm } from "react-hook-form";
 
 const { Header, Row } = ProductTable;
 
@@ -37,11 +43,52 @@ const entries = [
 ];
 
 export default function Table() {
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
+  const { register, handleSubmit, getValues } = useForm({
+    mode: "onTouched",
+    reValidateMode: "onChange",
+  });
+  const [value, setValue] = useState(0);
+  const { ref, inputValue, onKeyDownInput, onChangeInputValue, updateInputValue } = useInputNumberFactory({
+    value,
+    changeMode: "onBlur",
+    onChangeValue: setValue,
+  });
+
+  // const onSubmitForm = () => {
+  //   handleSubmit(
+  //     (value) => console.log(value),
+  //     () => alert("Erorr!")
+  //   );
+  // };
+
+  const validate: Partial<ValidateConfig> = {
+    //
+  };
+
+  const onKeydown: KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === "ArrowUp") {
+      updateInputValue({ value: value + 1, newCursor: 20 });
+    } else if (e.key === "ArrowDown") {
+      updateInputValue({ value: value - 1, newCursor: 20 });
+    }
+    onKeyDownInput(e, validate);
+  };
 
   return (
-    <div className="flex space-x-3" style={{ width: 900, height: 426 }}>
-      <div>
+    <div className="" style={{ width: 900, height: 426 }}>
+      <Button onClick={() => console.log(getValues())}>Click {value}</Button>
+
+      <InputBox
+        ref={ref}
+        className="ml-2"
+        placeholder="Enter some number"
+        value={inputValue}
+        onKeyDown={onKeydown}
+        onChange={(e) => onChangeInputValue(e, { validate })}
+      />
+
+      {/* <div className="mt-4">
         <ProductTable colsConfig={["w-5", "w-40", "w-20", "w-16", "w-24", "w-28"]}>
           <Header
             paddingY="pt-2 pb-5"
@@ -108,9 +155,7 @@ export default function Table() {
             );
           })}
         </ProductTable>
-      </div>
-
-      <div style={{ width: 330, height: 378 }}></div>
+      </div> */}
     </div>
   );
 }

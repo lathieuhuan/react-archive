@@ -1,3 +1,4 @@
+import { CONFIG_DECIMAL_NUMBER, DEFAULT_VALIDATE, MAXIMUM } from "./constants";
 import type {
   ErrorReport,
   FormatConfig,
@@ -9,11 +10,36 @@ import type {
 
 export const digitCount = (num: number) => num.toString().match(/[0-9]/g)?.length || 0;
 
-export const joinDecimal = (whole: number | string, fraction: number | string, isNegative?: boolean) => {
+export function joinDecimal(whole: number | string, fraction: number | string, isNegative?: boolean) {
   return Number((isNegative ? "-" : "") + whole + "." + fraction);
-};
+}
 
-export const initInputInfo = (strValue: string, format: FormatConfig): InputInfo => {
+export function getFullValidate({
+  maxValue,
+  minValue,
+  maxFractionalDigits = 0,
+  exceedMaxDigitsAction = "round",
+  validateMode = "onChangePrevent",
+}: Partial<ValidateConfig> = {}): ValidateConfig {
+  const validateFraction = {
+    maxFractionalDigits: Math.max(maxFractionalDigits, 0),
+    exceedMaxDigitsAction,
+  };
+  const validate = {
+    minValue: minValue !== undefined ? limitFractionDigits(minValue, validateFraction).newValue : 0,
+    maxValue: maxValue !== undefined ? limitFractionDigits(maxValue, validateFraction).newValue : MAXIMUM,
+    ...validateFraction,
+    validateMode,
+  };
+
+  if (validate.maxValue < validate.minValue) {
+    validate.maxValue = validate.minValue;
+  }
+
+  return validate;
+}
+
+export function initInputInfo(strValue: string, format: FormatConfig): InputInfo {
   const parts = strValue.split(format.decimalSeparator);
   const [wholePart, fractionPart] = parts;
 
@@ -87,39 +113,45 @@ export const initInputInfo = (strValue: string, format: FormatConfig): InputInfo
     withDecimalSeparator,
     cursorMoves,
   };
-};
+}
 
 /**
  * validate fraction => validate max, min
+ * @param config config.format only uses decimalSeparator (default to CONFIG_DECIMAL_NUMBER)
  */
-export const validateInputInfo = (
+export function validateInputInfo(
   inputInfo: InputInfo,
-  validate: ValidateConfig,
-  format?: FormatConfig,
-  onValidateFailed?: OnValidateFailedHandler
-) => {
-  const { minValue, maxValue, maxFractionalDigits, validateMode } = validate;
+  validate?: Partial<ValidateConfig>,
+  config?: {
+    format?: FormatConfig;
+    onValidateFailed?: OnValidateFailedHandler;
+  }
+) {
+  const { format, onValidateFailed } = config || {};
+  const { decimalSeparator = CONFIG_DECIMAL_NUMBER.decimalSeparator } = format || {};
+  const fullValidate = getFullValidate(validate);
+  const { minValue, maxValue, maxFractionalDigits, validateMode } = fullValidate;
 
   // VALIDATE FRACTION
   if (maxFractionalDigits === 0) {
     inputInfo.value = Math.trunc(inputInfo.value);
     inputInfo.withDecimalSeparator = false;
   } else {
-    let tempInputValue: string;
+    let tempInputValue = inputInfo.value.toString();
 
-    if (inputInfo.value > Math.floor(inputInfo.value)) {
-      tempInputValue = inputInfo.value + "0".repeat(inputInfo.trailingZeroDigits);
-    } else {
-      tempInputValue = inputInfo.value.toString() + "." + "0".repeat(inputInfo.trailingZeroDigits);
+    // add trailing zeroes
+    if (inputInfo.value === Math.floor(inputInfo.value)) {
+      tempInputValue += decimalSeparator;
     }
-    const limitedResult = limitFractionDigits(tempInputValue, validate);
+    tempInputValue += "0".repeat(inputInfo.trailingZeroDigits);
+
+    const limitedResult = limitFractionDigits(tempInputValue, fullValidate);
 
     inputInfo.value = limitedResult.newValue;
     inputInfo.trailingZeroDigits = limitedResult.newTrailingZeroDigits;
   }
 
-  const { decimalSeparator = "." } = format || {};
-
+  // VALIDATE MAX, MIN
   const MAX_VALUE_ERROR: ErrorReport = {
     failCase: "maxValue",
     records: [maxValue.toString().replace(".", decimalSeparator)],
@@ -160,54 +192,65 @@ export const validateInputInfo = (
       }
     }
   }
-};
+}
 
 /**
  *
- * @param value when as string can contains trailing zeroes
+ * @param value when as string can contain trailing zeroes 3.00
  * @returns value & trailingZeroDigits
  */
-export const limitFractionDigits = (
+export function limitFractionDigits(
   value: string | number,
-  { maxFractionalDigits = 0, exceedMaxDigitsAction = "prevent" }: Partial<ValidateFractionConfig>
-) => {
+  { maxFractionalDigits = 3, exceedMaxDigitsAction = "round" }: Partial<ValidateFractionConfig> = {}
+) {
   let newValue = +value;
   let newTrailingZeroDigits = 0;
 
-  if (exceedMaxDigitsAction === "prevent") {
-    const splitResult = value.toString().split(".");
-    const whole = splitResult[0];
-    let fractionPart = splitResult[1];
+  const splitResult = value.toString().split(".");
+  const whole = splitResult[0];
+  const fractionPart = splitResult[1] ? splitResult[1].slice(0, maxFractionalDigits) : "";
 
-    fractionPart = fractionPart ? fractionPart.slice(0, maxFractionalDigits) : "";
-
-    for (let i = fractionPart.length - 1; i >= 0; i--) {
-      if (fractionPart[i] === "0") {
-        newTrailingZeroDigits++;
-      } else {
-        break;
-      }
+  for (let i = fractionPart.length - 1; i >= 0; i--) {
+    if (fractionPart[i] === "0") {
+      newTrailingZeroDigits++;
+    } else {
+      break;
     }
+  }
 
+  if (exceedMaxDigitsAction === "prevent") {
     newValue = joinDecimal(whole, fractionPart);
   } else if (exceedMaxDigitsAction === "round") {
     const roundPow = Math.pow(10, maxFractionalDigits);
 
     newValue = Math.round(newValue * roundPow) / roundPow;
+
+    if (newTrailingZeroDigits) {
+      const freeSlots = maxFractionalDigits - digitCount(+newValue.toString().split(".")[1]);
+      newTrailingZeroDigits = Math.min(freeSlots, newTrailingZeroDigits);
+    }
   }
 
   return {
     newValue,
     newTrailingZeroDigits,
   };
-};
+}
 
-export function convertToInputValue(inputInfo: InputInfo, format: FormatConfig, validate: ValidateConfig) {
+export function convertToInputValue(
+  inputInfo: Partial<InputInfo> & { value: number },
+  format: FormatConfig,
+  /**
+   * Only need when there are inputInfo.trailingZeroDigits
+   */
+  maxFractionalDigits?: number
+) {
   const splitResult = inputInfo.value.toString().split(".");
   let wholeAsString = splitResult[0];
   const fractionAsString = splitResult[1];
 
   let resultAsString = "";
+  let cursorMoves = 0;
   const isNegative = wholeAsString[0] === "-";
 
   if (isNegative) {
@@ -219,23 +262,24 @@ export function convertToInputValue(inputInfo: InputInfo, format: FormatConfig, 
 
     if (j && j % 3 === 0) {
       leftDigit += format.groupingSeparator;
-      inputInfo.cursorMoves++;
+      cursorMoves++;
     }
     resultAsString = leftDigit + resultAsString;
   }
 
+  if (inputInfo.cursorMoves !== undefined) {
+    inputInfo.cursorMoves += cursorMoves;
+  }
   if (isNegative) {
     resultAsString = "-" + resultAsString;
   }
-
   if (fractionAsString) {
     resultAsString += format.decimalSeparator + fractionAsString;
   } else if (inputInfo.withDecimalSeparator) {
     resultAsString += format.decimalSeparator;
   }
-
-  if (inputInfo.trailingZeroDigits) {
-    const freeSlots = validate.maxFractionalDigits - (fractionAsString?.length || 0);
+  if (maxFractionalDigits && inputInfo.trailingZeroDigits) {
+    const freeSlots = maxFractionalDigits - (fractionAsString?.length || 0);
 
     resultAsString += "0".repeat(Math.min(inputInfo.trailingZeroDigits, freeSlots));
   }
@@ -243,7 +287,7 @@ export function convertToInputValue(inputInfo: InputInfo, format: FormatConfig, 
   return resultAsString;
 }
 
-export const mergeRefs = (...refs: any[]) => {
+export function mergeRefs(...refs: any[]) {
   const filteredRefs = refs.filter(Boolean);
 
   if (!filteredRefs.length) {
@@ -259,4 +303,4 @@ export const mergeRefs = (...refs: any[]) => {
       }
     }
   };
-};
+}
