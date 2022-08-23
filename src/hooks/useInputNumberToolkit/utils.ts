@@ -1,5 +1,6 @@
 import { CONFIG_DECIMAL_NUMBER, DEFAULT_VALIDATE, MAXIMUM } from "./constants";
 import type {
+  Config,
   ErrorReport,
   FormatConfig,
   InputInfo,
@@ -12,31 +13,6 @@ export const digitCount = (num: number) => num.toString().match(/[0-9]/g)?.lengt
 
 export function joinDecimal(whole: number | string, fraction: number | string, isNegative?: boolean) {
   return Number((isNegative ? "-" : "") + whole + "." + fraction);
-}
-
-export function getFullValidate({
-  maxValue,
-  minValue,
-  maxFractionalDigits = 0,
-  exceedMaxDigitsAction = "round",
-  validateMode = "onChangePrevent",
-}: Partial<ValidateConfig> = {}): ValidateConfig {
-  const validateFraction = {
-    maxFractionalDigits: Math.max(maxFractionalDigits, 0),
-    exceedMaxDigitsAction,
-  };
-  const validate = {
-    minValue: minValue !== undefined ? limitFractionDigits(minValue, validateFraction).newValue : 0,
-    maxValue: maxValue !== undefined ? limitFractionDigits(maxValue, validateFraction).newValue : MAXIMUM,
-    ...validateFraction,
-    validateMode,
-  };
-
-  if (validate.maxValue < validate.minValue) {
-    validate.maxValue = validate.minValue;
-  }
-
-  return validate;
 }
 
 export function initInputInfo(strValue: string, format: FormatConfig): InputInfo {
@@ -115,25 +91,12 @@ export function initInputInfo(strValue: string, format: FormatConfig): InputInfo
   };
 }
 
-/**
- * validate fraction => validate max, min
- * @param config config.format only uses decimalSeparator (default to CONFIG_DECIMAL_NUMBER)
- */
-export function validateInputInfo(
-  inputInfo: InputInfo,
-  validate?: Partial<ValidateConfig>,
-  config?: {
-    format?: FormatConfig;
-    onValidateFailed?: OnValidateFailedHandler;
-  }
-) {
-  const { format, onValidateFailed } = config || {};
+export function validateInputInfo(inputInfo: InputInfo, { format, validate, onValidateFailed }: Config) {
   const { decimalSeparator = CONFIG_DECIMAL_NUMBER.decimalSeparator } = format || {};
-  const fullValidate = getFullValidate(validate);
-  const { minValue, maxValue, maxFractionalDigits, validateMode } = fullValidate;
+  const { minValue, maxValue, maxFractionDigits, validateMode } = validate;
 
   // VALIDATE FRACTION
-  if (maxFractionalDigits === 0) {
+  if (maxFractionDigits === 0) {
     inputInfo.value = Math.trunc(inputInfo.value);
     inputInfo.withDecimalSeparator = false;
   } else {
@@ -145,7 +108,7 @@ export function validateInputInfo(
     }
     tempInputValue += "0".repeat(inputInfo.trailingZeroDigits);
 
-    const limitedResult = limitFractionDigits(tempInputValue, fullValidate);
+    const limitedResult = limitFractionDigits(tempInputValue, validate);
 
     inputInfo.value = limitedResult.newValue;
     inputInfo.trailingZeroDigits = limitedResult.newTrailingZeroDigits;
@@ -201,14 +164,14 @@ export function validateInputInfo(
  */
 export function limitFractionDigits(
   value: string | number,
-  { maxFractionalDigits = 3, exceedMaxDigitsAction = "round" }: Partial<ValidateFractionConfig> = {}
+  { maxFractionDigits = 3, exceedMaxFractionDigitsAction = "round" }: Partial<ValidateFractionConfig> = {}
 ) {
   let newValue = +value;
   let newTrailingZeroDigits = 0;
 
   const splitResult = value.toString().split(".");
   const whole = splitResult[0];
-  const fractionPart = splitResult[1] ? splitResult[1].slice(0, maxFractionalDigits) : "";
+  const fractionPart = splitResult[1] ? splitResult[1].slice(0, maxFractionDigits) : "";
 
   for (let i = fractionPart.length - 1; i >= 0; i--) {
     if (fractionPart[i] === "0") {
@@ -218,15 +181,15 @@ export function limitFractionDigits(
     }
   }
 
-  if (exceedMaxDigitsAction === "prevent") {
+  if (exceedMaxFractionDigitsAction === "prevent") {
     newValue = joinDecimal(whole, fractionPart);
-  } else if (exceedMaxDigitsAction === "round") {
-    const roundPow = Math.pow(10, maxFractionalDigits);
+  } else if (exceedMaxFractionDigitsAction === "round") {
+    const roundPow = Math.pow(10, maxFractionDigits);
 
     newValue = Math.round(newValue * roundPow) / roundPow;
 
     if (newTrailingZeroDigits) {
-      const freeSlots = maxFractionalDigits - digitCount(+newValue.toString().split(".")[1]);
+      const freeSlots = maxFractionDigits - digitCount(+newValue.toString().split(".")[1]);
       newTrailingZeroDigits = Math.min(freeSlots, newTrailingZeroDigits);
     }
   }
@@ -243,7 +206,7 @@ export function convertToInputValue(
   /**
    * Only need when there are inputInfo.trailingZeroDigits
    */
-  maxFractionalDigits?: number
+  maxFractionDigits?: number
 ) {
   const splitResult = inputInfo.value.toString().split(".");
   let wholeAsString = splitResult[0];
@@ -278,8 +241,8 @@ export function convertToInputValue(
   } else if (inputInfo.withDecimalSeparator) {
     resultAsString += format.decimalSeparator;
   }
-  if (maxFractionalDigits && inputInfo.trailingZeroDigits) {
-    const freeSlots = maxFractionalDigits - (fractionAsString?.length || 0);
+  if (maxFractionDigits && inputInfo.trailingZeroDigits) {
+    const freeSlots = maxFractionDigits - (fractionAsString?.length || 0);
 
     resultAsString += "0".repeat(Math.min(inputInfo.trailingZeroDigits, freeSlots));
   }

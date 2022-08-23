@@ -3,7 +3,7 @@ import { ProductTable } from "./Core";
 import Button from "@Src/components/Button";
 import { KeyboardEventHandler, useState } from "react";
 import { Modal } from "@Src/components/Modal";
-import { useInputNumberFactory, ValidateConfig } from "@Src/hooks/useInputNumberFactory";
+import { useInputNumberToolkit, ValidateConfig } from "@Src/hooks/useInputNumberToolkit";
 import InputBox from "@Src/components/InputBox";
 import { useForm } from "react-hook-form";
 
@@ -44,48 +44,51 @@ const entries = [
 
 export default function Table() {
   // const { t } = useTranslation();
-  const { register, handleSubmit, getValues } = useForm({
-    mode: "onTouched",
-    reValidateMode: "onChange",
-  });
-  const [value, setValue] = useState(0);
-  const { ref, inputValue, onKeyDownInput, onChangeInputValue, updateInputValue } = useInputNumberFactory({
-    value,
-    changeMode: "onBlur",
-    onChangeValue: setValue,
+  // const { register, handleSubmit, getValues } = useForm({
+  //   mode: "onTouched",
+  //   reValidateMode: "onChange",
+  // });
+  const [valueA, setValueA] = useState(0);
+  const [valueB, setValueB] = useState(0);
+  const { getToolKit } = useInputNumberToolkit({
+    changeMode: "onChange",
+    validateMode: "onChangePrevent",
   });
 
-  // const onSubmitForm = () => {
-  //   handleSubmit(
-  //     (value) => console.log(value),
-  //     () => alert("Erorr!")
-  //   );
+  // const onKeydown: KeyboardEventHandler<HTMLInputElement> = (e) => {
+  //   if (e.key === "ArrowUp") {
+  //     updateInputValue({ value: value + 1, newCursor: 20 });
+  //   } else if (e.key === "ArrowDown") {
+  //     updateInputValue({ value: value - 1, newCursor: 20 });
+  //   }
+  //   onKeyDownInput(e, validate);
   // };
 
-  const validate: Partial<ValidateConfig> = {
-    //
-  };
+  console.log(valueA, valueB);
 
-  const onKeydown: KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (e.key === "ArrowUp") {
-      updateInputValue({ value: value + 1, newCursor: 20 });
-    } else if (e.key === "ArrowDown") {
-      updateInputValue({ value: value - 1, newCursor: 20 });
-    }
-    onKeyDownInput(e, validate);
-  };
+  // const { onChange, ...rest } = getToolKit("value", {
+  //   maxValue: 1000,
+  // });
 
   return (
     <div className="" style={{ width: 900, height: 426 }}>
-      <Button onClick={() => console.log(getValues())}>Click {value}</Button>
-
       <InputBox
-        ref={ref}
         className="ml-2"
         placeholder="Enter some number"
-        value={inputValue}
-        onKeyDown={onKeydown}
-        onChange={(e) => onChangeInputValue(e, { validate })}
+        {...getToolKit({
+          name: "valueA",
+          maxValue: 10000,
+          onChangeValue: setValueA,
+        })}
+      />
+      <InputBox
+        className="ml-2"
+        placeholder="Enter some number"
+        {...getToolKit({
+          name: "valueB",
+          maxValue: 100000,
+          onChangeValue: setValueB,
+        })}
       />
 
       {/* <div className="mt-4">
