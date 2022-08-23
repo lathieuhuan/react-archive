@@ -12,19 +12,13 @@ import {
 import { useRunAfterPaint } from "../useRunAfterPaint";
 import { ALLOWED_KEYS, CONFIG_DECIMAL_NUMBER, MAXIMUM } from "./constants";
 
-import {
-  GetToolkitConfig,
-  InputInfo,
-  IUseInputNumberToolkitArgs,
-  UpdateInputValuesArgs,
-  ValidateConfig,
-} from "./types";
+import { RegisterConfig, InputInfo, IUseInputNumberToolkitArgs, UpdateInputValuesArgs, ValidateConfig } from "./types";
 
 import { limitFractionDigits, initInputInfo, validateInputInfo, convertToInputValue } from "./utils";
 
-const DEFAULT_KEY = "value";
+const DEFAULT_KEY = "undefined";
 
-export function useInputNumberToolkit({
+export function useInputNumber({
   groupingSeparator = CONFIG_DECIMAL_NUMBER.groupingSeparator,
   decimalSeparator = CONFIG_DECIMAL_NUMBER.decimalSeparator,
   changeMode = "onChange",
@@ -33,7 +27,8 @@ export function useInputNumberToolkit({
 }: IUseInputNumberToolkitArgs = {}) {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
 
-  const ref = useRef<Record<string, HTMLInputElement | null>>({});
+  const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});
+  const valuesRef = useRef<Record<string, number>>({});
   const runAfterPaint = useRunAfterPaint();
 
   const format = {
@@ -41,18 +36,28 @@ export function useInputNumberToolkit({
     decimalSeparator,
   };
 
-  function getToolKit(config: GetToolkitConfig) {
+  function register(config?: RegisterConfig) {
     const {
       name = DEFAULT_KEY,
+      value,
       maxValue = MAXIMUM,
       minValue = 0,
       maxFractionDigits = 0,
       onChangeValue,
       onValidateFailed,
-    } = config;
+    } = config || {};
 
     if (inputValues[name] === undefined) {
       inputValues[name] = "";
+    }
+    if (
+      value !== undefined &&
+      value !== null &&
+      !isNaN(value) &&
+      (valuesRef.current[name] === undefined || valuesRef.current[name] !== value)
+    ) {
+      valuesRef.current[name] = value;
+      updateInputValue({ name, value });
     }
 
     const validate = {
@@ -63,6 +68,7 @@ export function useInputNumberToolkit({
       validateMode,
     };
 
+    // return value after
     function onChange(e: ChangeEvent<HTMLInputElement>) {
       const { value } = e.target;
 
@@ -84,7 +90,7 @@ export function useInputNumberToolkit({
             validate: {
               maxValue: MAXIMUM,
               minValue: -MAXIMUM,
-              maxFractionDigits: validate.maxFractionDigits, // for now, to prevent 0.0000001 => 1e-7
+              maxFractionDigits: 6, // for now, to prevent 0.0000001 => 1e-7
               exceedMaxFractionDigitsAction: "prevent",
               validateMode: "onChangePrevent",
             },
@@ -93,7 +99,7 @@ export function useInputNumberToolkit({
           validateInputInfo(inputInfo, { format, validate, onValidateFailed });
         }
 
-        return updateInputValue(
+        const newValue = updateInputValue(
           {
             name,
             ...inputInfo,
@@ -102,6 +108,10 @@ export function useInputNumberToolkit({
           },
           onChangeValue
         );
+
+        console.log(newValue);
+
+        return newValue;
       } catch (error) {
         //
       }
@@ -109,9 +119,9 @@ export function useInputNumberToolkit({
 
     return {
       ref: (el: HTMLInputElement | null) => {
-        ref.current[name] = el;
+        inputsRef.current[name] = el;
       },
-      value: inputValues[name] || "",
+      value: inputValues[name],
       onChange,
     };
   }
@@ -135,6 +145,7 @@ export function useInputNumberToolkit({
     const newInputValue = convertToInputValue(inputInfo, format, maxFractionDigits);
 
     if (newInputValue !== inputValues[name]) {
+      valuesRef.current[name] = value;
       setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
 
       if (changeMode === "onChange" && typeof onChange === "function") {
@@ -152,7 +163,7 @@ export function useInputNumberToolkit({
           }
           newCursor = Math.max(newCursor, 0);
         }
-        ref.current?.[name]?.setSelectionRange(newCursor, newCursor);
+        inputsRef.current?.[name]?.setSelectionRange(newCursor, newCursor);
       });
     }
 
@@ -234,6 +245,8 @@ export function useInputNumberToolkit({
   // }
 
   return {
-    getToolKit,
+    value: valuesRef.current.undefined,
+    values: valuesRef.current,
+    register,
   };
 }

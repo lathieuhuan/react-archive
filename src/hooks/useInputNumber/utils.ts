@@ -1,13 +1,5 @@
-import { CONFIG_DECIMAL_NUMBER, DEFAULT_VALIDATE, MAXIMUM } from "./constants";
-import type {
-  Config,
-  ErrorReport,
-  FormatConfig,
-  InputInfo,
-  OnValidateFailedHandler,
-  ValidateConfig,
-  ValidateFractionConfig,
-} from "./types";
+import { CONFIG_DECIMAL_NUMBER } from "./constants";
+import type { Config, ErrorReport, FormatConfig, InputInfo, ValidateFractionConfig } from "./types";
 
 export const digitCount = (num: number) => num.toString().match(/[0-9]/g)?.length || 0;
 

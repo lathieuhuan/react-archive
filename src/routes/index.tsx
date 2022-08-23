@@ -19,7 +19,8 @@ import TableWithAfter from "@Features/tricks/TableWithAfter";
 
 import Processors from "@Features/processors";
 import InputProcessors from "@Features/processors/InputProcessors";
-import FormatAndLimitNumber from "@Features/processors/InputProcessors/FormatAndLimitNumber";
+import InputNumber from "@Src/features/processors/InputProcessors/InputNumber";
+import UseInputNumber from "@Src/features/processors/InputProcessors/UseInputNumber";
 
 import Formik from "@Features/formik";
 import BasicFormik from "@Features/formik/basic";
@@ -179,10 +180,18 @@ export const topCluster: ICluster = [
           {
             info: {
               id: branchID++,
-              name: "Format and Limit Number",
-              path: "format-and-limit-number",
+              name: "Input Number",
+              path: "input-number",
             },
-            component: FormatAndLimitNumber,
+            component: InputNumber,
+          },
+          {
+            info: {
+              id: branchID++,
+              name: "useInputNumber",
+              path: "useInputNumber-example",
+            },
+            component: UseInputNumber,
           },
         ],
       },

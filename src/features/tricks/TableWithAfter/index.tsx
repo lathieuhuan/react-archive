@@ -1,11 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { ProductTable } from "./Core";
-import Button from "@Src/components/Button";
-import { KeyboardEventHandler, useState } from "react";
-import { Modal } from "@Src/components/Modal";
-import { useInputNumberToolkit, ValidateConfig } from "@Src/hooks/useInputNumberToolkit";
-import InputBox from "@Src/components/InputBox";
-import { useForm } from "react-hook-form";
 
 const { Header, Row } = ProductTable;
 
@@ -43,55 +37,11 @@ const entries = [
 ];
 
 export default function Table() {
-  // const { t } = useTranslation();
-  // const { register, handleSubmit, getValues } = useForm({
-  //   mode: "onTouched",
-  //   reValidateMode: "onChange",
-  // });
-  const [valueA, setValueA] = useState(0);
-  const [valueB, setValueB] = useState(0);
-  const { getToolKit } = useInputNumberToolkit({
-    changeMode: "onChange",
-    validateMode: "onChangePrevent",
-  });
-
-  // const onKeydown: KeyboardEventHandler<HTMLInputElement> = (e) => {
-  //   if (e.key === "ArrowUp") {
-  //     updateInputValue({ value: value + 1, newCursor: 20 });
-  //   } else if (e.key === "ArrowDown") {
-  //     updateInputValue({ value: value - 1, newCursor: 20 });
-  //   }
-  //   onKeyDownInput(e, validate);
-  // };
-
-  console.log(valueA, valueB);
-
-  // const { onChange, ...rest } = getToolKit("value", {
-  //   maxValue: 1000,
-  // });
+  const { t } = useTranslation();
 
   return (
     <div className="" style={{ width: 900, height: 426 }}>
-      <InputBox
-        className="ml-2"
-        placeholder="Enter some number"
-        {...getToolKit({
-          name: "valueA",
-          maxValue: 10000,
-          onChangeValue: setValueA,
-        })}
-      />
-      <InputBox
-        className="ml-2"
-        placeholder="Enter some number"
-        {...getToolKit({
-          name: "valueB",
-          maxValue: 100000,
-          onChangeValue: setValueB,
-        })}
-      />
-
-      {/* <div className="mt-4">
+      <div className="mt-4">
         <ProductTable colsConfig={["w-5", "w-40", "w-20", "w-16", "w-24", "w-28"]}>
           <Header
             paddingY="pt-2 pb-5"
@@ -158,7 +108,7 @@ export default function Table() {
             );
           })}
         </ProductTable>
-      </div> */}
+      </div>
     </div>
   );
 }

@@ -45,9 +45,19 @@ export type ValidateConfig = ValidateValue & ValidateAction;
 
 export type ValidateFractionConfig = Pick<ValidateConfig, "maxFractionDigits" | "exceedMaxFractionDigitsAction">;
 
-export type GetToolkitConfig = Partial<ValidateValue> & {
+export type RegisterConfig = Partial<ValidateValue> & {
   name?: string;
+  /**
+   * Used to sync inputValue with value when value is controlled by something else
+   */
+  value?: number | null;
+  /**
+   * Used for connecting to outside state.
+   */
   onChangeValue?: (value: number) => void;
+  /**
+   * Callback fired when validate failed.
+   */
   onValidateFailed?: OnValidateFailedHandler;
 };
 
