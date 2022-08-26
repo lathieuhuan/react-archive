@@ -19,7 +19,9 @@ export default function UseInputNumberExamples() {
 }
 
 function MostBasic() {
-  const { value, register } = useInputNumber();
+  const { value, register } = useInputNumber({
+    enterActions: ["blur"],
+  });
 
   return (
     <div className={classNames("flex flex-col", sectionStyle, "mt-0")}>

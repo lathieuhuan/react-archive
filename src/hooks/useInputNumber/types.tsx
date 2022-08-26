@@ -39,6 +39,7 @@ export type InputInfo = {
 
 export interface IUseInputNumberToolkitArgs extends Partial<FormatConfig>, Partial<ValidateAction> {
   changeMode?: "onChange" | "onBlur";
+  enterActions?: ("validate" | "changeValue" | "blur")[];
 }
 
 export type ValidateConfig = ValidateValue & ValidateAction;
