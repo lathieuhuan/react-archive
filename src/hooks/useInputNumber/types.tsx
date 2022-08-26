@@ -1,3 +1,5 @@
+import { ChangeEvent } from "react";
+
 export type FormatConfig = {
   groupingSeparator: string;
   decimalSeparator: string;
@@ -39,7 +41,16 @@ export type InputInfo = {
 
 export interface IUseInputNumberToolkitArgs extends Partial<FormatConfig>, Partial<ValidateAction> {
   changeMode?: "onChange" | "onBlur";
-  enterActions?: ("validate" | "changeValue" | "blur")[];
+  enterActions?: {
+    validate?: boolean;
+    changeValue?: boolean;
+    blur?: boolean;
+  };
+  focusActions?: {
+    selectAll?: boolean;
+    clearZero?: boolean;
+  };
+  allowEmpty?: boolean;
 }
 
 export type ValidateConfig = ValidateValue & ValidateAction;

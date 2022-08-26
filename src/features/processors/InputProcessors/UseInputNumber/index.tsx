@@ -20,7 +20,14 @@ export default function UseInputNumberExamples() {
 
 function MostBasic() {
   const { value, register } = useInputNumber({
-    enterActions: ["blur"],
+    enterActions: {
+      blur: true,
+    },
+    focusActions: {
+      selectAll: true,
+      clearZero: true,
+    },
+    allowEmpty: true,
   });
 
   return (
@@ -43,24 +50,40 @@ function MostBasic() {
 }
 
 function Basic() {
-  const { value, register } = useInputNumber({
+  const config = {
     changeMode: "onBlur",
-  });
+    validateMode: "onChangeSetBack",
+  } as const;
 
   const validate = {
     maxValue: 10000,
     minValue: -1000,
   };
 
+  const [value, setValue] = useState(0);
+  const { register } = useInputNumber({
+    ...config,
+  });
+
   return (
     <div className={classNames("flex flex-col", sectionStyle)}>
       <div className="flex flex-col gap-2">
-        <p className="font-bold text-lg text-red-500">With config and validate</p>
-        <JsonDisplayer title="Config" />
+        <div>
+          <p className="font-bold text-lg text-red-500">With config and validate</p>
+          <p className="text-slate-700 text-sm">Use state.</p>
+        </div>
+        <JsonDisplayer title="Config" body={config} />
         <JsonDisplayer title="Validate" body={validate} />
       </div>
 
-      <InputBox className="mt-4" placeholder="Enter some input..." {...register(validate)} />
+      <InputBox
+        className="mt-4"
+        placeholder="Enter some input..."
+        {...register({
+          ...validate,
+          onChangeValue: setValue,
+        })}
+      />
       <p className="mt-4 font-medium text-right">{value} :Value</p>
     </div>
   );

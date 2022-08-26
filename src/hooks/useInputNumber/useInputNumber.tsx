@@ -1,6 +1,7 @@
 import {
   ChangeEvent,
   ChangeEventHandler,
+  FocusEvent,
   FocusEventHandler,
   KeyboardEvent,
   KeyboardEventHandler,
@@ -24,7 +25,9 @@ export function useInputNumber({
   changeMode = "onChange",
   validateMode = "onChangePrevent",
   exceedMaxFractionDigitsAction = "round",
-  enterActions = [],
+  enterActions = {},
+  focusActions = {},
+  allowEmpty,
 }: IUseInputNumberToolkitArgs = {}) {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
 
@@ -80,14 +83,16 @@ export function useInputNumber({
       const { value } = e.target;
 
       try {
-        // if (["-", ""].includes(value)) {
-        //   setInputValues((prev) => ({ ...prev, [name]: value }));
+        if (["-", ""].includes(value)) {
+          // case: from "3" to "" in Most Basic, value is still 3, set to 0 or min?
+          // valuesRef.current[name] = 0;
+          setInputValues((prev) => ({ ...prev, [name]: value }));
 
-        //   if (changeMode === "onChange" && typeof onChangeValue === "function") {
-        //     onChangeValue(0);
-        //   }
-        //   return;
-        // }
+          if (changeMode === "onChange" && typeof onChangeValue === "function") {
+            onChangeValue(0);
+          }
+          return;
+        }
 
         const inputInfo = initInputInfo(value, format);
 
@@ -127,7 +132,7 @@ export function useInputNumber({
      * Fire before onChange on the input, preventDefault will not lead to onChange.
      */
     function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-      if (e.key === "Enter" && enterActions.length) {
+      if (e.key === "Enter" && Object.keys(enterActions).length) {
         const inputInfo = initInputInfo(inputValues[name], format);
 
         const validateOnEnter = () => {
@@ -145,16 +150,16 @@ export function useInputNumber({
           }
         };
 
-        if (enterActions.includes("changeValue")) {
+        if (enterActions.changeValue) {
           if (changeMode === "onBlur") {
             validateOnEnter();
             updateValue(inputInfo.value);
           }
-        } else if (enterActions.includes("validate")) {
+        } else if (enterActions.validate) {
           if (validateMode === "onBlur") {
             validateOnEnter();
           }
-        } else if (enterActions.includes("blur")) {
+        } else if (enterActions.blur) {
           inputsRef.current?.[name]?.blur();
         }
 
@@ -196,6 +201,51 @@ export function useInputNumber({
       e.preventDefault();
     }
 
+    function onBlur(e: FocusEvent<HTMLInputElement>) {
+      try {
+        const inputInfo = initInputInfo(inputValues[name], format);
+
+        if (validateMode === "onBlur") {
+          validateInputInfo(inputInfo, {
+            validate: {
+              ...validate,
+              validateMode: "onChangeSetBack", // set back when out of range
+            },
+          });
+        }
+        if (changeMode === "onBlur") {
+          updateValue(inputInfo.value);
+        }
+
+        let newInputValue = convertToInputValue(
+          {
+            ...inputInfo,
+            trailingZeroDigits: 0,
+            withDecimalSeparator: false,
+          },
+          format,
+          validate.maxFractionDigits
+        );
+
+        if (newInputValue === "0" && allowEmpty) {
+          newInputValue = "";
+        }
+
+        setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
+      } catch (error) {
+        //
+      }
+    }
+
+    function onFocus(e: FocusEvent<HTMLInputElement>) {
+      if (focusActions.clearZero && inputValues[name] === "0") {
+        setInputValues((prev) => ({ ...prev, [name]: "" }));
+      }
+      if (focusActions.selectAll) {
+        inputsRef.current[name]?.setSelectionRange(0, 20);
+      }
+    }
+
     return {
       ref: (el: HTMLInputElement | null) => {
         inputsRef.current[name] = el;
@@ -203,6 +253,8 @@ export function useInputNumber({
       value: inputValues[name],
       onChange,
       onKeyDown,
+      onFocus,
+      onBlur,
     };
   }
 
