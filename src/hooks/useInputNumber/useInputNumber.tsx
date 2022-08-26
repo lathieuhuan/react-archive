@@ -186,7 +186,6 @@ export function useInputNumber({
               beforeInputValue.slice(selectionStart, selectionStart + 1) === format.groupingSeparator) ||
             (["Backspace", "Delete"].includes(e.key) &&
               selectionEnd &&
-              selectionStart + 1 === selectionEnd &&
               beforeInputValue.slice(selectionStart, selectionEnd) === format.groupingSeparator)
           ) {
             e.preventDefault();
