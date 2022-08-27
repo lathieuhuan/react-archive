@@ -17,6 +17,11 @@ export function initInputInfo(strValue: string, format: FormatConfig): InputInfo
 
   let whole = 0;
   let isNegative = false;
+  /**
+   * this is one of 2 conditions for
+   * target.value '${decimalSeparator}' converted to value 0 and withdecimalSeparator true
+   */
+  let canHaveAutoDecimal = false;
   let cursorMoves = 0;
 
   whole = (() => {
@@ -30,11 +35,15 @@ export function initInputInfo(strValue: string, format: FormatConfig): InputInfo
       digitPart = wholeSubParts[1];
       isNegative = true;
     }
+    if (digitPart === "") {
+      canHaveAutoDecimal = true;
+    }
 
     let resultAsString = "";
 
     for (const char of digitPart) {
       if (char === format.groupingSeparator) {
+        // for every groupingSeparator removed, push cursor to left by 1
         cursorMoves--;
       } else if (isNaN(+char)) {
         throw new Error(`Invalid wholePart [${digitPart}]`);
@@ -58,11 +67,11 @@ export function initInputInfo(strValue: string, format: FormatConfig): InputInfo
       for (let i = fractionPart.length - 1; i >= 0; i--) {
         const char = fractionPart[i];
 
-        if (isNaN(+char)) {
+        if (isNaN(+char) && char !== format.groupingSeparator) {
           throw new Error(`Invalid fractionPart [${fractionPart}]`);
         } else if (char === "0" && isTrailing) {
           trailingZeroDigits++;
-        } else {
+        } else if (char !== format.groupingSeparator) {
           result = char + result;
           isTrailing = false;
         }
@@ -75,27 +84,35 @@ export function initInputInfo(strValue: string, format: FormatConfig): InputInfo
     return fractionAsString;
   })();
 
+  // target.value '${decimalSeparator}' converted to '0.'
+  // enter 1 but add 2 characters => push cursor to the right by 1
+  if (canHaveAutoDecimal && withDecimalSeparator) {
+    cursorMoves++;
+  }
+
   return {
     value: joinDecimal(whole, fractionAsString, isNegative),
     trailingZeroDigits,
     withDecimalSeparator,
+    isNegative,
     cursorMoves,
   };
 }
 
 export function validateInputInfo(inputInfo: InputInfo, { format, validate, onValidateFailed }: Config) {
+  const { value } = inputInfo;
   const { decimalSeparator = CONFIG_DECIMAL_NUMBER.decimalSeparator } = format || {};
   const { minValue, maxValue, maxFractionDigits, validateMode } = validate;
 
   // VALIDATE FRACTION
   if (maxFractionDigits === 0) {
-    inputInfo.value = Math.trunc(inputInfo.value);
+    inputInfo.value = Math.trunc(value);
     inputInfo.withDecimalSeparator = false;
   } else {
-    let tempInputValue = inputInfo.value.toString();
+    let tempInputValue = value.toString();
 
     // add trailing zeroes
-    if (inputInfo.value === Math.floor(inputInfo.value)) {
+    if (value === Math.floor(value)) {
       tempInputValue += decimalSeparator;
     }
     tempInputValue += "0".repeat(inputInfo.trailingZeroDigits);
@@ -110,36 +127,36 @@ export function validateInputInfo(inputInfo: InputInfo, { format, validate, onVa
   const MAX_VALUE_ERROR: ErrorReport = {
     failCase: "maxValue",
     records: [maxValue.toString().replace(".", decimalSeparator)],
-    message: `Result ${inputInfo.value} is larger than max ${maxValue}`,
+    message: `Result ${value} is larger than max ${maxValue}`,
   };
   const MIN_VALUE_ERROR: ErrorReport = {
     failCase: "minValue",
     records: [minValue.toString().replace(".", decimalSeparator)],
-    message: `Result ${inputInfo.value} is smaller than min ${minValue}`,
+    message: `Result ${value} is smaller than min ${minValue}`,
   };
 
   if (validateMode === "onChangePrevent") {
-    if (inputInfo.value > maxValue) {
+    if (value > maxValue) {
       throw MAX_VALUE_ERROR;
     }
-    if (inputInfo.value < minValue) {
+    if (value < minValue) {
       throw MIN_VALUE_ERROR;
     }
   } else if (validateMode === "onChangeSetBack") {
     let limit: number | undefined;
     let error: ErrorReport | undefined;
 
-    if (inputInfo.value > maxValue) {
+    if (value > maxValue) {
       limit = maxValue;
       error = MAX_VALUE_ERROR;
     }
-    if (inputInfo.value < minValue) {
+    if (value < minValue) {
       limit = minValue;
       error = MIN_VALUE_ERROR;
     }
 
     if (limit !== undefined) {
-      inputInfo.cursorMoves += digitCount(limit) - digitCount(inputInfo.value);
+      inputInfo.cursorMoves += digitCount(limit) - digitCount(value);
       inputInfo.value = limit;
 
       if (error && typeof onValidateFailed === "function") {
@@ -200,15 +217,18 @@ export function convertToInputValue(
    */
   maxFractionDigits?: number
 ) {
-  const splitResult = inputInfo.value.toString().split(".");
+  const { value, isNegative, withDecimalSeparator, trailingZeroDigits } = inputInfo;
+
+  const splitResult = value.toString().split(".");
   let wholeAsString = splitResult[0];
   const fractionAsString = splitResult[1];
 
   let resultAsString = "";
   let cursorMoves = 0;
-  const isNegative = wholeAsString[0] === "-";
 
-  if (isNegative) {
+  if (isNegative && value !== 0) {
+    // wholeAsString is '-x', x !== 0
+    // minus will be added again later
     wholeAsString = wholeAsString.slice(1);
   }
 
@@ -217,6 +237,7 @@ export function convertToInputValue(
 
     if (j && j % 3 === 0) {
       leftDigit += format.groupingSeparator;
+      // for every groupingSeparator added, push cursor to the right by 1
       cursorMoves++;
     }
     resultAsString = leftDigit + resultAsString;
@@ -230,13 +251,13 @@ export function convertToInputValue(
   }
   if (fractionAsString) {
     resultAsString += format.decimalSeparator + fractionAsString;
-  } else if (inputInfo.withDecimalSeparator) {
+  } else if (withDecimalSeparator) {
     resultAsString += format.decimalSeparator;
   }
-  if (maxFractionDigits && inputInfo.trailingZeroDigits) {
+  if (maxFractionDigits && trailingZeroDigits) {
     const freeSlots = maxFractionDigits - (fractionAsString?.length || 0);
 
-    resultAsString += "0".repeat(Math.min(inputInfo.trailingZeroDigits, freeSlots));
+    resultAsString += "0".repeat(Math.min(trailingZeroDigits, freeSlots));
   }
 
   return resultAsString;

@@ -1,5 +1,3 @@
-import { ChangeEvent } from "react";
-
 export type FormatConfig = {
   groupingSeparator: string;
   decimalSeparator: string;
@@ -12,7 +10,14 @@ type ValidateValue = {
 };
 
 type ValidateAction = {
+  /**
+   * Default to 'onChangePrevent'. Forced to 'onBlur' when (minValue * maxValue > 0).
+   * Why: max 1000, min 10, validateMode 'onChange...' => cannot enter 1-9 for 1... - 9...
+   */
   validateMode: "onChangePrevent" | "onChangeSetBack" | "onBlur";
+  /**
+   * Default to 'round'
+   */
   exceedMaxFractionDigitsAction: "prevent" | "round";
 };
 
@@ -24,7 +29,7 @@ export type ErrorReport = {
 
 export type OnValidateFailedHandler = (args: ErrorReport) => void;
 
-// assume decimalSeparator is "."
+// Assume decimalSeparator is "."
 export type InputInfo = {
   value: number;
   /**
@@ -36,10 +41,19 @@ export type InputInfo = {
    * Only for inputValue "3." when value is 3
    */
   withDecimalSeparator: boolean;
+  /**
+   * Add minus before inputValue or not.
+   * Also to distinguish '0' and '-0', '0.' and '-0.', '0.0' and '-0.0'
+   */
+  isNegative: boolean;
   cursorMoves: number;
 };
 
-export interface IUseInputNumberToolkitArgs extends Partial<FormatConfig>, Partial<ValidateAction> {
+export interface IUseInputNumberArgs extends Partial<FormatConfig>, Partial<ValidateAction> {
+  /**
+   * Default to 'onChange'. 'onBlur' only works when connect to a state.
+   * value or values returned by the hook always change onChange.
+   */
   changeMode?: "onChange" | "onBlur";
   enterActions?: {
     validate?: boolean;
@@ -47,9 +61,19 @@ export interface IUseInputNumberToolkitArgs extends Partial<FormatConfig>, Parti
     blur?: boolean;
   };
   focusActions?: {
+    /**
+     * Select all input value onFocus
+     */
     selectAll?: boolean;
+    /**
+     * Empty input onFocus when value is 0
+     */
     clearZero?: boolean;
   };
+  /**
+   * Empty input onBlur when value is 0. Default to false. Forced to false
+   * when (minValue > 0 || maxValue < 0)
+   */
   allowEmpty?: boolean;
 }
 
@@ -60,15 +84,15 @@ export type ValidateFractionConfig = Pick<ValidateConfig, "maxFractionDigits" | 
 export type RegisterConfig = Partial<ValidateValue> & {
   name?: string;
   /**
-   * Used to sync inputValue with value when value is controlled by something else
+   * Used to sync inputValue with value when value is also controlled by another thing
    */
   value?: number | null;
   /**
-   * Used for connecting to outside state.
+   * Used for connecting to outside state
    */
   onChangeValue?: (value: number) => void;
   /**
-   * Callback fired when validate failed.
+   * Callback fired when validate failed
    */
   onValidateFailed?: OnValidateFailedHandler;
 };

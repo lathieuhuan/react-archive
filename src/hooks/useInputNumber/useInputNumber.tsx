@@ -1,24 +1,20 @@
-import {
-  ChangeEvent,
-  ChangeEventHandler,
-  FocusEvent,
-  FocusEventHandler,
-  KeyboardEvent,
-  KeyboardEventHandler,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { ChangeEvent, FocusEvent, KeyboardEvent, useRef, useState } from "react";
 import { useRunAfterPaint } from "../useRunAfterPaint";
+
+import { RegisterConfig, IUseInputNumberArgs, UpdateInputValuesArgs } from "./types";
+import { initInputInfo, validateInputInfo, convertToInputValue } from "./utils";
 import { ALLOWED_KEYS, CONFIG_DECIMAL_NUMBER, MAXIMUM } from "./constants";
-
-import { RegisterConfig, InputInfo, IUseInputNumberToolkitArgs, UpdateInputValuesArgs, ValidateConfig } from "./types";
-
-import { limitFractionDigits, initInputInfo, validateInputInfo, convertToInputValue } from "./utils";
 
 const DEFAULT_KEY = "undefined";
 
+// Corner case: Add decimalSeparator (.) to '123,456,789' after digit 1 to make '1.23456789'
+// Remove this decimalSeparator, cursor is pushed to the right by 2 because 2 groupingSeparators
+// were added (see convertToInputValue)
+
+/**
+ * 'inputValue' is the formatted value on the input.
+ * 'value' is the value converted from inputValue, is number when succeed, undefined when failed.
+ */
 export function useInputNumber({
   groupingSeparator = CONFIG_DECIMAL_NUMBER.groupingSeparator,
   decimalSeparator = CONFIG_DECIMAL_NUMBER.decimalSeparator,
@@ -28,7 +24,7 @@ export function useInputNumber({
   enterActions = {},
   focusActions = {},
   allowEmpty,
-}: IUseInputNumberToolkitArgs = {}) {
+}: IUseInputNumberArgs = {}) {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
 
   const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});
@@ -51,17 +47,15 @@ export function useInputNumber({
       onValidateFailed,
     } = config || {};
 
+    if (minValue * maxValue > 0) {
+      validateMode = "onBlur";
+    }
+    if (minValue > 0 || maxValue < 0) {
+      // must not happend
+      allowEmpty = false;
+    }
     if (inputValues[name] === undefined) {
       inputValues[name] = "";
-    }
-    if (
-      value !== undefined &&
-      value !== null &&
-      !isNaN(value) &&
-      (valuesRef.current[name] === undefined || valuesRef.current[name] !== value)
-    ) {
-      valuesRef.current[name] = value;
-      updateInputValue({ name, value });
     }
 
     const validate = {
@@ -78,52 +72,40 @@ export function useInputNumber({
       }
     };
 
-    // return value after
-    function onChange(e: ChangeEvent<HTMLInputElement>) {
-      const { value } = e.target;
+    // sync inputValue with value
+    // need to validate and run onValidateFailed
+    // need to handle case value is invalid (undefined, null...)
+    if (
+      value !== undefined &&
+      value !== null &&
+      !isNaN(value) &&
+      (valuesRef.current[name] === undefined || valuesRef.current[name] !== value)
+    ) {
+      const inputInfo = {
+        value,
+        trailingZeroDigits: 0,
+        isNegative: false,
+        cursorMoves: 0,
+        withDecimalSeparator: false,
+      };
 
       try {
-        if (["-", ""].includes(value)) {
-          // case: from "3" to "" in Most Basic, value is still 3, set to 0 or min?
-          // valuesRef.current[name] = 0;
-          setInputValues((prev) => ({ ...prev, [name]: value }));
-
-          if (changeMode === "onChange" && typeof onChangeValue === "function") {
-            onChangeValue(0);
-          }
-          return;
-        }
-
-        const inputInfo = initInputInfo(value, format);
-
-        if (validateMode === "onBlur") {
-          // default validate
-          validateInputInfo(inputInfo, {
-            validate: {
-              maxValue: MAXIMUM,
-              minValue: -MAXIMUM,
-              maxFractionDigits: 6, // for now, to prevent 0.0000001 => 1e-7
-              exceedMaxFractionDigitsAction: "prevent",
-              validateMode: "onChangePrevent",
-            },
-          });
-        } else {
-          validateInputInfo(inputInfo, { format, validate, onValidateFailed });
-        }
-
-        const newValue = updateInputValue(
-          {
-            name,
-            ...inputInfo,
-            newCursor: e.target.selectionStart,
-            maxFractionDigits: validate.maxFractionDigits,
-          },
-          onChangeValue
-        );
-
-        return newValue;
+        validateInputInfo(inputInfo, { format, validate, onValidateFailed });
       } catch (error) {
         //
+        // updateValue(valuesRef.current[name]);
+      }
+      updateInputValue({ name, value: inputInfo.value }, onChangeValue);
+
+      valuesRef.current[name] = value;
+    }
+
+    function onFocus(e: FocusEvent<HTMLInputElement>) {
+      if (focusActions.clearZero && inputValues[name] === "0") {
+        setInputValues((prev) => ({ ...prev, [name]: "" }));
+      }
+      if (focusActions.selectAll) {
+        inputsRef.current[name]?.setSelectionRange(0, 20);
       }
     }
 
@@ -174,24 +156,27 @@ export function useInputNumber({
 
       if (e.key === "-") {
         // only allow '-' at the start when min is negative
-        if (validate.minValue < 0 && selectionStart === 0) {
+        if (selectionStart === 0 && validate.minValue < 0) {
           return;
         }
-      } else if (e.key === format.decimalSeparator) {
+      } else if (e.key === decimalSeparator) {
         if (validate.maxFractionDigits > 0) {
           return;
         }
       } else if (/[0-9]/g.test(e.key) || ALLOWED_KEYS.includes(e.key)) {
-        if (selectionStart) {
+        if (selectionStart && selectionEnd) {
           // prevent removing groupingSeparator
-          if (
-            (e.key === "Backspace" &&
-              beforeInputValue.slice(selectionStart - 1, selectionStart) === format.groupingSeparator) ||
-            (e.key === "Delete" &&
-              beforeInputValue.slice(selectionStart, selectionStart + 1) === format.groupingSeparator) ||
-            (["Backspace", "Delete"].includes(e.key) &&
-              selectionEnd &&
-              beforeInputValue.slice(selectionStart, selectionEnd) === format.groupingSeparator)
+          if (selectionStart === selectionEnd) {
+            if (
+              (e.key === "Backspace" &&
+                beforeInputValue.slice(selectionStart - 1, selectionStart) === groupingSeparator) ||
+              (e.key === "Delete" && beforeInputValue.slice(selectionStart, selectionStart + 1) === groupingSeparator)
+            ) {
+              e.preventDefault();
+            }
+          } else if (
+            ["Backspace", "Delete"].includes(e.key) &&
+            beforeInputValue.slice(selectionStart, selectionEnd) === groupingSeparator
           ) {
             e.preventDefault();
           }
@@ -199,6 +184,56 @@ export function useInputNumber({
         return;
       }
       e.preventDefault();
+    }
+
+    /**
+     * @returns the value equivalent of inputValue
+     */
+    function onChange(e: ChangeEvent<HTMLInputElement>) {
+      const { value } = e.target;
+
+      try {
+        if (["-", ""].includes(value)) {
+          setInputValues((prev) => ({ ...prev, [name]: value }));
+          valuesRef.current[name] = 0;
+
+          if (changeMode === "onChange") {
+            updateValue(0);
+          }
+          return 0;
+        }
+
+        const inputInfo = initInputInfo(value, format);
+
+        if (validateMode === "onBlur") {
+          // default validate
+          validateInputInfo(inputInfo, {
+            validate: {
+              maxValue: MAXIMUM,
+              minValue: -MAXIMUM,
+              maxFractionDigits: 6, // for now, to prevent 0.0000001 => 1e-7
+              exceedMaxFractionDigitsAction: "prevent",
+              validateMode: "onChangePrevent",
+            },
+          });
+        } else {
+          validateInputInfo(inputInfo, { format, validate, onValidateFailed });
+        }
+
+        const newValue = updateInputValue(
+          {
+            name,
+            ...inputInfo,
+            newCursor: e.target.selectionStart,
+            maxFractionDigits: validate.maxFractionDigits,
+          },
+          onChangeValue
+        );
+
+        return newValue;
+      } catch (error) {
+        //
+      }
     }
 
     function onBlur(e: FocusEvent<HTMLInputElement>) {
@@ -222,6 +257,8 @@ export function useInputNumber({
             ...inputInfo,
             trailingZeroDigits: 0,
             withDecimalSeparator: false,
+            // '-0' and '0' are treated the same onBlur
+            isNegative: inputInfo.value === 0 ? false : inputInfo.isNegative,
           },
           format,
           validate.maxFractionDigits
@@ -234,15 +271,6 @@ export function useInputNumber({
         setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
       } catch (error) {
         //
-      }
-    }
-
-    function onFocus(e: FocusEvent<HTMLInputElement>) {
-      if (focusActions.clearZero && inputValues[name] === "0") {
-        setInputValues((prev) => ({ ...prev, [name]: "" }));
-      }
-      if (focusActions.selectAll) {
-        inputsRef.current[name]?.setSelectionRange(0, 20);
       }
     }
 
@@ -277,8 +305,8 @@ export function useInputNumber({
     const newInputValue = convertToInputValue(inputInfo, format, maxFractionDigits);
 
     if (newInputValue !== inputValues[name]) {
-      valuesRef.current[name] = value;
       setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
+      valuesRef.current[name] = value;
 
       if (changeMode === "onChange" && typeof onChange === "function") {
         onChange(value);
