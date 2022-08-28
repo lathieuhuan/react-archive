@@ -12,7 +12,10 @@ export function initInputInfo(strValue: string, format: FormatConfig): InputInfo
   const [wholePart, fractionPart] = parts;
 
   if (parts.length > 2) {
-    throw new Error(`There're atleast 2 decimal separators [${format.decimalSeparator}]`);
+    throw {
+      failCase: "format/decimalSeparator",
+      message: `There're atleast 2 decimal separators [${format.decimalSeparator}]`,
+    };
   }
 
   let whole = 0;
@@ -29,7 +32,10 @@ export function initInputInfo(strValue: string, format: FormatConfig): InputInfo
     let digitPart = wholeSubParts[0];
 
     if (wholeSubParts.length > 2) {
-      throw new Error("There're atleast 2 minus signs");
+      throw {
+        failCase: "format/minusSign",
+        message: "There're atleast 2 minus signs",
+      };
     }
     if (wholeSubParts.length === 2) {
       digitPart = wholeSubParts[1];
@@ -43,10 +49,13 @@ export function initInputInfo(strValue: string, format: FormatConfig): InputInfo
 
     for (const char of digitPart) {
       if (char === format.groupingSeparator) {
-        // for every groupingSeparator removed, push cursor to left by 1
+        // for every groupingSeparator removed, push cursor to the left by 1
         cursorMoves--;
       } else if (isNaN(+char)) {
-        throw new Error(`Invalid wholePart [${digitPart}]`);
+        throw {
+          failCase: "format/NaN",
+          message: `Value [${strValue}] is not a number`,
+        };
       } else {
         resultAsString += char;
       }
@@ -68,7 +77,10 @@ export function initInputInfo(strValue: string, format: FormatConfig): InputInfo
         const char = fractionPart[i];
 
         if (isNaN(+char) && char !== format.groupingSeparator) {
-          throw new Error(`Invalid fractionPart [${fractionPart}]`);
+          throw {
+            failCase: "format/NaN",
+            message: `Value [${strValue}] is not a number`,
+          };
         } else if (char === "0" && isTrailing) {
           trailingZeroDigits++;
         } else if (char !== format.groupingSeparator) {
@@ -117,7 +129,10 @@ export function validateInputInfo(inputInfo: InputInfo, { format, validate, onVa
     }
     tempInputValue += "0".repeat(inputInfo.trailingZeroDigits);
 
-    const limitedResult = limitFractionDigits(tempInputValue, validate);
+    const limitedResult = limitFractionDigits(tempInputValue, {
+      ...validate,
+      onValidateFailed,
+    });
 
     inputInfo.value = limitedResult.newValue;
     inputInfo.trailingZeroDigits = limitedResult.newTrailingZeroDigits;
@@ -126,13 +141,11 @@ export function validateInputInfo(inputInfo: InputInfo, { format, validate, onVa
   // VALIDATE MAX, MIN
   const MAX_VALUE_ERROR: ErrorReport = {
     failCase: "maxValue",
-    records: [maxValue.toString().replace(".", decimalSeparator)],
-    message: `Result ${value} is larger than max ${maxValue}`,
+    message: `Value must be equal or less than ${maxValue}`,
   };
   const MIN_VALUE_ERROR: ErrorReport = {
     failCase: "minValue",
-    records: [minValue.toString().replace(".", decimalSeparator)],
-    message: `Result ${value} is smaller than min ${minValue}`,
+    message: `Value must be equal or more than ${minValue}`,
   };
 
   if (validateMode === "onChangePrevent") {
@@ -173,7 +186,11 @@ export function validateInputInfo(inputInfo: InputInfo, { format, validate, onVa
  */
 export function limitFractionDigits(
   value: string | number,
-  { maxFractionDigits = 3, exceedMaxFractionDigitsAction = "round" }: Partial<ValidateFractionConfig> = {}
+  {
+    maxFractionDigits = 3,
+    exceedMaxFractionDigitsAction = "round",
+    onValidateFailed,
+  }: Partial<ValidateFractionConfig> = {}
 ) {
   let newValue = +value;
   let newTrailingZeroDigits = 0;
@@ -201,6 +218,13 @@ export function limitFractionDigits(
       const freeSlots = maxFractionDigits - digitCount(+newValue.toString().split(".")[1]);
       newTrailingZeroDigits = Math.min(freeSlots, newTrailingZeroDigits);
     }
+  }
+
+  if (digitCount(newValue) !== digitCount(+value) && typeof onValidateFailed === "function") {
+    onValidateFailed({
+      failCase: "format/maxFractionDigits",
+      message: `The maximum number of fraction digits is ${maxFractionDigits}`,
+    });
   }
 
   return {

@@ -7,6 +7,7 @@ import Button from "@Src/components/Button";
 import InputBox from "@Src/components/InputBox";
 import JsonDisplayer from "@Src/components/JsonDisplayer";
 import { ConnectToStateTemplate } from "./template";
+import Tooltip from "@Src/components/Tooltip";
 
 const sectionStyle = "mt-4 p-4 rounded-lg border border-slate-200 break-inside-avoid-column";
 
@@ -126,11 +127,11 @@ function ConnectToState() {
   const [valueA, setValueA] = useState(0);
   const [valueB, setValueB] = useState(0);
   const [valueC, setValueC] = useState(0);
-  const { register } = useInputNumber({ validateMode: "onChangePrevent" });
+  const { register, updateInputValue } = useInputNumber({ changeMode: "onBlur", validateMode: "onBlur" });
 
-  const { onChange, ...rest } = register({ name: "inputB", minValue: -1000000 });
-
-  console.log(valueC);
+  const { onChange, ...rest } = register({
+    name: "inputB",
+  });
 
   return (
     <div className="flex flex-col">
@@ -184,6 +185,7 @@ function ConnectToState() {
               value: valueC,
               maxValue: 1000,
               onChangeValue: setValueC,
+              onValidateFailed: (error) => alert(error.message),
             })}
           />
         }
@@ -199,10 +201,18 @@ function ConnectToState() {
           Change valueC to the same as valueB
         </Button>
         <Button
-          className="shrink-0 bg-orange-500 hover:bg-orange-400 text-xl font-bold"
+          className="shrink-0 bg-orange-500 hover:bg-orange-400 text-xl font-bold relative group"
           onClick={() => setValueC(valueC + 1)}
         >
           +
+          <Tooltip className="w-48 text-sm font-normal" placement="bottom" text="use third party to control" />
+        </Button>
+        <Button
+          className="shrink-0 bg-cyan-500 hover:bg-cyan-400 text-xl font-bold relative group"
+          onClick={() => updateInputValue({ name: "inputC", value: valueC + 1 })}
+        >
+          +
+          <Tooltip className="w-44 text-sm font-normal" placement="bottom" text="use updateInputValue of the hook" />
         </Button>
       </div>
     </div>

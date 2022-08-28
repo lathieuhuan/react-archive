@@ -1,7 +1,7 @@
 import { ChangeEvent, FocusEvent, KeyboardEvent, useRef, useState } from "react";
 import { useRunAfterPaint } from "../useRunAfterPaint";
 
-import { RegisterConfig, IUseInputNumberArgs, UpdateInputValuesArgs } from "./types";
+import { RegisterConfig, IUseInputNumberArgs, UpdateInputValuesArgs, ErrorReport } from "./types";
 import { initInputInfo, validateInputInfo, convertToInputValue } from "./utils";
 import { ALLOWED_KEYS, CONFIG_DECIMAL_NUMBER, MAXIMUM } from "./constants";
 
@@ -10,6 +10,11 @@ const DEFAULT_KEY = "undefined";
 // Corner case: Add decimalSeparator (.) to '123,456,789' after digit 1 to make '1.23456789'
 // Remove this decimalSeparator, cursor is pushed to the right by 2 because 2 groupingSeparators
 // were added (see convertToInputValue)
+
+// #to-do:
+// use validateOnSync when syncing inputValue with value
+// changeMode 'onChange', validateMode 'onBlur' => when blur not change value back
+// changeMode 'onBlur', validateMode 'onBlur' => cannot change inputValue due to value immediately change it back
 
 /**
  * 'inputValue' is the formatted value on the input.
@@ -20,7 +25,8 @@ export function useInputNumber({
   decimalSeparator = CONFIG_DECIMAL_NUMBER.decimalSeparator,
   changeMode = "onChange",
   validateMode = "onChangePrevent",
-  exceedMaxFractionDigitsAction = "round",
+  exceedMaxFractionDigitsAction = "prevent",
+  validateOnSync = {},
   enterActions = {},
   focusActions = {},
   allowEmpty,
@@ -61,7 +67,7 @@ export function useInputNumber({
     const validate = {
       maxValue,
       minValue,
-      maxFractionDigits: Math.max(maxFractionDigits, 0),
+      maxFractionDigits,
       exceedMaxFractionDigitsAction,
       validateMode,
     };
@@ -73,7 +79,6 @@ export function useInputNumber({
     };
 
     // sync inputValue with value
-    // need to validate and run onValidateFailed
     // need to handle case value is invalid (undefined, null...)
     if (
       value !== undefined &&
@@ -91,11 +96,14 @@ export function useInputNumber({
 
       try {
         validateInputInfo(inputInfo, { format, validate, onValidateFailed });
+        updateInputValue({ name, value: inputInfo.value }, onChangeValue);
       } catch (error) {
-        //
-        // updateValue(valuesRef.current[name]);
+        if (typeof onValidateFailed === "function") {
+          onValidateFailed(error as ErrorReport);
+        }
+        // validate failed, change value and back to before
+        updateValue(valuesRef.current[name]);
       }
-      updateInputValue({ name, value: inputInfo.value }, onChangeValue);
 
       valuesRef.current[name] = value;
     }
@@ -232,7 +240,9 @@ export function useInputNumber({
 
         return newValue;
       } catch (error) {
-        //
+        if (typeof onValidateFailed === "function") {
+          onValidateFailed(error as ErrorReport);
+        }
       }
     }
 
@@ -270,7 +280,9 @@ export function useInputNumber({
 
         setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
       } catch (error) {
-        //
+        if (typeof onValidateFailed === "function") {
+          onValidateFailed(error as ErrorReport);
+        }
       }
     }
 
@@ -304,28 +316,26 @@ export function useInputNumber({
 
     const newInputValue = convertToInputValue(inputInfo, format, maxFractionDigits);
 
-    if (newInputValue !== inputValues[name]) {
-      setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
-      valuesRef.current[name] = value;
-
-      if (changeMode === "onChange" && typeof onChange === "function") {
-        onChange(value);
-      }
-
-      // update cursor position
-      runAfterPaint(() => {
-        if (newCursor !== null) {
-          // keep cursor after 0 (0 is intended to not be removed)
-          if (["0", "-0"].includes(newInputValue)) {
-            newCursor++;
-          } else {
-            newCursor += inputInfo.cursorMoves;
-          }
-          newCursor = Math.max(newCursor, 0);
-        }
-        inputsRef.current?.[name]?.setSelectionRange(newCursor, newCursor);
-      });
+    if (changeMode === "onChange" && typeof onChange === "function") {
+      onChange(value);
     }
+
+    setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
+    valuesRef.current[name] = value;
+
+    // update cursor position
+    runAfterPaint(() => {
+      if (newCursor !== null) {
+        // keep cursor after 0 (0 is intended to not be removed)
+        if (["0", "-0"].includes(newInputValue)) {
+          newCursor++;
+        } else {
+          newCursor += inputInfo.cursorMoves;
+        }
+        newCursor = Math.max(newCursor, 0);
+      }
+      inputsRef.current?.[name]?.setSelectionRange(newCursor, newCursor);
+    });
 
     return value;
   }
@@ -334,5 +344,6 @@ export function useInputNumber({
     value: valuesRef.current.undefined,
     values: valuesRef.current,
     register,
+    updateInputValue,
   };
 }

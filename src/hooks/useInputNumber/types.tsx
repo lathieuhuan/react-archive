@@ -3,6 +3,8 @@ export type FormatConfig = {
   decimalSeparator: string;
 };
 
+type ValidateMode = "onChangePrevent" | "onChangeSetBack" | "onBlur";
+
 type ValidateValue = {
   maxValue: number;
   minValue: number;
@@ -14,16 +16,21 @@ type ValidateAction = {
    * Default to 'onChangePrevent'. Forced to 'onBlur' when (minValue * maxValue > 0).
    * Why: max 1000, min 10, validateMode 'onChange...' => cannot enter 1-9 for 1... - 9...
    */
-  validateMode: "onChangePrevent" | "onChangeSetBack" | "onBlur";
+  validateMode: ValidateMode;
   /**
-   * Default to 'round'
+   * Default to 'prevent'
    */
   exceedMaxFractionDigitsAction: "prevent" | "round";
 };
 
 export type ErrorReport = {
-  failCase: "minValue" | "maxValue";
-  records: (number | string)[];
+  failCase:
+    | "format/decimalSeparator"
+    | "format/maxFractionDigits"
+    | "format/minusSign"
+    | "format/NaN"
+    | "minValue"
+    | "maxValue";
   message: string;
 };
 
@@ -55,6 +62,21 @@ export interface IUseInputNumberArgs extends Partial<FormatConfig>, Partial<Vali
    * value or values returned by the hook always change onChange.
    */
   changeMode?: "onChange" | "onBlur";
+  /**
+   * When connected to a state by passing a value and there's a third party
+   * also controlling this value, validation will be carried out everytime value
+   * is changed by the said party
+   */
+  validateOnSync?: {
+    /**
+     * Default to 'onChangePrevent'
+     */
+    mode?: Exclude<ValidateMode, "onBlur">;
+    /**
+     * Default to 'round'. 'round' will prevent floating-point issue
+     */
+    exceedMaxFractionDigitsAction?: "prevent" | "round";
+  };
   enterActions?: {
     validate?: boolean;
     changeValue?: boolean;
@@ -79,7 +101,9 @@ export interface IUseInputNumberArgs extends Partial<FormatConfig>, Partial<Vali
 
 export type ValidateConfig = ValidateValue & ValidateAction;
 
-export type ValidateFractionConfig = Pick<ValidateConfig, "maxFractionDigits" | "exceedMaxFractionDigitsAction">;
+export type ValidateFractionConfig = Pick<ValidateConfig, "maxFractionDigits" | "exceedMaxFractionDigitsAction"> & {
+  onValidateFailed?: OnValidateFailedHandler;
+};
 
 export type RegisterConfig = Partial<ValidateValue> & {
   name?: string;
