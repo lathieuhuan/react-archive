@@ -96,7 +96,7 @@ export function useInputNumber({
 
       try {
         validateInputInfo(inputInfo, { format, validate, onValidateFailed });
-        updateInputValue({ name, value: inputInfo.value }, onChangeValue);
+        updateInputValue({ name, value: inputInfo.value });
       } catch (error) {
         if (typeof onValidateFailed === "function") {
           onValidateFailed(error as ErrorReport);
