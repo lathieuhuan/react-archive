@@ -29,12 +29,11 @@ export function useInputNumber({
   validateOnSync = {},
   enterActions = {},
   focusActions = {},
-  allowEmpty,
 }: IUseInputNumberArgs = {}) {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
 
   const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});
-  const valuesRef = useRef<Record<string, number>>({});
+  const valuesRef = useRef<Record<string, number | undefined>>({});
   const runAfterPaint = useRunAfterPaint();
 
   const format = {
@@ -42,7 +41,7 @@ export function useInputNumber({
     decimalSeparator,
   };
 
-  function register(config?: RegisterConfig) {
+  function register(config: RegisterConfig = {}) {
     const {
       name = DEFAULT_KEY,
       value,
@@ -51,17 +50,10 @@ export function useInputNumber({
       maxFractionDigits = 0,
       onChangeValue,
       onValidateFailed,
-    } = config || {};
+    } = config;
 
     if (minValue * maxValue > 0) {
       validateMode = "onBlur";
-    }
-    if (minValue > 0 || maxValue < 0) {
-      // must not happend
-      allowEmpty = false;
-    }
-    if (inputValues[name] === undefined) {
-      inputValues[name] = "";
     }
 
     const validate = {
@@ -72,7 +64,7 @@ export function useInputNumber({
       validateMode,
     };
 
-    const updateValue = (newValue: number) => {
+    const updateValue = (newValue: number | undefined) => {
       if (typeof onChangeValue === "function") {
         onChangeValue(newValue);
       }
@@ -80,32 +72,41 @@ export function useInputNumber({
 
     // sync inputValue with value
     // need to handle case value is invalid (undefined, null...)
-    if (
-      value !== undefined &&
-      value !== null &&
-      !isNaN(value) &&
-      (valuesRef.current[name] === undefined || valuesRef.current[name] !== value)
-    ) {
-      const inputInfo = {
-        value,
-        trailingZeroDigits: 0,
-        isNegative: false,
-        cursorMoves: 0,
-        withDecimalSeparator: false,
-      };
+    // if (
+    //   value !== undefined &&
+    //   value !== null &&
+    //   !isNaN(value) &&
+    //   (valuesRef.current[name] === undefined || valuesRef.current[name] !== value)
+    // ) {
+    //   const inputInfo = {
+    //     value,
+    //     trailingZeroDigits: 0,
+    //     isNegative: false,
+    //     cursorMoves: 0,
+    //     withDecimalSeparator: false,
+    //   };
 
-      try {
-        validateInputInfo(inputInfo, { format, validate, onValidateFailed });
-        updateInputValue({ name, value: inputInfo.value });
-      } catch (error) {
-        if (typeof onValidateFailed === "function") {
-          onValidateFailed(error as ErrorReport);
-        }
-        // validate failed, change value and back to before
-        updateValue(valuesRef.current[name]);
+    //   try {
+    //     validateInputInfo(inputInfo, { format, validate, onValidateFailed });
+    //     updateInputValue({ name, value: inputInfo.value });
+    //   } catch (error) {
+    //     if (typeof onValidateFailed === "function") {
+    //       onValidateFailed(error as ErrorReport);
+    //     }
+    //     // validate failed, change value and back to before
+    //     updateValue(valuesRef.current[name]);
+    //   }
+
+    //   valuesRef.current[name] = value;
+    // }
+
+    if ('value' in config) {
+      if (value === undefined && valuesRef.current[name] !== undefined) {
+        setInputValues((prev) => ({...prev, [name]: ''}));
+        valuesRef.current[name] = undefined;
+      } else if (value !== undefined && value !== valuesRef.current[name]) {
+        updateInputValue({ name, value });
       }
-
-      valuesRef.current[name] = value;
     }
 
     function onFocus(e: FocusEvent<HTMLInputElement>) {
@@ -113,7 +114,7 @@ export function useInputNumber({
         setInputValues((prev) => ({ ...prev, [name]: "" }));
       }
       if (focusActions.selectAll) {
-        inputsRef.current[name]?.setSelectionRange(0, 20);
+        inputsRef.current[name]?.setSelectionRange(0, 50);
       }
     }
 
@@ -203,12 +204,12 @@ export function useInputNumber({
       try {
         if (["-", ""].includes(value)) {
           setInputValues((prev) => ({ ...prev, [name]: value }));
-          valuesRef.current[name] = 0;
+          valuesRef.current[name] = undefined;
 
           if (changeMode === "onChange") {
-            updateValue(0);
+            updateValue(undefined);
           }
-          return 0;
+          return;
         }
 
         const inputInfo = initInputInfo(value, format);
@@ -274,7 +275,7 @@ export function useInputNumber({
           validate.maxFractionDigits
         );
 
-        if (newInputValue === "0" && allowEmpty) {
+        if (newInputValue === "0") {
           newInputValue = "";
         }
 
@@ -290,7 +291,7 @@ export function useInputNumber({
       ref: (el: HTMLInputElement | null) => {
         inputsRef.current[name] = el;
       },
-      value: inputValues[name],
+      value: inputValues[name] || "",
       onChange,
       onKeyDown,
       onFocus,
@@ -298,13 +299,16 @@ export function useInputNumber({
     };
   }
 
-  function updateInputValue(args: UpdateInputValuesArgs, onChange?: (value: number) => void) {
+  function updateInputValue(args: UpdateInputValuesArgs, onChange?: (value?: number) => void) {
     const { name, value, maxFractionDigits, ...valueInfo } = args;
-    let newCursor = args.newCursor || null;
-
-    if (value === undefined || value === null || isNaN(value)) {
-      return 0;
+    
+    if (!value) {
+      setInputValues((prev) => ({ ...prev, [name]: '' }));
+      valuesRef.current[name] = undefined;
+      return;
     }
+
+    let newCursor = args.newCursor || null;
 
     const inputInfo = {
       value,

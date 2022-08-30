@@ -96,7 +96,7 @@ export interface IUseInputNumberArgs extends Partial<FormatConfig>, Partial<Vali
    * Empty input onBlur when value is 0. Default to false. Forced to false
    * when (minValue > 0 || maxValue < 0)
    */
-  allowEmpty?: boolean;
+  // valueWhenEmpty?: boolean;
 }
 
 export type ValidateConfig = ValidateValue & ValidateAction;
@@ -110,11 +110,11 @@ export type RegisterConfig = Partial<ValidateValue> & {
   /**
    * Used to sync inputValue with value when value is also controlled by another thing
    */
-  value?: number | null;
+  value?: number;
   /**
    * Used for connecting to outside state
    */
-  onChangeValue?: (value: number) => void;
+  onChangeValue?: (value: number | undefined) => void;
   /**
    * Callback fired when validate failed
    */
@@ -127,9 +127,9 @@ export type Config = {
   onValidateFailed?: OnValidateFailedHandler;
 };
 
-export type UpdateInputValuesArgs = Partial<InputInfo> & {
+export type UpdateInputValuesArgs = Omit<Partial<InputInfo>, 'value'> & {
   name: string;
-  value?: number | null;
+  value?: number;
   newCursor?: number | null;
   maxFractionDigits?: number;
 };
