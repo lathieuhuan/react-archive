@@ -29,8 +29,11 @@ export function useInputNumber({
   validateOnSync = {},
   enterActions = {},
   focusActions = {},
+  valueWhenEmpty,
 }: IUseInputNumberArgs = {}) {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  // fake state to trigger render onBlur when not connected to outside state
+  const [, setBoo] = useState(true);
 
   const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});
   const valuesRef = useRef<Record<string, number | undefined>>({});
@@ -55,6 +58,9 @@ export function useInputNumber({
     if (minValue * maxValue > 0) {
       validateMode = "onBlur";
     }
+    if (minValue > 0 || maxValue < 0) {
+      valueWhenEmpty = undefined;
+    }
 
     const validate = {
       maxValue,
@@ -68,50 +74,30 @@ export function useInputNumber({
       if (typeof onChangeValue === "function") {
         onChangeValue(newValue);
       }
+      valuesRef.current[name] = newValue;
     };
 
-    // sync inputValue with value
-    // need to handle case value is invalid (undefined, null...)
-    // if (
-    //   value !== undefined &&
-    //   value !== null &&
-    //   !isNaN(value) &&
-    //   (valuesRef.current[name] === undefined || valuesRef.current[name] !== value)
-    // ) {
-    //   const inputInfo = {
-    //     value,
-    //     trailingZeroDigits: 0,
-    //     isNegative: false,
-    //     cursorMoves: 0,
-    //     withDecimalSeparator: false,
-    //   };
+    if (!valuesRef.current.hasOwnProperty(name)) {
+      inputValues[name] = "";
+      valuesRef.current[name] = undefined;
+    }
 
-    //   try {
-    //     validateInputInfo(inputInfo, { format, validate, onValidateFailed });
-    //     updateInputValue({ name, value: inputInfo.value });
-    //   } catch (error) {
-    //     if (typeof onValidateFailed === "function") {
-    //       onValidateFailed(error as ErrorReport);
-    //     }
-    //     // validate failed, change value and back to before
-    //     updateValue(valuesRef.current[name]);
-    //   }
-
-    //   valuesRef.current[name] = value;
-    // }
-
-    if ('value' in config) {
-      if (value === undefined && valuesRef.current[name] !== undefined) {
-        setInputValues((prev) => ({...prev, [name]: ''}));
-        valuesRef.current[name] = undefined;
-      } else if (value !== undefined && value !== valuesRef.current[name]) {
+    if ("value" in config && value !== valuesRef.current[name]) {
+      if (value === undefined) {
+        setInputValues((prev) => ({ ...prev, [name]: "" }));
+      } else {
         updateInputValue({ name, value });
       }
+      valuesRef.current[name] = value;
     }
 
     function onFocus(e: FocusEvent<HTMLInputElement>) {
       if (focusActions.clearZero && inputValues[name] === "0") {
         setInputValues((prev) => ({ ...prev, [name]: "" }));
+
+        if (changeMode === "onChange" && valueWhenEmpty === undefined) {
+          updateValue(undefined);
+        }
       }
       if (focusActions.selectAll) {
         inputsRef.current[name]?.setSelectionRange(0, 50);
@@ -204,10 +190,9 @@ export function useInputNumber({
       try {
         if (["-", ""].includes(value)) {
           setInputValues((prev) => ({ ...prev, [name]: value }));
-          valuesRef.current[name] = undefined;
 
           if (changeMode === "onChange") {
-            updateValue(undefined);
+            updateValue(valueWhenEmpty);
           }
           return;
         }
@@ -229,17 +214,18 @@ export function useInputNumber({
           validateInputInfo(inputInfo, { format, validate, onValidateFailed });
         }
 
-        const newValue = updateInputValue(
-          {
-            name,
-            ...inputInfo,
-            newCursor: e.target.selectionStart,
-            maxFractionDigits: validate.maxFractionDigits,
-          },
-          onChangeValue
-        );
+        updateInputValue({
+          name,
+          ...inputInfo,
+          newCursor: e.target.selectionStart,
+          maxFractionDigits: validate.maxFractionDigits,
+        });
 
-        return newValue;
+        if (changeMode === "onChange") {
+          updateValue(inputInfo.value);
+        }
+
+        return inputInfo.value;
       } catch (error) {
         if (typeof onValidateFailed === "function") {
           onValidateFailed(error as ErrorReport);
@@ -259,9 +245,6 @@ export function useInputNumber({
             },
           });
         }
-        if (changeMode === "onBlur") {
-          updateValue(inputInfo.value);
-        }
 
         let newInputValue = convertToInputValue(
           {
@@ -275,11 +258,28 @@ export function useInputNumber({
           validate.maxFractionDigits
         );
 
-        if (newInputValue === "0") {
+        // after validate empty string is still converted to 0
+        if (["", "-"].includes(inputValues[name]) && newInputValue === "0" && valueWhenEmpty !== 0) {
           newInputValue = "";
         }
 
-        setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
+        if (newInputValue !== inputValues[name]) {
+          setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
+
+          if (changeMode === "onChange" && newInputValue === "0") {
+            updateValue(0);
+          }
+        }
+
+        const newValue = newInputValue === "" ? undefined : inputInfo.value;
+
+        if (changeMode === "onBlur" && newValue !== value) {
+          updateValue(newValue);
+
+          if (!config.hasOwnProperty("value")) {
+            setBoo((prev) => !prev);
+          }
+        }
       } catch (error) {
         if (typeof onValidateFailed === "function") {
           onValidateFailed(error as ErrorReport);
@@ -291,7 +291,7 @@ export function useInputNumber({
       ref: (el: HTMLInputElement | null) => {
         inputsRef.current[name] = el;
       },
-      value: inputValues[name] || "",
+      value: inputValues[name],
       onChange,
       onKeyDown,
       onFocus,
@@ -299,15 +299,8 @@ export function useInputNumber({
     };
   }
 
-  function updateInputValue(args: UpdateInputValuesArgs, onChange?: (value?: number) => void) {
+  function updateInputValue(args: UpdateInputValuesArgs) {
     const { name, value, maxFractionDigits, ...valueInfo } = args;
-    
-    if (!value) {
-      setInputValues((prev) => ({ ...prev, [name]: '' }));
-      valuesRef.current[name] = undefined;
-      return;
-    }
-
     let newCursor = args.newCursor || null;
 
     const inputInfo = {
@@ -320,34 +313,30 @@ export function useInputNumber({
 
     const newInputValue = convertToInputValue(inputInfo, format, maxFractionDigits);
 
-    if (changeMode === "onChange" && typeof onChange === "function") {
-      onChange(value);
-    }
+    if (newInputValue !== inputValues[name]) {
+      setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
 
-    setInputValues((prev) => ({ ...prev, [name]: newInputValue }));
-    valuesRef.current[name] = value;
-
-    // update cursor position
-    runAfterPaint(() => {
-      if (newCursor !== null) {
-        // keep cursor after 0 (0 is intended to not be removed)
-        if (["0", "-0"].includes(newInputValue)) {
-          newCursor++;
-        } else {
+      // update cursor position
+      runAfterPaint(() => {
+        if (newCursor !== null) {
           newCursor += inputInfo.cursorMoves;
+          newCursor = Math.max(newCursor, 0);
         }
-        newCursor = Math.max(newCursor, 0);
-      }
-      inputsRef.current?.[name]?.setSelectionRange(newCursor, newCursor);
-    });
+        inputsRef.current?.[name]?.setSelectionRange(newCursor, newCursor);
+      });
+    }
+  }
 
-    return value;
+  function unregister(name: string) {
+    delete inputsRef.current[name];
+    delete valuesRef.current[name];
+    delete inputValues[name];
   }
 
   return {
     value: valuesRef.current.undefined,
     values: valuesRef.current,
     register,
-    updateInputValue,
+    unregister,
   };
 }

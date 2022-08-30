@@ -14,9 +14,9 @@ const sectionStyle = "mt-4 p-4 rounded-lg border border-slate-200 break-inside-a
 export default function UseInputNumberExamples() {
   return (
     <div className="columns-2">
-      <Test />
+      {/* <Test /> */}
 
-      {/* <div className={classNames("space-y-2", sectionStyle, "mt-0")}>
+      <div className={classNames("space-y-2", sectionStyle, "mt-0")}>
         <Basic />
         <BasicWithConfigAndValidate />
       </div>
@@ -27,275 +27,282 @@ export default function UseInputNumberExamples() {
         <ConnectToState />
       </div>
 
-      <MultipleDynamicInputs /> */}
+      <MultipleDynamicInputs />
     </div>
   );
 }
 
-function Test() {
-  const [value, setValue] = useState<number | undefined>();
-  const { register, values, updateInputValue } = useInputNumber();
+// function Test() {
+//   const [value, setValue] = useState<number | undefined>();
+//   const { register, values } = useInputNumber({
+//     changeMode: "onBlur",
+//     // changeMode: "onChange",
+//     // validateMode: "onBlur",
+//     // valueWhenEmpty: "0",
+//   });
+
+//   return (
+//     <div className={classNames("space-y-2", sectionStyle, "mt-0")}>
+//       <InputBox
+//         {...register({
+//           name: "test",
+//           value,
+//           maxValue: 100000,
+//           minValue: -1000000,
+//           onChangeValue: (num) => {
+//             console.log("run setValue");
+//             setValue(num);
+//           },
+//         })}
+//       />
+
+//       <div className="space-x-2">
+//         <Button onClick={() => setValue((value || 0) - 1)}>-</Button>
+//         <Button
+//           onClick={() => {
+//             console.log("state", value);
+//             console.log(values);
+//           }}
+//         >
+//           Log
+//         </Button>
+//         <Button onClick={() => setValue((value || 0) + 1)}>+</Button>
+//         <Button onClick={() => setValue(undefined)}>Clear</Button>
+//       </div>
+
+//       <JsonDisplayer title="Values hook" body={values} />
+//       <JsonDisplayer title="Values state" body={{ value }} />
+//     </div>
+//   );
+// }
+
+function Basic() {
+  const { value, register } = useInputNumber({
+    enterActions: {
+      blur: true,
+    },
+    focusActions: {
+      selectAll: true,
+      clearZero: true,
+    },
+    valueWhenEmpty: 0,
+  });
 
   return (
-    <div className={classNames("space-y-2", sectionStyle, "mt-0")}>
-      <InputBox
-        {...register({
-          name: "test",
-          value,
-          onChangeValue: setValue,
-        })}
-      />
+    <div className="flex flex-col">
+      <p className="font-bold text-lg text-red-500">Basic</p>
+      <p className="text-slate-600 text-sm">One input. No config (use default). No validation. No need useState.</p>
 
-      <div>
-        <Button
-          onClick={() => {
-            console.log('state', value);
-            console.log(values);
-          }}
-        >
-          Log
-        </Button>
-        <Button onClick={() => setValue(undefined)}>Clear</Button>
-      </div>
+      <p className="mt-2 text-blue-500 font-medium">Behaviors:</p>
+      <ul className="pl-5 list-disc list-outside">
+        <li>The hook returns value.</li>
+        <li>Start with value undefined, inputValue empty. Once enter some input, value cannot return to undefined.</li>
+      </ul>
 
-      <JsonDisplayer title="Values hook" body={values} />
-      <JsonDisplayer title="Values state" body={{ value }} />
+      <InputBox className="mt-4" placeholder="Enter some input..." {...register()} />
+      <p className="mt-4 font-medium text-right">{value === undefined ? "(undefined)" : value} :Value</p>
     </div>
   );
 }
 
-// function Basic() {
-//   const { value, register } = useInputNumber({
-//     enterActions: {
-//       blur: true,
-//     },
-//     focusActions: {
-//       selectAll: true,
-//       clearZero: true,
-//     },
-//   });
+function BasicWithConfigAndValidate() {
+  const config: IUseInputNumberArgs = {
+    changeMode: "onBlur",
+    validateMode: "onChangeSetBack",
+  };
+  const validate = {
+    maxValue: 10000000,
+    minValue: -10000000,
+    maxFractionDigits: 5,
+  };
 
-//   return (
-//     <div className="flex flex-col">
-//       <p className="font-bold text-lg text-red-500">Basic</p>
-//       <p className="text-slate-600 text-sm">One input. No config (use default). No validation. No need useState.</p>
+  const { value, register } = useInputNumber(config);
 
-//       <p className="mt-2 text-blue-500 font-medium">Behaviors:</p>
-//       <ul className="pl-5 list-disc list-outside">
-//         <li>The hook returns value.</li>
-//         <li>Start with value undefined, inputValue empty. Once enter some input, value cannot return to undefined.</li>
-//       </ul>
+  return (
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-2">
+        <div>
+          <p className="font-bold text-lg text-red-500">With config and validate</p>
+        </div>
+        <JsonDisplayer title="Config" body={config} />
+        <JsonDisplayer title="Validate" body={validate} />
+      </div>
 
-//       <InputBox className="mt-4" placeholder="Enter some input..." {...register()} />
-//       <p className="mt-4 font-medium text-right">{value === undefined ? "(undefined)" : value} :Value</p>
-//     </div>
-//   );
-// }
+      <InputBox className="mt-4" placeholder="Enter some input..." {...register(validate)} />
+      <p className="mt-4 font-medium text-right">{value === undefined ? "(undefined)" : value} :Value</p>
+    </div>
+  );
+}
 
-// function BasicWithConfigAndValidate() {
-//   const config: IUseInputNumberArgs = {
-//     changeMode: "onBlur",
-//     validateMode: "onChangeSetBack",
-//   };
-//   const validate = {
-//     maxValue: 10000000,
-//     minValue: -10000000,
-//     maxFractionDigits: 5,
-//   };
+function MultipleInputsBasic() {
+  const { value, values, register } = useInputNumber();
 
-//   const { value, register } = useInputNumber(config);
+  return (
+    <div className={sectionStyle}>
+      <p className="font-bold text-lg text-red-500">Multiple inputs</p>
+      <p className="text-slate-600 text-sm">Each input should have a unique name.</p>
 
-//   return (
-//     <div className="flex flex-col">
-//       <div className="flex flex-col gap-2">
-//         <div>
-//           <p className="font-bold text-lg text-red-500">With config and validate</p>
-//         </div>
-//         <JsonDisplayer title="Config" body={config} />
-//         <JsonDisplayer title="Validate" body={validate} />
-//       </div>
+      <div className="mt-4 grid grid-cols-2 gap-4">
+        <InputBox placeholder="Enter valueA" {...register({ name: "valueA" })} />
+        <InputBox placeholder="Enter valueB" {...register({ name: "valueB" })} />
+      </div>
 
-//       <InputBox className="mt-4" placeholder="Enter some input..." {...register(validate)} />
-//       <p className="mt-4 font-medium text-right">{value === undefined ? "(undefined)" : value} :Value</p>
-//     </div>
-//   );
-// }
+      <p className="mt-2 text-red-500 font-medium">Behaviors:</p>
+      <ul className="pl-5 list-disc list-outside">
+        <li>Inputs registered with the same name are treated as one.</li>
+        <li>Inputs registered with no name are also treated as one. Their value is 'value' or 'values.undefined'</li>
+      </ul>
 
-// function MultipleInputsBasic() {
-//   const { value, values, register } = useInputNumber();
+      <div className="mt-4 grid grid-cols-2 gap-4">
+        <InputBox placeholder="Enter valueC" {...register({ name: "valueC" })} />
+        <InputBox placeholder="Enter valueC" {...register({ name: "valueC" })} />
+      </div>
 
-//   return (
-//     <div className={sectionStyle}>
-//       <p className="font-bold text-lg text-red-500">Multiple inputs</p>
-//       <p className="text-slate-600 text-sm">Each input should have a unique name.</p>
+      <div className="mt-4 grid grid-cols-2 gap-4">
+        <InputBox placeholder="Registered with no name" {...register()} />
+        <InputBox placeholder="Registered with no name" {...register()} />
+      </div>
 
-//       <div className="mt-4 grid grid-cols-2 gap-4">
-//         <InputBox placeholder="Enter valueA" {...register({ name: "valueA" })} />
-//         <InputBox placeholder="Enter valueB" {...register({ name: "valueB" })} />
-//       </div>
+      <JsonDisplayer className="mt-4" title="Values" body={values} />
+      <p className="mt-4 font-medium text-right">{value} :Value</p>
+    </div>
+  );
+}
 
-//       <p className="mt-2 text-red-500 font-medium">Behaviors:</p>
-//       <ul className="pl-5 list-disc list-outside">
-//         <li>Inputs registered with the same name are treated as one.</li>
-//         <li>Inputs registered with no name are also treated as one. Their value is 'value' or 'values.undefined'</li>
-//       </ul>
+function ConnectToState() {
+  const [valueA, setValueA] = useState(0);
+  const [valueB, setValueB] = useState(0);
+  const [valueC, setValueC] = useState(0);
+  const { register } = useInputNumber({ changeMode: "onBlur", validateMode: "onBlur" });
 
-//       <div className="mt-4 grid grid-cols-2 gap-4">
-//         <InputBox placeholder="Enter valueC" {...register({ name: "valueC" })} />
-//         <InputBox placeholder="Enter valueC" {...register({ name: "valueC" })} />
-//       </div>
+  const { onChange, ...rest } = register({
+    name: "inputB",
+  });
 
-//       <div className="mt-4 grid grid-cols-2 gap-4">
-//         <InputBox placeholder="Registered with no name" {...register()} />
-//         <InputBox placeholder="Registered with no name" {...register()} />
-//       </div>
+  return (
+    <div className="flex flex-col">
+      <p className="font-bold text-lg text-red-500">Connect to State</p>
 
-//       <JsonDisplayer className="mt-4" title="Values" body={values} />
-//       <p className="mt-4 font-medium text-right">{value} :Value</p>
-//     </div>
-//   );
-// }
+      <ConnectToStateTemplate
+        desc="Pass a callback as onChangeValue in register config"
+        label="Input A"
+        value={valueA}
+        input={
+          <InputBox
+            className="grow"
+            placeholder="Enter some input..."
+            {...register({
+              name: "inputA",
+              onChangeValue: (value) => setValueA(value || 0),
+            })}
+          />
+        }
+      />
 
-// function ConnectToState() {
-//   const [valueA, setValueA] = useState(0);
-//   const [valueB, setValueB] = useState(0);
-//   const [valueC, setValueC] = useState(0);
-//   const { register, updateInputValue } = useInputNumber({ changeMode: "onBlur", validateMode: "onBlur" });
+      <ConnectToStateTemplate
+        desc="Or use value returned by onChange returned by register"
+        label="Input B"
+        value={valueB}
+        input={
+          <InputBox
+            className="grow"
+            placeholder="Enter some input..."
+            onChange={(e) => {
+              const newValue = onChange(e);
+              if (newValue !== undefined) {
+                setValueB(newValue);
+              }
+            }}
+            {...rest}
+          />
+        }
+      />
 
-//   const { onChange, ...rest } = register({
-//     name: "inputB",
-//   });
+      <ConnectToStateTemplate
+        desc="Pass the value to register to update inputValue when a third party change the value. (maxValue: 1000)"
+        label="Input C"
+        value={valueC}
+        input={
+          <InputBox
+            className="grow"
+            placeholder="Enter some input..."
+            {...register({
+              name: "inputC",
+              value: valueC,
+              maxValue: 1000,
+              onChangeValue: (value) => setValueC(value || 0),
+              onValidateFailed: (error) => alert(error.message),
+            })}
+          />
+        }
+      />
+      <div className="mt-2 px-4 flex gap-2">
+        <Button
+          className="shrink-0 bg-orange-500 hover:bg-orange-400 text-xl font-bold"
+          onClick={() => setValueC(valueC - 1)}
+        >
+          -
+        </Button>
+        <Button className="grow" onClick={() => setValueC(valueB)}>
+          Change valueC to the same as valueB
+        </Button>
+        <Button
+          className="shrink-0 bg-orange-500 hover:bg-orange-400 text-xl font-bold relative group"
+          onClick={() => setValueC(valueC + 1)}
+        >
+          +
+          <Tooltip className="w-48 text-sm font-normal" placement="bottom" text="use third party to control" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
-//   return (
-//     <div className="flex flex-col">
-//       <p className="font-bold text-lg text-red-500">Connect to State</p>
+function MultipleDynamicInputs() {
+  const [inputs, setInputs] = useState<Array<{ id: number }>>([]);
+  const { values, register, unregister } = useInputNumber();
 
-//       <ConnectToStateTemplate
-//         desc="Pass a callback as onChangeValue in register config"
-//         label="Input A"
-//         value={valueA}
-//         input={
-//           <InputBox
-//             className="grow"
-//             placeholder="Enter some input..."
-//             {...register({
-//               name: "inputA",
-//               onChangeValue: (value) => setValueA(value || 0),
-//             })}
-//           />
-//         }
-//       />
+  return (
+    <div className={classNames("flex flex-col gap-4", sectionStyle)}>
+      <p className="font-bold text-lg text-red-500">Multiple dynamic inputs</p>
 
-//       <ConnectToStateTemplate
-//         desc="Or use value returned by onChange returned by register"
-//         label="Input B"
-//         value={valueB}
-//         input={
-//           <InputBox
-//             className="grow"
-//             placeholder="Enter some input..."
-//             onChange={(e) => {
-//               const newValue = onChange(e);
-//               if (newValue !== undefined) {
-//                 setValueB(newValue);
-//               }
-//             }}
-//             {...rest}
-//           />
-//         }
-//       />
+      {inputs.length ? (
+        <div className="flex flex-col gap-4">
+          {inputs.map((input, i) => {
+            return (
+              <div key={input.id} className="flex gap-3">
+                <InputBox
+                  className="grow"
+                  placeholder={"Enter input id " + input.id}
+                  {...register({ name: "input-" + input.id })}
+                />
+                <button
+                  className="px-4 bg-red-200 text-red-500 text-xl font-bold rounded"
+                  onClick={() => {
+                    setInputs((prev) => {
+                      const newInputs = [...prev];
+                      newInputs.splice(i, 1);
+                      return newInputs;
+                    });
+                    unregister("input-" + input.id);
+                  }}
+                >
+                  X
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
 
-//       <ConnectToStateTemplate
-//         desc="Pass the value to register to update inputValue when a third party change the value. (maxValue: 1000)"
-//         label="Input C"
-//         value={valueC}
-//         input={
-//           <InputBox
-//             className="grow"
-//             placeholder="Enter some input..."
-//             {...register({
-//               name: "inputC",
-//               value: valueC,
-//               maxValue: 1000,
-//               onChangeValue: (value) => setValueC(value || 0),
-//               onValidateFailed: (error) => alert(error.message),
-//             })}
-//           />
-//         }
-//       />
-//       <div className="mt-2 px-4 flex gap-2">
-//         <Button
-//           className="shrink-0 bg-orange-500 hover:bg-orange-400 text-xl font-bold"
-//           onClick={() => setValueC(valueC - 1)}
-//         >
-//           -
-//         </Button>
-//         <Button className="grow" onClick={() => setValueC(valueB)}>
-//           Change valueC to the same as valueB
-//         </Button>
-//         <Button
-//           className="shrink-0 bg-orange-500 hover:bg-orange-400 text-xl font-bold relative group"
-//           onClick={() => setValueC(valueC + 1)}
-//         >
-//           +
-//           <Tooltip className="w-48 text-sm font-normal" placement="bottom" text="use third party to control" />
-//         </Button>
-//         <Button
-//           className="shrink-0 bg-cyan-500 hover:bg-cyan-400 text-xl font-bold relative group"
-//           onClick={() => updateInputValue({ name: "inputC", value: valueC + 1 })}
-//         >
-//           +
-//           <Tooltip className="w-44 text-sm font-normal" placement="bottom" text="use updateInputValue of the hook" />
-//         </Button>
-//       </div>
-//     </div>
-//   );
-// }
+      <Button
+        className="w-full bg-green-200 text-green-600 hover:bg-green-300 hover:text-green-600 text-lg font-bold flex justify-center items-center"
+        onClick={() => setInputs((prev) => [...prev, { id: Date.now() }])}
+      >
+        Add
+      </Button>
 
-// function MultipleDynamicInputs() {
-//   const [inputs, setInputs] = useState<Array<{ id: number }>>([]);
-//   const { values, register } = useInputNumber();
-
-//   return (
-//     <div className={classNames("flex flex-col gap-4", sectionStyle)}>
-//       <p className="font-bold text-lg text-red-500">Multiple dynamic inputs</p>
-
-//       {inputs.length ? (
-//         <div className="flex flex-col gap-4">
-//           {inputs.map((input, i) => {
-//             return (
-//               <div key={input.id} className="flex gap-3">
-//                 <InputBox
-//                   className="grow"
-//                   placeholder={"Enter input id " + input.id}
-//                   {...register({ name: "input-" + input.id })}
-//                 />
-//                 <button
-//                   className="px-4 bg-red-200 text-red-500 text-xl font-bold rounded"
-//                   onClick={() =>
-//                     setInputs((prev) => {
-//                       const newInputs = [...prev];
-//                       newInputs.splice(i, 1);
-//                       return newInputs;
-//                     })
-//                   }
-//                 >
-//                   X
-//                 </button>
-//               </div>
-//             );
-//           })}
-//         </div>
-//       ) : null}
-
-//       <Button
-//         className="w-full bg-green-200 text-green-600 hover:bg-green-300 hover:text-green-600 text-lg font-bold flex justify-center items-center"
-//         onClick={() => setInputs((prev) => [...prev, { id: Date.now() }])}
-//       >
-//         Add
-//       </Button>
-
-//       <JsonDisplayer title="Values" body={values} />
-//     </div>
-//   );
-// }
+      <JsonDisplayer title="Values" body={values} />
+    </div>
+  );
+}

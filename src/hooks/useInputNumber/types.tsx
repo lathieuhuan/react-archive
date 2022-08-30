@@ -13,7 +13,8 @@ type ValidateValue = {
 
 type ValidateAction = {
   /**
-   * Default to 'onChangePrevent'. Forced to 'onBlur' when (minValue * maxValue > 0).
+   * Default to 'onChangePrevent'. If 'onBlur' value will be set back when < minValue
+   * or > maxValue, and fire onValidateFailed if any. Forced to 'onBlur' when (minValue * maxValue > 0).
    * Why: max 1000, min 10, validateMode 'onChange...' => cannot enter 1-9 for 1... - 9...
    */
   validateMode: ValidateMode;
@@ -58,8 +59,7 @@ export type InputInfo = {
 
 export interface IUseInputNumberArgs extends Partial<FormatConfig>, Partial<ValidateAction> {
   /**
-   * Default to 'onChange'. 'onBlur' only works when connect to a state.
-   * value or values returned by the hook always change onChange.
+   * Default to 'onChange'
    */
   changeMode?: "onChange" | "onBlur";
   /**
@@ -93,10 +93,10 @@ export interface IUseInputNumberArgs extends Partial<FormatConfig>, Partial<Vali
     clearZero?: boolean;
   };
   /**
-   * Empty input onBlur when value is 0. Default to false. Forced to false
-   * when (minValue > 0 || maxValue < 0)
+   * value when input is empty. When 0 also show 0 instead of empty on blur. Default to 'undefined'.
+   * Forced to 'undefined' when (minValue > 0 || maxValue < 0)
    */
-  // valueWhenEmpty?: boolean;
+  valueWhenEmpty?: 0;
 }
 
 export type ValidateConfig = ValidateValue & ValidateAction;
@@ -127,9 +127,9 @@ export type Config = {
   onValidateFailed?: OnValidateFailedHandler;
 };
 
-export type UpdateInputValuesArgs = Omit<Partial<InputInfo>, 'value'> & {
+export type UpdateInputValuesArgs = Omit<Partial<InputInfo>, "value"> & {
   name: string;
-  value?: number;
+  value: number;
   newCursor?: number | null;
   maxFractionDigits?: number;
 };
