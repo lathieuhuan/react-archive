@@ -1,10 +1,10 @@
-import Button from "@Src/components/Button";
-import InputBox from "@Src/components/InputBox";
-import JsonDisplayer from "@Src/components/JsonDisplayer";
 import { useState } from "react";
+import Button from "@Components/Button";
+import InputBox from "@Components/InputBox";
+import JsonDisplayer from "@Components/JsonDisplayer";
 import Core from "./Core";
 import { Payment } from "./types";
-import { Modal } from "antd";
+import { Modal } from "@Components/Modal";
 
 export default function NestedValues() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -24,28 +24,21 @@ export default function NestedValues() {
         <Button className="px-2 py-1 text-sm" onClick={() => setIsActive(true)}>
           Open Modal
         </Button>
-        <Button
-          className="px-2 py-1 text-sm bg-yellow-500 hover:bg-yellow-400 hover:text-black"
-          onClick={onClickReset}
-        >
+        <Button className="px-2 py-1 text-sm bg-yellow-500 hover:bg-yellow-400 hover:text-black" onClick={onClickReset}>
           Reset
         </Button>
       </div>
 
       <InputBox value={amountToPay} onChange={(e) => setAmountToPay(+e.target.value)} />
 
-      <div>
-        {isActive ? (
-          <Core
-            amountToPay={amountToPay}
-            payments={payments}
-            onConfirmPayments={setPayments}
-            onClose={() => setIsActive(false)}
-          />
-        ) : (
-          <p className=" text-red-500">Modal has been unmounted</p>
-        )}
-      </div>
+      <Modal active={isActive} className="bg-black rounded-lg">
+        <Core
+          amountToPay={amountToPay}
+          payments={payments}
+          onConfirmPayments={setPayments}
+          onClose={() => setIsActive(false)}
+        />
+      </Modal>
 
       <JsonDisplayer title="Payments" body={payments} />
     </div>

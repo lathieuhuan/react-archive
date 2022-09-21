@@ -6,10 +6,10 @@ import styles from "./styles.module.scss";
 
 interface ModalProps {
   active?: boolean;
-  wrapperClassName?: string;
+  className?: string;
   children: ReactNode;
 }
-export function Modal({ active = false, wrapperClassName, children }: ModalProps) {
+export function Modal({ active = false, className, children }: ModalProps) {
   const [state, setState] = useState({
     active: false,
     animate: false,
@@ -45,7 +45,7 @@ export function Modal({ active = false, wrapperClassName, children }: ModalProps
         className={cn(
           "fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 shadow-white-glow transition duration-150 ease-linear",
           state.animate ? "opacity-100" : "opacity-0",
-          wrapperClassName || cn("rounded-lg bg-darkblue-2", styles["content-wrapper"])
+          className || cn("rounded-lg bg-darkblue-2", styles["content-wrapper"])
         )}
       >
         {children}

@@ -1,0 +1,14 @@
+.chosen-character {
+  border-style: solid;
+  border-right-width: 1px;
+  animation: cursor-active 1s linear infinite;
+}
+
+@keyframes cursor-active {
+  from {
+    --tw-border-opacity: 0;
+  }
+  to {
+    --tw-border-opacity: 1;
+  }
+}

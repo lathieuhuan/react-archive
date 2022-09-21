@@ -3,11 +3,11 @@ import { useState } from "react";
 
 import { IUseInputNumberArgs, useInputNumber } from "@Src/hooks/useInputNumber";
 
-import Button from "@Src/components/Button";
-import InputBox from "@Src/components/InputBox";
-import JsonDisplayer from "@Src/components/JsonDisplayer";
+import InputBox from "@Components/InputBox";
+import JsonDisplayer from "@Components/JsonDisplayer";
+import Tooltip from "@Components/Tooltip";
+import Button from "@Components/Button";
 import { ConnectToStateTemplate } from "./template";
-import Tooltip from "@Src/components/Tooltip";
 
 const sectionStyle = "mt-4 p-4 rounded-lg border border-slate-200 break-inside-avoid-column";
 
