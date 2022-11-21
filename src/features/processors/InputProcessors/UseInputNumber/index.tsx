@@ -14,8 +14,6 @@ const sectionStyle = "mt-4 p-4 rounded-lg border border-slate-200 break-inside-a
 export default function UseInputNumberExamples() {
   return (
     <div className="columns-2">
-      {/* <Test /> */}
-
       <div className={classNames("space-y-2", sectionStyle, "mt-0")}>
         <Basic />
         <BasicWithConfigAndValidate />
@@ -31,50 +29,6 @@ export default function UseInputNumberExamples() {
     </div>
   );
 }
-
-// function Test() {
-//   const [value, setValue] = useState<number | undefined>();
-//   const { register, values } = useInputNumber({
-//     changeMode: "onBlur",
-//     // changeMode: "onChange",
-//     // validateMode: "onBlur",
-//     // valueWhenEmpty: "0",
-//   });
-
-//   return (
-//     <div className={classNames("space-y-2", sectionStyle, "mt-0")}>
-//       <InputBox
-//         {...register({
-//           name: "test",
-//           value,
-//           maxValue: 100000,
-//           minValue: -1000000,
-//           onChangeValue: (num) => {
-//             console.log("run setValue");
-//             setValue(num);
-//           },
-//         })}
-//       />
-
-//       <div className="space-x-2">
-//         <Button onClick={() => setValue((value || 0) - 1)}>-</Button>
-//         <Button
-//           onClick={() => {
-//             console.log("state", value);
-//             console.log(values);
-//           }}
-//         >
-//           Log
-//         </Button>
-//         <Button onClick={() => setValue((value || 0) + 1)}>+</Button>
-//         <Button onClick={() => setValue(undefined)}>Clear</Button>
-//       </div>
-
-//       <JsonDisplayer title="Values hook" body={values} />
-//       <JsonDisplayer title="Values state" body={{ value }} />
-//     </div>
-//   );
-// }
 
 function Basic() {
   const { value, register } = useInputNumber({

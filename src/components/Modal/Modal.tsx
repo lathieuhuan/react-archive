@@ -1,15 +1,21 @@
 import cn from "classnames";
-import { ReactNode, useEffect, useState } from "react";
+import ReactDOM from "react-dom";
+import { CSSProperties, ReactNode, useEffect, useState } from "react";
+import styles from "./styles.module.scss";
 import { useCloseWithEsc } from "@Src/hooks/useCloseWithEsc";
 
-import styles from "./styles.module.scss";
+export interface ModalControl {
+  active: boolean;
+  onClose: () => void;
+}
 
-interface ModalProps {
-  active?: boolean;
+interface ModalProps extends ModalControl {
   className?: string;
+  style?: CSSProperties;
+  isCustom?: boolean;
   children: ReactNode;
 }
-export function Modal({ active = false, className, children }: ModalProps) {
+export function Modal({ active, className, style, isCustom, children, onClose }: ModalProps) {
   const [state, setState] = useState({
     active: false,
     animate: false,
@@ -19,37 +25,45 @@ export function Modal({ active = false, className, children }: ModalProps) {
     setState((prev) => ({ ...prev, animate: false }));
     setTimeout(() => {
       setState((prev) => ({ ...prev, active: false }));
-    }, 160);
+      onClose();
+    }, 150);
   };
 
   useEffect(() => {
-    if (active) {
-      setState({ active: true, animate: true });
-    } else {
+    if (active && !state.active) {
+      setState((prev) => ({ ...prev, active: true }));
+      setTimeout(() => {
+        setState((prev) => ({ ...prev, animate: true }));
+      }, 50);
+    } else if (active === false && state.active) {
       closeModal();
     }
-  }, [active]);
+  }, [active, state.active]);
 
-  useCloseWithEsc(closeModal);
+  useCloseWithEsc(() => active && closeModal());
 
-  return state.active ? (
-    <div className="fixed full-stretch z-50">
-      <div
-        className={cn(
-          "w-full h-full bg-black transition duration-150 ease-linear",
-          state.animate ? "opacity-60" : "opacity-0"
-        )}
-        onClick={closeModal}
-      />
-      <div
-        className={cn(
-          "fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 shadow-white-glow transition duration-150 ease-linear",
-          state.animate ? "opacity-100" : "opacity-0",
-          className || cn("rounded-lg bg-darkblue-2", styles["content-wrapper"])
-        )}
-      >
-        {children}
-      </div>
-    </div>
-  ) : null;
+  return state.active
+    ? ReactDOM.createPortal(
+        <div className="fixed top-0 bottom-0 left-0 right-0 z-50">
+          <div
+            className={cn(
+              "w-full h-full bg-black transition duration-150 ease-linear",
+              state.animate ? "opacity-60" : "opacity-20"
+            )}
+            onClick={closeModal}
+          />
+          <div
+            className={cn(
+              "fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 transition duration-150 ease-linear",
+              state.animate ? "opacity-100 scale-100" : "opacity-0 scale-95",
+              className
+            )}
+            style={style}
+          >
+            {children}
+          </div>
+        </div>,
+        document.querySelector("#root")!
+      )
+    : null;
 }

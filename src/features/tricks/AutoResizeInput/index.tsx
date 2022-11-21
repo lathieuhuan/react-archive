@@ -1,12 +1,5 @@
 import classNames from "classnames";
-import {
-  type InputHTMLAttributes,
-  ReactNode,
-  useState,
-  useEffect,
-  useRef,
-} from "react";
-import { Link } from "react-router-dom";
+import { type InputHTMLAttributes, ReactNode, useState } from "react";
 import styles from "./styles.module.scss";
 
 export default function AutoResizeInput() {
@@ -30,9 +23,7 @@ function UseSizeAttr() {
 
   return (
     <div>
-      <h3 className="text-xl text-red-600">
-        Use 'size' attribute of the input element
-      </h3>
+      <h3 className="text-xl text-red-600">Use 'size' attribute of the input element</h3>
       <Note>Only works in some unknown cases.</Note>
       <div className="mt-3 flex">
         <label className="mr-2">Label:</label>
@@ -53,17 +44,17 @@ function UseDatasetAndCss1() {
   return (
     <div>
       <h3 className="text-xl text-blue-600">Use dataset and CSS</h3>
-      <Note>
-        Initial width cannot be set as expected, size = 1 is still wide.
-      </Note>
+      <Note>Initial width cannot be set as expected, size = 1 is still wide.</Note>
       <Note>
         Input cannot have padding or some letters will be clipped.{" "}
-        <Link
+        <a
           className="text-red-600"
-          to="https://css-tricks.com/auto-growing-inputs-textareas/"
+          href="https://css-tricks.com/auto-growing-inputs-textareas/"
+          target="blank"
+          referrerPolicy="no-referrer"
         >
           Css-tricks
-        </Link>{" "}
+        </a>{" "}
         somehow can manage this.
       </Note>
       <div className={classNames("mt-3", styles.inputWrapper1)}>
@@ -92,10 +83,7 @@ function UseDatasetAndCss2() {
       <Note>A different approach.</Note>
       <div className="mt-2 flex items-center">
         <label className="mr-2">Label:</label>
-        <ValueFitInput
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-        />
+        <ValueFitInput value={value} onChange={(e) => setValue(e.target.value)} />
       </div>
     </div>
   );
@@ -107,10 +95,7 @@ interface ValueFitInputProps extends InputHTMLAttributes<HTMLInputElement> {
 export function ValueFitInput(props: ValueFitInputProps) {
   const { className, wrapperClassName, value, onChange, ...rest } = props;
   return (
-    <div
-      className={classNames("relative", styles.inputWrapper2, wrapperClassName)}
-      data-value={value}
-    >
+    <div className={classNames("relative", styles.inputWrapper2, wrapperClassName)} data-value={value}>
       <input
         className={classNames(
           "absolute top-0 bottom-0 left-0 right-0 rounded-sm border-1 border-slate-300 outline-none",
