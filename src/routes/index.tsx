@@ -19,8 +19,9 @@ import TableWithAfter from "@Features/tricks/TableWithAfter";
 
 import Processors from "@Features/processors";
 import InputProcessors from "@Features/processors/InputProcessors";
-import InputNumber from "@Src/features/processors/InputProcessors/InputNumber";
-import UseInputNumber from "@Src/features/processors/InputProcessors/UseInputNumber";
+import InputNumber from "@Features/processors/InputProcessors/InputNumber";
+import UseInputNumber from "@Features/processors/InputProcessors/UseInputNumber";
+import BarcodeScanner from "@Features/processors/BarcodeScanner";
 
 import Formik from "@Features/formik";
 import BasicFormik from "@Features/formik/basic";
@@ -194,6 +195,14 @@ export const topCluster: ICluster = [
             component: UseInputNumber,
           },
         ],
+      },
+      {
+        info: {
+          id: branchID++,
+          name: "Barcode Scanner",
+          path: "barcode-scanner",
+        },
+        component: BarcodeScanner,
       },
     ],
   },
