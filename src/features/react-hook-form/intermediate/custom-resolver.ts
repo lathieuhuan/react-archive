@@ -6,12 +6,12 @@ const customResolver: Resolver<UseControllerFormData> = (
   _context,
   options
 ) => {
-  console.log("values");
-  console.log(values);
-  console.log("_context");
-  console.log(_context);
-  console.log("options");
-  console.log(options);
+  // console.log("values");
+  // console.log(values);
+  // console.log("_context");
+  // console.log(_context);
+  // console.log("options");
+  // console.log(options);
 
   return { values, errors: {} };
 };

@@ -8,14 +8,7 @@ import { UseControllerFormData } from "./types";
 import customResolver from "./custom-resolver";
 
 export default function UseController() {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    control,
-    reset,
-    formState: { errors },
-  } = useForm<UseControllerFormData>({
+  const { handleSubmit, watch, control, reset } = useForm<UseControllerFormData>({
     mode: "onTouched",
     defaultValues: {
       name: "",
@@ -35,7 +28,6 @@ export default function UseController() {
       },
     });
   };
-  // console.log("run");
 
   return (
     <div>
@@ -46,48 +38,47 @@ export default function UseController() {
             name="name"
             render={({ field: { onChange, onBlur, value, ref } }) => {
               return (
-                <Input
-                  placeholder="Enter your name"
-                  value={value}
-                  onChange={onChange}
-                  onBlur={onBlur}
-                  ref={ref}
-                />
+                <Input placeholder="Enter your name" value={value} onChange={onChange} onBlur={onBlur} ref={ref} />
               );
             }}
           />
         </div>
 
-        <div>
-          <Controller
-            control={control}
-            name="colors"
-            render={({ field: { onChange, onBlur, value, ref } }) => {
-              console.log(value);
-              return (
-                <div>
-                  {COLORS.map((c, i) => (
-                    <div key={i}>
-                      <input type="checkbox" hidden />
-                      <label htmlFor="">{c}</label>
-                    </div>
-                  ))}
-                </div>
-              );
-            }}
-          />
-        </div>
+        <Controller
+          control={control}
+          name="colors"
+          render={({ field: { onChange, value } }) => {
+            return (
+              <div className="mt-4 flex space-x-4">
+                {COLORS.map((color, i) => {
+                  const checked = value.includes(color);
+                  return (
+                    <label key={i}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          if (checked) {
+                            onChange(value.filter((existedColor) => existedColor !== color));
+                          } else {
+                            onChange([...value, color]);
+                          }
+                        }}
+                      />
+                      <span className="ml-2 capitalize">{color}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            );
+          }}
+        />
 
         <div className="mx-auto mt-4 flex gap-3">
-          {/* background-color: transparent of tailwind overwrite background-color of antd Button */}
-          <Button
-            htmlType="button"
-            type="primary"
-            danger
-            onClick={() => reset()}
-          >
+          <Button htmlType="button" type="primary" danger onClick={() => reset()}>
             Reset
           </Button>
+          {/* background-color: transparent of tailwind overwrite background-color of antd Button */}
           <Button className="bg-blue-400" htmlType="submit" type="primary">
             Submit
           </Button>
