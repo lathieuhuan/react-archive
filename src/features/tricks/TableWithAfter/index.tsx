@@ -1,38 +1,24 @@
+import { numberFormat } from "@Utils/index";
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { ProductTable } from "./Core";
 
 const { Header, Row } = ProductTable;
 
-const numberFormat = (num: number) => num;
-
-const entries = [
+const items = [
   {
-    id: "497564942242802016",
-    orderEntryId: "497635310981325236",
-    amount: 50000,
-    receivedQuantity: 2,
-    totalAmount: 100000,
-    orderEntry: {
-      id: "497635310981325236",
-      barcode: "",
-      productId: "10001949_DTH",
-      productName: "XUÂN HOA Bát giấy Kraf 13cm 10cái",
-      isRemovable: true,
-      status: "SUCCESS",
-      position: 1,
-      quantity: 20,
-      maxQuantity: 999999999,
-      returnMaxQuantity: 20,
-      unit: "G1",
-      price: 50000,
-      salePrice: 50000,
-      original: 50000,
-      totalAmount: 1000000,
-      discounts: [],
-      isCouponApplied: false,
-      isDecimal: false,
-      decimalDigit: 0,
-    },
+    id: "123456789",
+    name: "Item 1",
+    unit: "lon",
+    amount: 3,
+    price: 50000,
+  },
+  {
+    id: "08081508",
+    name: "Item 2",
+    unit: "kg",
+    amount: 8,
+    price: 15000,
   },
 ];
 
@@ -40,71 +26,77 @@ export default function Table() {
   const { t } = useTranslation();
 
   return (
-    <div className="" style={{ width: 900, height: 426 }}>
+    <div style={{ width: 900, height: 426 }}>
+      <p className="text-xl font-bold">Table with ::after</p>
+      <p className="mt-2">Use ::after to round each row of the table.</p>
+
       <div className="mt-4">
-        <ProductTable colsConfig={["w-5", "w-40", "w-20", "w-16", "w-24", "w-28"]}>
+        <ProductTable colsConfig={["w-10", "w-60", "w-24", "w-20", "w-24", "w-28"]}>
           <Header
-            paddingY="pt-2 pb-5"
-            className="text-xs font-medium text-ink-400"
+            commonCellClassName="pt-2 pb-5"
+            className="text-sm font-medium text-ink-400"
             afterClassName="after:border-ink-200"
             columns={[
               {},
               { content: t("Name") },
               {
                 className: "pl-2 text-center",
-                content: t("Unit"),
-              },
-              {
-                className: "pl-2 text-center",
-                content: t("Quantity or Volume"),
-              },
-              {
-                className: "pl-2 text-center",
                 content: t("Price"),
               },
               {
-                className: "px-2 text-center",
-                content: t("Return money"),
+                className: "pl-2 text-center",
+                content: t("Amount"),
+              },
+              {
+                className: "pl-2 text-center",
+                content: t("Unit"),
+              },
+              {
+                className: "pl-2 pr-3 text-center",
+                content: t("Total"),
               },
             ]}
           />
-          {entries.map((entry, i) => {
+          {items.map((item, i) => {
             return (
-              <Row
-                key={i}
-                columns={[
-                  {
-                    content: i + 1,
-                  },
-                  {
-                    className: "pl-2 ",
-                    content: (
-                      <>
-                        <p className="overflow-hidden whitespace-nowrap text-ellipsis">
-                          {entry?.orderEntry?.productName}
-                        </p>
-                        <p className="font-normal text-ink-400">{entry?.orderEntry?.barcode}</p>
-                      </>
-                    ),
-                  },
-                  {
-                    className: "pl-2 text-center font-bold text-blue-500",
-                    content: entry?.orderEntry?.unit,
-                  },
-                  {
-                    className: "pl-2 text-center",
-                    content: <label className="border-b px-1">{entry?.receivedQuantity}</label>,
-                  },
-                  {
-                    className: "pl-2 text-center text-blue-500",
-                    content: numberFormat(entry?.orderEntry?.salePrice || 0),
-                  },
-                  {
-                    className: "pl-2 text-center text-blue-500",
-                    content: numberFormat(entry?.totalAmount || 0),
-                  },
-                ]}
-              />
+              <Fragment key={i}>
+                <Row
+                  roundedTop
+                  roundedBottom
+                  commonCellClassName="py-3"
+                  columns={[
+                    {
+                      className: "text-center",
+                      content: i + 1,
+                    },
+                    {
+                      content: (
+                        <>
+                          <p className="font-medium overflow-hidden whitespace-nowrap text-ellipsis">{item.name}</p>
+                          <p className="text-ink-400">{item.id}</p>
+                        </>
+                      ),
+                    },
+                    {
+                      className: "pl-2 text-center text-blue-500",
+                      content: numberFormat(item.price),
+                    },
+                    {
+                      className: "pl-2 text-center",
+                      content: <label className="border-b px-1">{item.amount}</label>,
+                    },
+                    {
+                      className: "pl-2 text-center",
+                      content: item.unit,
+                    },
+                    {
+                      className: "pl-2 text-center text-blue-500 font-bold",
+                      content: numberFormat(item.amount * item.price),
+                    },
+                  ]}
+                />
+                <tr className="h-2" />
+              </Fragment>
             );
           })}
         </ProductTable>
