@@ -15,7 +15,7 @@ export default function Pitfall(props: PitfallProps) {
     : [failedSolutions];
 
   return (
-    <div className="px-4 py-2 rounded border-1 border-slate-300 flex flex-col gap-2">
+    <div className="px-4 py-2 rounded border border-slate-300 flex flex-col gap-2">
       <Block title="Context" body={context} />
       <Block title="Reproduce Steps" body={reproduceSteps} />
       {fails.map((fail, i) => {

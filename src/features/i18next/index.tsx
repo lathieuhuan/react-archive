@@ -93,7 +93,7 @@ function T(props: TProps) {
 function Example() {
   const [value, setValue] = useState("");
   return (
-    <div className="mt-2 p-4 rounded border-1 border-slate-300">
+    <div className="mt-2 p-4 rounded border border-slate-300">
       <p>This is a React Component</p>
       <InputBox
         className="mt-2"

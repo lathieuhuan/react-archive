@@ -2,9 +2,6 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
-      borderWidth: {
-        1: "1px",
-      },
       colors: {
         myred: {
           dark: "#A30000",

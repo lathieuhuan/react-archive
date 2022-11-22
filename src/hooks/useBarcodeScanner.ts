@@ -21,9 +21,7 @@ interface IUseBarcodeScannerArgs {
 export function useBarcodeScanner(args?: IUseBarcodeScannerArgs) {
   const { disabled = false, formatConfig = [2, 5, 5, 1], keepPreviousResult = false, onScanSuccess } = args || {};
 
-  const scanningRef = useRef(false);
   const [barcode, setBarcode] = useState<string[]>([]);
-  // const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     let concatedKey = "";
@@ -56,8 +54,6 @@ export function useBarcodeScanner(args?: IUseBarcodeScannerArgs) {
           setBarcode(newBarcode);
         }
 
-        scanningRef.current = false;
-
         // Reset series
         return (concatedKey = "");
       }
@@ -81,11 +77,6 @@ export function useBarcodeScanner(args?: IUseBarcodeScannerArgs) {
       }
 
       previousKeydownTime = currentKeydownTime;
-
-      console.log(concatedKey);
-
-      // setScanning(concatedKey.length > 1);
-      scanningRef.current = concatedKey.length > 1;
     };
 
     window.addEventListener("keydown", onKeydown);
@@ -101,7 +92,5 @@ export function useBarcodeScanner(args?: IUseBarcodeScannerArgs) {
 
   return {
     formattedBarcode: barcode,
-    // isScanning: scanning,
-    isScanning: scanningRef.current,
   };
 }

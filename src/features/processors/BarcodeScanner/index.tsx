@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { useBarcodeScanner, useDebounce } from "@Src/hooks";
-import { callFakeApi } from "@Utils/index";
+import { useBarcodeScanner, useDebounce, useFakeApi, useLogger } from "@Src/hooks";
 
 import InputBox from "@Components/InputBox";
+import Button from "@Components/Button";
 import JsonDisplayer from "@Components/JsonDisplayer";
 
 interface IInputState {
@@ -17,49 +17,69 @@ export default function BarcodeScanner() {
     src: "INPUT",
   });
 
-  const { formattedBarcode } = useBarcodeScanner({
+  const { isLoading, callFakeApi } = useFakeApi();
+
+  useBarcodeScanner({
     keepPreviousResult: true,
+    onScanSuccess,
   });
 
   const debouncedValue = useDebounce(input.value, 300);
 
+  const { log, renderLogger } = useLogger({ title: "ACTIONS" });
+
   useEffect(() => {
+    log(`useEffect run. Debounced value: ${JSON.stringify(debouncedValue)} (src: ${input.src})`);
+
     if (input.src === "INPUT" && debouncedValue) {
-      handleBusiness("input: " + debouncedValue);
+      handleBusiness(debouncedValue + " (INPUT)");
+    }
+    if (input.src === "SCAN") {
+      setInput({
+        value: input.value,
+        src: "INPUT",
+      });
     }
   }, [debouncedValue]);
 
-  useEffect(() => {
-    if (formattedBarcode.length) {
-      handleBusiness("scan: " + formattedBarcode.join(""));
-
-      setInput({
-        value: formattedBarcode.join(""),
-        src: "SCAN",
-      });
-    }
-  }, [JSON.stringify(formattedBarcode)]);
-
   function handleBusiness(term: string) {
-    console.log("callApi with this term", term);
+    log(`call api with this term: ${term}`);
 
     callFakeApi().then((args) => {
-      console.log("response", args);
+      log(["response:", args as string]);
+    });
+  }
+
+  function onScanSuccess(barcode: string[]) {
+    const newBarcode = barcode.join("");
+
+    handleBusiness(newBarcode + " (SCAN)");
+
+    setInput({
+      value: newBarcode,
+      src: "SCAN",
     });
   }
 
   return (
-    <div className="w-full">
-      <InputBox
-        value={input.value}
-        onChange={(e) =>
-          setInput({
-            value: e.target.value,
-            src: "INPUT",
-          })
-        }
-      />
-      <JsonDisplayer className="my-4" title="Barcode" body={formattedBarcode} />
+    <div className="space-y-4">
+      <div className="space-x-4">
+        <InputBox
+          value={input.value}
+          onChange={(e) => {
+            setInput({
+              value: e.target.value,
+              src: "INPUT",
+            });
+          }}
+        />
+        <Button onClick={() => console.log(input)}>See Input state</Button>
+        <span hidden={!isLoading}>Loading...</span>
+      </div>
+
+      <JsonDisplayer title="Input state" body={input} />
+
+      {renderLogger()}
     </div>
   );
 }

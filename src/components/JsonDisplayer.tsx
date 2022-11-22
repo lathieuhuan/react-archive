@@ -8,7 +8,7 @@ interface JsonDisplayerProps {
 }
 export default function JsonDisplayer(props: JsonDisplayerProps) {
   return (
-    <div className={classNames("border-1 border-slate-300 rounded", props.className)}>
+    <div className={classNames("border border-slate-300 rounded", props.className)}>
       <div className="px-4 py-2 bg-slate-200">
         <h3 className="text-2xl font-semibold">{props.title}</h3>
       </div>

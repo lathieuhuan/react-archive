@@ -28,7 +28,7 @@ function UseSizeAttr() {
       <div className="mt-3 flex">
         <label className="mr-2">Label:</label>
         <input
-          className="border-slate-300 border-1 outline-none"
+          className="border-slate-300 border outline-none"
           size={inputSize}
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -60,7 +60,7 @@ function UseDatasetAndCss1() {
       <div className={classNames("mt-3", styles.inputWrapper1)}>
         <label className="mr-2">Label:</label>
         <input
-          className="rounded-sm border-1 border-slate-300 outline-none"
+          className="rounded-sm border border-slate-300 outline-none"
           size={1}
           value={value}
           onChange={(e) => {
@@ -98,7 +98,7 @@ export function ValueFitInput(props: ValueFitInputProps) {
     <div className={classNames("relative", styles.inputWrapper2, wrapperClassName)} data-value={value}>
       <input
         className={classNames(
-          "absolute top-0 bottom-0 left-0 right-0 rounded-sm border-1 border-slate-300 outline-none",
+          "absolute top-0 bottom-0 left-0 right-0 rounded-sm border border-slate-300 outline-none",
           className
         )}
         value={value}
