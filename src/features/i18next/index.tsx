@@ -2,7 +2,6 @@ import type { ChangeEventHandler, ReactNode } from "react";
 import { Suspense, useState } from "react";
 import i18n from "i18next";
 import { Trans, useTranslation } from "react-i18next";
-import Button from "@Src/components/Button";
 import InputBox from "@Src/components/InputBox";
 
 // i18n is init in ./i18n
@@ -33,9 +32,7 @@ export default function I18next() {
           </div>
 
           <p>
-            <Trans components={{ b: <b />, i: <i /> }}>
-              translate and add markups
-            </Trans>
+            <Trans components={{ b: <b />, i: <i /> }}>translate and add markups</Trans>
           </p>
 
           <p>
@@ -58,13 +55,12 @@ export default function I18next() {
               })}
             </p>
             <div className="mt-2 flex gap-2">
-              <Button onClick={() => setEgg(egg + 1)}>Give 1 more egg</Button>
-              <Button
-                className="bg-red-700 hover:bg-red-600"
-                onClick={() => setEgg(0)}
-              >
+              <button className="button button-primary" onClick={() => setEgg(egg + 1)}>
+                Give 1 more egg
+              </button>
+              <button className="button button-danger" onClick={() => setEgg(0)}>
                 Take all back
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -95,15 +91,10 @@ function Example() {
   return (
     <div className="mt-2 p-4 rounded border border-slate-300">
       <p>This is a React Component</p>
-      <InputBox
-        className="mt-2"
-        placeholder="..."
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-      />
-      <Button className="ml-2" onClick={() => console.log(value)}>
+      <InputBox className="mt-2" placeholder="..." value={value} onChange={(e) => setValue(e.target.value)} />
+      <button className="ml-2 button button-primary" onClick={() => console.log(value)}>
         Log
-      </Button>
+      </button>
     </div>
   );
 }

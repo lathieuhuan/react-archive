@@ -3,7 +3,6 @@ import classNames from "classnames";
 import { QueryFunction, useQuery } from "react-query";
 import { CaretLeftOutlined, CaretRightOutlined } from "@ant-design/icons";
 
-import Button from "@Components/Button";
 import Card from "@Components/Card";
 import { ApiData } from "./types";
 import styles from "./styles.module.scss";
@@ -44,7 +43,7 @@ export default function RickAndMortyCharacters() {
       <p className="text-sm">Page {page}</p>
 
       <div className="mt-2 mb-4 mx-auto flex gap-4">
-        <Button
+        <button
           className={buttonStyles}
           disabled={isPreviousData || page <= 1}
           onClick={() => setPage((prev) => prev - 1)}
@@ -52,7 +51,7 @@ export default function RickAndMortyCharacters() {
           <CaretLeftOutlined
             className={classNames(styles.pageCaret, styles.left)}
           />
-        </Button>
+        </button>
 
         <ValueFitInput
           className="hide-spin-button"
@@ -68,7 +67,7 @@ export default function RickAndMortyCharacters() {
           }}
         />
 
-        <Button
+        <button
           className={buttonStyles}
           disabled={isPreviousData || !data?.info.next}
           onClick={() => setPage((prev) => prev + 1)}
@@ -76,7 +75,7 @@ export default function RickAndMortyCharacters() {
           <CaretRightOutlined
             className={classNames(styles.pageCaret, styles.right)}
           />
-        </Button>
+        </button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">

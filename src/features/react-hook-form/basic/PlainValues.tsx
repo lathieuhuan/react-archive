@@ -1,5 +1,4 @@
 import { SubmitHandler, useForm } from "react-hook-form";
-import Button from "@Components/Button";
 import InputBox from "@Components/InputBox";
 import { showNotify } from "@Src/utils";
 import { ErrorMsg } from "../components";
@@ -137,9 +136,9 @@ export default function PlainValues() {
         <ErrorMsg error={errors.occupation} />
       </div>
 
-      <Button className="mx-auto" type="submit">
+      <button className="mx-auto button button-primary" type="submit">
         Submit
-      </Button>
+      </button>
     </form>
   );
 }

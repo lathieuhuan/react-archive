@@ -1,7 +1,6 @@
 import cn from "classnames";
 import { ChangeEventHandler, useState } from "react";
 
-import Button from "@Components/Button";
 import Select from "@Components/Select";
 import InputBox from "@Components/InputBox";
 import JsonDisplayer from "@Src/components/JsonDisplayer";
@@ -123,13 +122,13 @@ export default function InputNumberExample() {
                       disabled={isDisabledInput}
                     />
                   )}
-                  <Button
-                    className={cn("ml-2", !isDisabledInput && "bg-red-600 hover:bg-red-500")}
+                  <button
+                    className={cn("ml-2 button", isDisabledInput ? "button-primary" : "button-danger")}
                     disabled={index === 0}
                     onClick={() => onClickRemoveButton(key)}
                   >
                     {isDisabledInput ? "O" : "X"}
-                  </Button>
+                  </button>
                 </div>
               </div>
             );

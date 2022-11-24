@@ -1,19 +1,18 @@
+import { CloseCircleFilled, LoadingOutlined } from "@ant-design/icons";
+import classNames from "classnames";
 import {
   ChangeEventHandler,
   FocusEventHandler,
   forwardRef,
   KeyboardEventHandler,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
-import { LoadingOutlined, MinusOutlined, PlusOutlined, CloseCircleFilled } from "@ant-design/icons";
-import classNames from "classnames";
 
-import { InputInfo, IInputNumberProps } from "./types";
-
-import { limitFractionDigits, initInputInfo, validateInputInfo, convertToInputValue, mergeRefs } from "./utils";
+import { IInputNumberProps, InputInfo } from "./types";
+import { convertToInputValue, initInputInfo, limitFractionDigits, mergeRefs, validateInputInfo } from "./utils";
+import { useRunAfterPaint } from "@Src/hooks";
 
 import styles from "./styles.module.scss";
 
@@ -379,15 +378,6 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(
         >
           <LoadingOutlined />
         </div>
-        {controllers[0] ? (
-          <button
-            className="mr-1 flex flex-none items-center justify-center w-7 h-7 rounded bg-black-100 disabled:bg-ink-100"
-            disabled={ctrlersDisabled[0]}
-            onClick={() => changeInputValueByStep(false)}
-          >
-            <MinusOutlined className={classNames({ "opacity-40": ctrlersDisabled[0] })} />
-          </button>
-        ) : null}
         <div className="flex flex-row flex-grow items-center">
           <div
             className={classNames("flex-grow", shouldFitValue && styles["input-wrapper"], shouldFitValue && className)}
@@ -411,28 +401,7 @@ export const InputNumber = forwardRef<HTMLInputElement, IInputNumberProps>(
           {allowClear && <CloseCircleFilled className="ml-1 text-ink-300" onClick={onClickClearIcon} />}
           {typeof renderSuffix === "function" && renderSuffix()}
         </div>
-        {controllers[1] ? (
-          <button
-            onClick={() => changeInputValueByStep(true)}
-            disabled={ctrlersDisabled[1]}
-            className="ml-1 flex flex-none items-center justify-center w-7 h-7 rounded bg-black-100 disabled:bg-ink-100"
-          >
-            <PlusOutlined className={classNames({ "opacity-40": ctrlersDisabled[1] })} />
-          </button>
-        ) : null}
       </div>
     );
   }
 );
-
-const useRunAfterPaint = () => {
-  const afterPaintRef = useRef<(() => void) | null>(null);
-
-  useLayoutEffect(() => {
-    if (afterPaintRef.current) {
-      afterPaintRef.current();
-      afterPaintRef.current = null;
-    }
-  });
-  return (fn: () => void) => (afterPaintRef.current = fn);
-};

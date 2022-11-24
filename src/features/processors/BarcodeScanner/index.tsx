@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useBarcodeScanner, useDebounce, useFakeApi, useLogger } from "@Src/hooks";
 
 import InputBox from "@Components/InputBox";
-import Button from "@Components/Button";
 import JsonDisplayer from "@Components/JsonDisplayer";
 
 interface IInputState {
@@ -73,7 +72,6 @@ export default function BarcodeScanner() {
             });
           }}
         />
-        <Button onClick={() => console.log(input)}>See Input state</Button>
         <span hidden={!isLoading}>Loading...</span>
       </div>
 

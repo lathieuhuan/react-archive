@@ -3,8 +3,17 @@
 @tailwind utilities;
 
 @layer components {
+  .button {
+    @apply px-4 py-2 rounded cursor-pointer font-semibold;
+  }
+  .button-primary {
+    @apply bg-blue-700 hover:bg-blue-600 text-white;
+  }
+  .button-danger {
+    @apply bg-red-700 hover:bg-red-600 text-white;
+  }
   button:disabled {
-    @apply !bg-slate-400 !text-white !cursor-default;
+    @apply bg-slate-400 hover:bg-slate-400 text-white cursor-default;
   }
 }
 

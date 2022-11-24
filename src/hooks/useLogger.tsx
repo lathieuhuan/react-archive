@@ -1,4 +1,3 @@
-import Button from "@Components/Button";
 import { useState } from "react";
 
 type Log = {
@@ -41,9 +40,9 @@ export const useLogger = (args?: IUseLoggerArgs) => {
                 );
               })}
             </ul>
-            <Button className="absolute top-1 right-1" hidden={!logs.length} onClick={() => setLogs([])}>
+            <button className="button button-primary absolute top-1 right-1" hidden={!logs.length} onClick={() => setLogs([])}>
               Reset
-            </Button>
+            </button>
           </div>
         </div>
       );

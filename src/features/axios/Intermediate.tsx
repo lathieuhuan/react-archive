@@ -1,6 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { useState } from "react";
-import Button from "@Components/Button";
 import JsonDisplayer from "@Components/JsonDisplayer";
 import Tooltip from "@Components/Tooltip";
 import { axiosInstance, axiosServiceWithInterceptor } from "./service";
@@ -168,16 +167,16 @@ export default function Intermediate() {
       <div className="flex gap-2">
         {methods.map((method) => {
           return (
-            <Button
+            <button
               key={method.text}
-              className="capitalize relative group bg-green-600 hover:bg-green-500"
+              className="button capitalize relative group bg-green-600 hover:bg-green-500 text-white"
               onClick={() => handleClick(method.text)}
             >
               {method.tooltip && (
                 <Tooltip className="normal-case" text={method.tooltip} />
               )}
               {method.text}
-            </Button>
+            </button>
           );
         })}
         <label className="ml-2 flex items-center">

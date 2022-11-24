@@ -6,7 +6,6 @@ import { IUseInputNumberArgs, useInputNumber } from "@Src/hooks/useInputNumber";
 import InputBox from "@Components/InputBox";
 import JsonDisplayer from "@Components/JsonDisplayer";
 import Tooltip from "@Components/Tooltip";
-import Button from "@Components/Button";
 import { ConnectToStateTemplate } from "./template";
 
 const sectionStyle = "mt-4 p-4 rounded-lg border border-slate-200 break-inside-avoid-column";
@@ -191,22 +190,22 @@ function ConnectToState() {
         }
       />
       <div className="mt-2 px-4 flex gap-2">
-        <Button
-          className="shrink-0 bg-orange-500 hover:bg-orange-400 text-xl font-bold"
+        <button
+          className="shrink-0 button bg-orange-500 hover:bg-orange-400 text-xl font-bold"
           onClick={() => setValueC(valueC - 1)}
         >
           -
-        </Button>
-        <Button className="grow" onClick={() => setValueC(valueB)}>
+        </button>
+        <button className="grow button button-primary" onClick={() => setValueC(valueB)}>
           Change valueC to the same as valueB
-        </Button>
-        <Button
-          className="shrink-0 bg-orange-500 hover:bg-orange-400 text-xl font-bold relative group"
+        </button>
+        <button
+          className="shrink-0 button bg-orange-500 hover:bg-orange-400 text-xl font-bold relative group"
           onClick={() => setValueC(valueC + 1)}
         >
           +
           <Tooltip className="w-48 text-sm font-normal" placement="bottom" text="use third party to control" />
-        </Button>
+        </button>
       </div>
     </div>
   );
@@ -249,12 +248,12 @@ function MultipleDynamicInputs() {
         </div>
       ) : null}
 
-      <Button
-        className="w-full bg-green-200 text-green-600 hover:bg-green-300 hover:text-green-600 text-lg font-bold flex justify-center items-center"
+      <button
+        className="w-full button bg-green-200 text-green-600 hover:bg-green-300 hover:text-green-600 text-lg font-bold flex-center"
         onClick={() => setInputs((prev) => [...prev, { id: Date.now() }])}
       >
         Add
-      </Button>
+      </button>
 
       <JsonDisplayer title="Values" body={values} />
     </div>

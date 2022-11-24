@@ -8,7 +8,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 
-import Button from "@Components/Button";
 import InputBox from "@Components/InputBox";
 import { showNotify } from "@Src/utils";
 import { ErrorMsg } from "../../components";
@@ -173,8 +172,8 @@ export default function NestedValues() {
               );
             })}
           </div>
-          <Button
-            className="mt-4 w-full h-10 bg-green-200 hover:bg-green-300 text-black"
+          <button
+            className="mt-4 w-full h-10 button bg-green-200 hover:bg-green-300 text-black"
             type="button"
             onClick={() => {
               append({ type: "", url: "" }, { shouldFocus: false });
@@ -183,7 +182,7 @@ export default function NestedValues() {
             disabled={socialsNotAddable}
           >
             <PlusOutlined />
-          </Button>
+          </button>
           {socials.length < MIN_NUM_OF_SOCIALS && isSubmitted && (
             <p className="mt-2 text-red-500">
               Require atleast {MIN_NUM_OF_SOCIALS} fields.
@@ -192,14 +191,14 @@ export default function NestedValues() {
         </div>
 
         <div className="mt-2 mx-auto flex gap-4">
-          <Button
-            className="bg-red-500 hover:bg-red-400"
+          <button
+            className="button bg-red-500 hover:bg-red-400 text-white"
             type="button"
             onClick={() => reset()}
           >
             Reset
-          </Button>
-          <Button type="submit">Submit</Button>
+          </button>
+          <button type="submit" className="button button-primary">Submit</button>
         </div>
       </form>
 

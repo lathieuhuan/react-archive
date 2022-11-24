@@ -1,6 +1,5 @@
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { useState } from "react";
-import Button from "@Components/Button";
 import JsonDisplayer from "@Components/JsonDisplayer";
 import { axiosInstance } from "./service";
 
@@ -59,13 +58,13 @@ export default function Basic() {
       <div className="flex gap-2">
         {METHODS.map((method) => {
           return (
-            <Button
+            <button
               key={method}
-              className="capitalize"
+              className="button button-primary capitalize"
               onClick={() => handleClick(method)}
             >
               {method}
-            </Button>
+            </button>
           );
         })}
       </div>
