@@ -70,6 +70,14 @@ svg {
   background-color: transparent;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 input[type='radio'] {
   appearance: none;
   display: flex;

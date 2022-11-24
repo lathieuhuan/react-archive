@@ -16,6 +16,7 @@ import ReactQuery from "@Features/react-query";
 import Tricks from "@Features/tricks";
 import AutoResizeInput from "@Features/tricks/AutoResizeInput";
 import TableWithAfter from "@Features/tricks/TableWithAfter";
+import HorizontalList from "@Features/tricks/HorizontalList";
 
 import Processors from "@Features/processors";
 import InputProcessors from "@Features/processors/InputProcessors";
@@ -230,6 +231,14 @@ export const topCluster: ICluster = [
         },
         component: TableWithAfter,
       },
+      {
+        info: {
+          id: branchID++,
+          name: 'Horizontal List',
+          path: 'horizontal-list'
+        },
+        component: HorizontalList
+      }
     ],
   },
 ];

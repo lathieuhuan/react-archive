@@ -1,0 +1,36 @@
+.wrapper {
+  background-color: #262626;
+}
+
+.article-list {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  &:after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 2rem;
+    bottom: 2rem;
+    width: 5px;
+    border-radius: 5px;
+    background: linear-gradient(130deg, #ff7a18, #af002d 41.07%, #319197 76.05%);
+    box-shadow: -10px 0 20px 3px #000;
+  }
+
+  .article {
+    width: 300px;
+    height: 350px;
+    background: linear-gradient(85deg, #434343, #262626);
+    box-shadow: -3rem 0 3rem -2rem #000;
+
+    &:hover {
+      transform: translateY(-1rem) rotate(3deg);
+      & ~ .article {
+        transform: translateX(130px);
+      }
+    }
+
+    &:not(:first-child) {
+      margin-left: -130px;
+    }
+  }
+}
