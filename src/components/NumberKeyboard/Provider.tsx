@@ -1,4 +1,3 @@
-import { formatNumber } from "@Src/utils";
 import { ReactNode, useState, createContext, useContext, useEffect } from "react";
 import { NumberKeyboard } from "./NumberKeyboard";
 
@@ -28,10 +27,10 @@ export const NumberKeyboardContext = createContext<NumberKeyboardContextValue>({
   setActiveInput: () => {},
 });
 
-export interface ProviderProps {
+export interface IProviderProps {
   children: ReactNode;
 }
-export function Provider({ children }: ProviderProps) {
+export function Provider({ children }: IProviderProps) {
   const [visible, setVisible] = useState(false);
   const [activeInput, setActiveInput] = useState(DEFAULT_ACTIVE_INPUT);
 
@@ -44,6 +43,8 @@ export function Provider({ children }: ProviderProps) {
 
     return () => document.removeEventListener("click", openKeyboard);
   }, []);
+
+  const formatNumber = new Intl.NumberFormat("en").format;
 
   const toggleKeyboard = (visible: boolean) => {
     setVisible(visible);
@@ -63,8 +64,7 @@ export function Provider({ children }: ProviderProps) {
       let valueStr = formatNumber(value);
       const oldLength = valueStr.length;
 
-      valueStr =
-        valueStr.slice(0, cursorIndex) + key + valueStr.slice(cursorIndex, valueStr.length);
+      valueStr = valueStr.slice(0, cursorIndex) + key + valueStr.slice(cursorIndex, valueStr.length);
       const newValue = +valueStr.replace(/,/g, "");
 
       setActiveInput((prev) => ({
@@ -99,15 +99,13 @@ export function Provider({ children }: ProviderProps) {
   };
 
   return (
-    <NumberKeyboardContext.Provider
-      value={{ visible, activeInput, setVisible: toggleKeyboard, setActiveInput }}
-    >
+    <NumberKeyboardContext.Provider value={{ visible, activeInput, setVisible: toggleKeyboard, setActiveInput }}>
       {children}
       <NumberKeyboard
-        visible={visible}
+        // visible={visible}
         onClickKey={onClickKey}
         onClickBackspace={onClickBackspace}
-        onClose={() => setVisible(false)}
+        // onClose={() => setVisible(false)}
       />
     </NumberKeyboardContext.Provider>
   );

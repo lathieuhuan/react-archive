@@ -1,10 +1,11 @@
-import { NumberKeyboard as NumberKeyboardCpn, NumberKeyboardProps } from "./NumberKeyboard";
-import { Provider, ProviderProps } from "./Context";
+import { NumberKeyboard as NumberKeyboardCpn } from "./NumberKeyboard";
+import { Provider, IProviderProps } from "./Provider";
 import { Input, InputProps } from "./Input";
+import { INumberKeyboardProps } from "./types";
 
 interface NumberKeyboardGroup {
-  (props: NumberKeyboardProps): JSX.Element;
-  Provider: (props: ProviderProps) => JSX.Element;
+  (props: INumberKeyboardProps): JSX.Element;
+  Provider: (props: IProviderProps) => JSX.Element;
   Input: (props: InputProps) => JSX.Element;
 }
 

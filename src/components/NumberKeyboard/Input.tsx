@@ -1,8 +1,6 @@
+import classNames from "classnames";
 import { useEffect } from "react";
-import clsx from "clsx";
-
-import { formatNumber } from "@Src/utils";
-import { useNumberKeyboard } from "./Context";
+import { useNumberKeyboard } from "./Provider";
 import styles from "./styles.module.scss";
 
 export interface InputProps {
@@ -15,7 +13,7 @@ export function Input({ className, name = "undefined", value = 0, onChange }: In
   const { activeInput, setActiveInput } = useNumberKeyboard();
 
   const isSelectedInput = activeInput.name === name;
-  const characters = value ? formatNumber(value).split("") : ["0"];
+  const characters = value ? new Intl.NumberFormat("en").format(value).split("") : ["0"];
 
   useEffect(() => {
     if (isSelectedInput && typeof onChange === "function") {
@@ -32,9 +30,9 @@ export function Input({ className, name = "undefined", value = 0, onChange }: In
   };
 
   return (
-    <div className={clsx("w-full flex", className)}>
+    <div className={classNames("w-full flex", className)}>
       <span
-        className={clsx(
+        className={classNames(
           "hdm-cursor-candidate grow border-blue-500",
           isSelectedInput && activeInput.cursorIndex === 0 && styles["chosen-character"]
         )}
@@ -45,7 +43,7 @@ export function Input({ className, name = "undefined", value = 0, onChange }: In
         return (
           <span
             key={i}
-            className={clsx(
+            className={classNames(
               "hdm-cursor-candidate border-blue-500 tracking-wide",
               isSelectedInput && i + 1 === activeInput.cursorIndex && styles["chosen-character"]
             )}
