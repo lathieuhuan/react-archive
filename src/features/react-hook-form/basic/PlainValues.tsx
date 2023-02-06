@@ -5,7 +5,7 @@ import { ErrorMsg } from "../components";
 import { COLORS, GENDERS, OCCUPATIONS } from "../constant";
 import { PlainFormField } from "../types";
 
-export default function PlainValues() {
+export const PlainValues = () => {
   const {
     register,
     handleSubmit,
@@ -79,9 +79,7 @@ export default function PlainValues() {
             );
           })}
         </select>
-        {errors.gender && (
-          <p className="mt-2 text-red-500">{errors.gender.message}</p>
-        )}
+        {errors.gender && <p className="mt-2 text-red-500">{errors.gender.message}</p>}
       </div>
 
       <div className="flex flex-col">
@@ -141,4 +139,4 @@ export default function PlainValues() {
       </button>
     </form>
   );
-}
+};

@@ -10,7 +10,7 @@ interface IInputState {
   src: "INPUT" | "SCAN";
 }
 
-export default function BarcodeScanner() {
+export const BarcodeScanner = () => {
   const [input, setInput] = useState<IInputState>({
     value: "",
     src: "INPUT",
@@ -80,4 +80,4 @@ export default function BarcodeScanner() {
       {renderLogger()}
     </div>
   );
-}
+};

@@ -1,6 +1,9 @@
 import { Link, Outlet } from "react-router-dom";
 import { BASE_URL } from "./constant";
 
+export * from "./Basic";
+export * from "./Intermediate";
+
 export default function Axios() {
   return (
     <div>

@@ -1,35 +1,12 @@
 import { QueryClient, QueryClientProvider } from "react-query";
+import type { ICluster } from "./types";
 
-import Axios from "@Features/axios";
-import AxiosBasic from "@Features/axios/Basic";
-import Intermediate from "@Features/axios/Intermediate";
-
-import ReactHookForm from "@Features/react-hook-form";
-import BasicForms from "@Features/react-hook-form/basic";
-import PlainValues from "@Features/react-hook-form/basic/PlainValues";
-import RHFNestedValues from "@Features/react-hook-form/basic/NestedValues";
-import IntermediateForms from "@Features/react-hook-form/intermediate/";
-import UseController from "@Features/react-hook-form/intermediate/UseController";
-
+import Axios, { Basic as AxiosBasic, Intermediate } from "@Features/axios";
+import { PlainValues, NestedValues, UseController } from "@Features/react-hook-form";
 import ReactQuery from "@Features/react-query";
-
-import Tricks from "@Features/tricks";
-import AutoResizeInput from "@Features/tricks/AutoResizeInput";
-import TableWithAfter from "@Features/tricks/TableWithAfter";
-import HorizontalList from "@Features/tricks/HorizontalList";
-
-import Processors from "@Features/processors";
-import InputProcessors from "@Features/processors/InputProcessors";
-import InputNumber from "@Features/processors/InputProcessors/InputNumber";
-import UseInputNumber from "@Features/processors/InputProcessors/UseInputNumber";
-import BarcodeScanner from "@Features/processors/BarcodeScanner";
-
-import Formik from "@Features/formik";
-import BasicFormik from "@Features/formik/basic";
-import FormikNestedValues from "@Features/formik/basic/NestedValues";
-
-import { ICluster } from "./types";
-import I18next from "@Src/features/i18next";
+import { AutoResizeInput, TableWithAfter, HorizontalList } from "@Features/tricks";
+import { InputNumberExample, UseInputNumberExamples, BarcodeScanner } from "@Features/processors";
+import { I18next } from "@Features/i18next";
 
 let branchID = 1;
 const queryClient = new QueryClient();
@@ -72,38 +49,9 @@ export const topCluster: ICluster = [
   {
     info: {
       id: branchID++,
-      name: "Formik",
-      path: "formik",
-    },
-    component: Formik,
-    cluster: [
-      {
-        info: {
-          id: branchID++,
-          name: "Basic",
-          path: "basic",
-        },
-        component: BasicFormik,
-        cluster: [
-          {
-            info: {
-              id: branchID++,
-              name: "Nested values",
-              path: "nested-values",
-            },
-            component: FormikNestedValues,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    info: {
-      id: branchID++,
       name: "React Hook Form",
       path: "react-hook-form",
     },
-    component: ReactHookForm,
     cluster: [
       {
         info: {
@@ -111,7 +59,6 @@ export const topCluster: ICluster = [
           name: "Basic",
           path: "basic",
         },
-        component: BasicForms,
         cluster: [
           {
             info: {
@@ -127,7 +74,7 @@ export const topCluster: ICluster = [
               name: "Nested values",
               path: "nested-values",
             },
-            component: RHFNestedValues,
+            component: NestedValues,
           },
         ],
       },
@@ -137,7 +84,6 @@ export const topCluster: ICluster = [
           name: "Intermediate",
           path: "intermediate",
         },
-        component: IntermediateForms,
         cluster: [
           {
             info: {
@@ -169,7 +115,6 @@ export const topCluster: ICluster = [
       name: "Processors",
       path: "processors",
     },
-    component: Processors,
     cluster: [
       {
         info: {
@@ -177,7 +122,6 @@ export const topCluster: ICluster = [
           name: "Input Processors",
           path: "input-processors",
         },
-        component: InputProcessors,
         cluster: [
           {
             info: {
@@ -185,7 +129,7 @@ export const topCluster: ICluster = [
               name: "Input Number",
               path: "input-number",
             },
-            component: InputNumber,
+            component: InputNumberExample,
           },
           {
             info: {
@@ -193,7 +137,7 @@ export const topCluster: ICluster = [
               name: "useInputNumber",
               path: "useInputNumber-example",
             },
-            component: UseInputNumber,
+            component: UseInputNumberExamples,
           },
         ],
       },
@@ -213,7 +157,6 @@ export const topCluster: ICluster = [
       name: "Tricks",
       path: "tricks",
     },
-    component: Tricks,
     cluster: [
       {
         info: {
@@ -234,11 +177,11 @@ export const topCluster: ICluster = [
       {
         info: {
           id: branchID++,
-          name: 'Horizontal List',
-          path: 'horizontal-list'
+          name: "Horizontal List",
+          path: "horizontal-list",
         },
-        component: HorizontalList
-      }
+        component: HorizontalList,
+      },
     ],
   },
 ];

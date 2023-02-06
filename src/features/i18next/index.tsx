@@ -6,7 +6,7 @@ import InputBox from "@Src/components/InputBox";
 
 // i18n is init in ./i18n
 
-export default function I18next() {
+export const I18next = () => {
   const { t } = useTranslation();
   const [egg, setEgg] = useState(0);
 
@@ -67,7 +67,7 @@ export default function I18next() {
       </div>
     </Suspense>
   );
-}
+};
 
 interface TProps {
   components?: Record<string, JSX.Element>;

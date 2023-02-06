@@ -1,9 +1,3 @@
-import { Outlet } from "react-router-dom";
-
-export default function InputProcessors() {
-  return (
-    <div className="w-full">
-      <Outlet />
-    </div>
-  );
-}
+export * from "./InputNumber";
+export * from "./InputNumber";
+export * from "./UseInputNumber";

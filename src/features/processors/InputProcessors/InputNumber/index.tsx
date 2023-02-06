@@ -57,7 +57,7 @@ const lines: Array<{
   },
 ];
 
-export default function InputNumberExample() {
+export const InputNumberExample = () => {
   const [test, setTest] = useState(initialState);
 
   const onChange: ChangeEventHandler<HTMLInputElement | HTMLSelectElement> = (e) => {
@@ -141,4 +141,4 @@ export default function InputNumberExample() {
       </div>
     </div>
   );
-}
+};

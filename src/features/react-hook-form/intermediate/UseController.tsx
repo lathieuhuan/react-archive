@@ -7,7 +7,7 @@ import { COLORS } from "../constant";
 import { UseControllerFormData } from "./types";
 import customResolver from "./custom-resolver";
 
-export default function UseController() {
+export const UseController = () => {
   const { handleSubmit, watch, control, reset } = useForm<UseControllerFormData>({
     mode: "onTouched",
     defaultValues: {
@@ -88,4 +88,4 @@ export default function UseController() {
       <JsonDisplayer className="mt-4" title="Form Data" body={watch()} />
     </div>
   );
-}
+};

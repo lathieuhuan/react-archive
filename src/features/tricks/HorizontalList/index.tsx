@@ -1,6 +1,6 @@
 import styles from "./styles.module.scss";
 
-export default function HorizontalList() {
+export const HorizontalList = () => {
   return (
     <div>
       <p className="text-3xl font-bold">Articles</p>

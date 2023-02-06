@@ -34,7 +34,7 @@ const schema: yup.SchemaOf<NestedFormField> = yup.object().shape({
     .min(MIN_NUM_OF_SOCIALS),
 });
 
-export default function NestedValues() {
+export const NestedValues = () => {
   const {
     register,
     handleSubmit,

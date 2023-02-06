@@ -10,7 +10,7 @@ import { ConnectToStateTemplate } from "./template";
 
 const sectionStyle = "mt-4 p-4 rounded-lg border border-slate-200 break-inside-avoid-column";
 
-export default function UseInputNumberExamples() {
+export const UseInputNumberExamples = () => {
   return (
     <div className="columns-2">
       <div className={classNames("space-y-2", sectionStyle, "mt-0")}>
@@ -27,7 +27,7 @@ export default function UseInputNumberExamples() {
       <MultipleDynamicInputs />
     </div>
   );
-}
+};
 
 function Basic() {
   const { value, register } = useInputNumber({

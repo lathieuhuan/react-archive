@@ -2,17 +2,6 @@ import classNames from "classnames";
 import { type InputHTMLAttributes, ReactNode, useState } from "react";
 import styles from "./styles.module.scss";
 
-export default function AutoResizeInput() {
-  return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-2xl font-semibold">Auto-resize Input</h2>
-      <UseSizeAttr />
-      <UseDatasetAndCss1 />
-      <UseDatasetAndCss2 />
-    </div>
-  );
-}
-
 const Note = ({ children }: { children: ReactNode }) => {
   return <p className="mt-1 text-sm italic">{children}</p>;
 };
@@ -92,7 +81,7 @@ function UseDatasetAndCss2() {
 interface ValueFitInputProps extends InputHTMLAttributes<HTMLInputElement> {
   wrapperClassName?: string;
 }
-export function ValueFitInput(props: ValueFitInputProps) {
+export const ValueFitInput = (props: ValueFitInputProps) => {
   const { className, wrapperClassName, value, onChange, ...rest } = props;
   return (
     <div className={classNames("relative", styles.inputWrapper2, wrapperClassName)} data-value={value}>
@@ -107,4 +96,15 @@ export function ValueFitInput(props: ValueFitInputProps) {
       />
     </div>
   );
-}
+};
+
+export const AutoResizeInput = () => {
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 className="text-2xl font-semibold">Auto-resize Input</h2>
+      <UseSizeAttr />
+      <UseDatasetAndCss1 />
+      <UseDatasetAndCss2 />
+    </div>
+  );
+};

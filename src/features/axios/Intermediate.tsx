@@ -30,7 +30,7 @@ const methods = [
   { text: Method.CANCEL_REQUEST },
 ];
 
-export default function Intermediate() {
+export const Intermediate = () => {
   const [result, setResult] = useState<AxiosResponse>();
   const [error, setError] = useState<string>("");
   const [isCanceled, setIsCanceled] = useState(true);
@@ -172,9 +172,7 @@ export default function Intermediate() {
               className="button capitalize relative group bg-green-600 hover:bg-green-500 text-white"
               onClick={() => handleClick(method.text)}
             >
-              {method.tooltip && (
-                <Tooltip className="normal-case" text={method.tooltip} />
-              )}
+              {method.tooltip && <Tooltip className="normal-case" text={method.tooltip} />}
               {method.text}
             </button>
           );
@@ -194,14 +192,10 @@ export default function Intermediate() {
       {result && (
         <div className="mt-4 flex flex-col gap-4">
           <JsonDisplayer title="Headers" body={result.headers} />
-          <JsonDisplayer
-            title="Data"
-            body={result.data}
-            bodyStyle={{ maxHeight: "600px", overflow: "auto" }}
-          />
+          <JsonDisplayer title="Data" body={result.data} bodyStyle={{ maxHeight: "600px", overflow: "auto" }} />
           <JsonDisplayer title="Config" body={result.config} />
         </div>
       )}
     </div>
   );
-}
+};

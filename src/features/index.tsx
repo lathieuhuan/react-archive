@@ -6,7 +6,7 @@ import { topCluster } from "@Src/routes";
 import BodhiTree from "@Components/BodhiTree";
 import styles from "./styles.module.scss";
 
-function Home() {
+const Home = () => {
   const [sidebarOn, setSidebarOn] = useState(true);
   const topPath = useLocation().pathname.split("/")[1];
   let topBranch = "";
@@ -49,7 +49,7 @@ function Home() {
       </div>
     </div>
   );
-}
+};
 
 Home.NotFound = () => {
   return (
@@ -60,4 +60,4 @@ Home.NotFound = () => {
   );
 };
 
-export default Home;
+export { Home };

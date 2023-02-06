@@ -22,7 +22,7 @@ const items = [
   },
 ];
 
-export default function Table() {
+export const TableWithAfter = () => {
   const { t } = useTranslation();
 
   return (
@@ -103,4 +103,4 @@ export default function Table() {
       </div>
     </div>
   );
-}
+};

@@ -5,7 +5,7 @@ import { axiosInstance } from "./service";
 
 const METHODS = ["get", "post", "put", "patch", "delete"] as const;
 
-export default function Basic() {
+export const Basic = () => {
   const [result, setResult] = useState<AxiosResponse>();
   const [error, setError] = useState<string>("");
 
@@ -58,11 +58,7 @@ export default function Basic() {
       <div className="flex gap-2">
         {METHODS.map((method) => {
           return (
-            <button
-              key={method}
-              className="button button-primary capitalize"
-              onClick={() => handleClick(method)}
-            >
+            <button key={method} className="button button-primary capitalize" onClick={() => handleClick(method)}>
               {method}
             </button>
           );
@@ -73,14 +69,10 @@ export default function Basic() {
       {result && (
         <div className="mt-4 flex flex-col gap-4">
           <JsonDisplayer title="Headers" body={result.headers} />
-          <JsonDisplayer
-            title="Data"
-            body={result.data}
-            bodyStyle={{ maxHeight: "600px", overflow: "auto" }}
-          />
+          <JsonDisplayer title="Data" body={result.data} bodyStyle={{ maxHeight: "600px", overflow: "auto" }} />
           <JsonDisplayer title="Config" body={result.config} />
         </div>
       )}
     </div>
   );
-}
+};
