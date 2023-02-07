@@ -7,6 +7,7 @@ import ReactQuery from "@Features/react-query";
 import { AutoResizeInput, TableWithAfter, HorizontalList } from "@Features/tricks";
 import { InputNumberExample, UseInputNumberExamples, BarcodeScanner } from "@Features/processors";
 import { I18next } from "@Features/i18next";
+import { AntdForm } from "@Features/antd-form";
 
 let branchID = 1;
 const queryClient = new QueryClient();
@@ -96,6 +97,14 @@ export const topCluster: ICluster = [
         ],
       },
     ],
+  },
+  {
+    info: {
+      id: branchID++,
+      name: "Antd Form",
+      path: "antd-form",
+    },
+    component: AntdForm,
   },
   {
     info: {
