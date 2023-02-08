@@ -22,8 +22,6 @@ export const AntdForm: React.FC = () => {
   };
 
   const checkAndDisable = (changedValues: Partial<MyForm>, values: MyForm) => {
-    console.log(changedValues, values);
-
     checkAndDisableV1(disables, setDisables)(changedValues, values);
   };
 

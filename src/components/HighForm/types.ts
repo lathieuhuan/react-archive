@@ -14,11 +14,35 @@ export interface IHighFormProps<T extends Store> {
   onFinish?: (values: T) => void;
 }
 
-type PrimalType = string | boolean | number | undefined;
+export type PrimalType = string | boolean | number | undefined;
 
-export type DisableSubRule = Record<string, PrimalType | PrimalType[]>;
+export type DisableFieldRule = Record<string, PrimalType | PrimalType[]>;
+
+export type DisableSubRule = {
+  fields?: DisableFieldRule;
+  allOf?: DisableSubRule | DisableSubRule[];
+  someOf?: DisableSubRule | DisableSubRule[];
+};
+
+type AllOfCondition = {
+  type: "allOf";
+  fields: DisableFieldRule;
+};
+
+type AnyOfCondition = {
+  type: "anyOf";
+  fields: DisableFieldRule;
+};
+
+type SomeOfCondition = {
+  type: "someOf";
+  fields: DisableFieldRule;
+  count: number;
+}
+
+export type Condition = AllOfCondition | AnyOfCondition;
 
 export type DisableRule = {
-  allOf?: DisableSubRule;
-  anyOf?: DisableSubRule;
+  checkFields: string[];
+  conditions: Condition | Condition[];
 };
