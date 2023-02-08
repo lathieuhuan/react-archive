@@ -38,7 +38,7 @@ type SomeOfCondition = {
   type: "someOf";
   fields: DisableFieldRule;
   count: number;
-}
+};
 
 export type Condition = AllOfCondition | AnyOfCondition;
 

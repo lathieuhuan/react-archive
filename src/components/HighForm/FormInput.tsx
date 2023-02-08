@@ -1,9 +1,7 @@
+import React from "react";
 import { Form, Input } from "antd";
-import { ReactNode } from "react";
 
-interface IFormInputProps {
-  name: string;
-  label?: ReactNode;
+interface IFormInputProps extends React.ComponentProps<typeof Form.Item> {
   disabled?: boolean;
 }
 

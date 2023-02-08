@@ -1,10 +1,30 @@
-import { useState } from "react";
-import { Form } from "antd";
-import type { Store } from "antd/es/form/interface";
-import type { IHighFormProps } from "./types";
+import React from "react";
+import { Form as AntdForm } from "antd";
+import FormStoreProvider from "./form-store";
+import { checkAndDisableV1 } from "./trials/ver1";
 
-export const HighForm = <T extends Store>({ ...rest }: IHighFormProps<T>) => {
-  //   const [disables, setDisables] = useState<Partial<Record<keyof T, boolean[]>>>({});
+interface IHighFormProps extends Omit<React.ComponentProps<typeof AntdForm>, "form"> {
+  initialActiveGroupKeys?: string | string[];
+  accordionGroups?: boolean;
+}
 
-  return <Form {...rest} />;
+export const HighForm = ({ initialActiveGroupKeys = [], accordionGroups, onValuesChange, ...rest }: IHighFormProps) => {
+  const [form] = AntdForm.useForm();
+
+  const onFormValuesChange = (changedValues: any, values: unknown) => {
+    onValuesChange?.(changedValues, values);
+
+    // checkAndDisableV1(disables, setDisables)(changedValues, values);
+  };
+
+  return (
+    <FormStoreProvider
+      defaultValues={{
+        activeGroupKeys: Array.isArray(initialActiveGroupKeys) ? initialActiveGroupKeys : [initialActiveGroupKeys],
+        accordionGroups,
+      }}
+    >
+      <AntdForm form={form} {...rest} onValuesChange={onFormValuesChange} />;
+    </FormStoreProvider>
+  );
 };
