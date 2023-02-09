@@ -1,19 +1,34 @@
 import { DownOutlined } from "@ant-design/icons";
-import { Collapse } from "@Components/temporary";
+import { Collapse } from "antd";
 import { useFormStore } from "./form-store";
 
 interface IFormGroupProps {
   groupKey: string;
-  headerText: string;
+  header: string;
   children: React.ReactNode;
+  collapsible?: boolean;
+  extra?: React.ReactNode;
+  cols?: number;
+  expandIcon?: null | (() => React.ReactNode);
 }
 
-export const FormGroup = ({ groupKey, headerText, children }: IFormGroupProps) => {
+export const FormGroup = ({
+  groupKey,
+  expandIcon,
+  collapsible = true,
+  cols = 1,
+  children,
+  ...panelProps
+}: IFormGroupProps) => {
   const [activeGroupKeys, setStore] = useFormStore((store) => store.activeGroupKeys);
-  const [accordionGroups] = useFormStore((store) => store.accordionGroups);
+  const [accordionMode] = useFormStore((store) => store.accordionMode);
 
   const onClickPanel = () => {
-    if (accordionGroups) {
+    if (!collapsible) {
+      return;
+    }
+
+    if (accordionMode) {
       setStore({
         activeGroupKeys: activeGroupKeys.includes(groupKey) ? [] : [groupKey],
       });
@@ -28,28 +43,36 @@ export const FormGroup = ({ groupKey, headerText, children }: IFormGroupProps) =
 
   return (
     <Collapse
-      activeKey={activeGroupKeys.includes(groupKey) ? "1" : "0"}
-      collapsible="header"
+      activeKey={!collapsible || activeGroupKeys.includes(groupKey) ? "1" : "0"}
       expandIcon={({ isActive }) => {
+        if (typeof expandIcon === "function") {
+          return expandIcon();
+        }
         return <DownOutlined rotate={isActive ? 180 : 0} style={{ fontSize: 14, color: "#1677FF" }} />;
       }}
       expandIconPosition="end"
       ghost
-      className="rounded-md overflow-hidden"
+      className="rounded-md overflow-hidden voucher-form-group"
       style={{
         border: "1px solid rgba(0, 0, 0, 0.06)",
       }}
+      onChange={onClickPanel}
     >
       <Collapse.Panel
-        className="bg-white"
-        header={
-          <p className="w-full font-semibold" style={{ padding: "13px 6px 13px 12px" }} onClick={onClickPanel}>
-            {headerText}
-          </p>
-        }
         key="1"
+        className="bg-white "
+        forceRender
+        showArrow={collapsible && expandIcon !== null}
+        {...panelProps}
       >
-        {children}
+        <div
+          className="py-1 grid"
+          style={{
+            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+          }}
+        >
+          {children}
+        </div>
       </Collapse.Panel>
     </Collapse>
   );

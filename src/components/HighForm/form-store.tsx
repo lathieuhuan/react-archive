@@ -3,12 +3,22 @@ import { createContext, useCallback, useContext, useRef, useSyncExternalStore } 
 type FormStore = {
   activeGroupKeys: string[];
   disabledFields: Record<string, boolean>;
-  accordionGroups: boolean;
+  accordionMode: boolean;
+};
+
+const DEFAULT_STORE: FormStore = {
+  activeGroupKeys: [],
+  accordionMode: true,
+  disabledFields: {},
 };
 
 const getDefaultFormStoreData = (defaultValues?: Partial<FormStore>) => {
-  const { activeGroupKeys = [], accordionGroups = true, disabledFields = {} } = defaultValues || {};
-  return { activeGroupKeys, accordionGroups, disabledFields };
+  const {
+    activeGroupKeys = DEFAULT_STORE.activeGroupKeys,
+    accordionMode = DEFAULT_STORE.accordionMode,
+    disabledFields = DEFAULT_STORE.disabledFields,
+  } = defaultValues || {};
+  return { activeGroupKeys, accordionMode, disabledFields };
 };
 
 const useFormStoreData = (
@@ -47,15 +57,19 @@ const useFormStoreData = (
 
 type FormStoreReturnType = ReturnType<typeof useFormStoreData>;
 
-const FormStoreContext = createContext<FormStoreReturnType | null>(null);
+const FormStoreContext = createContext<FormStoreReturnType>({
+  get: () => DEFAULT_STORE,
+  set: () => undefined,
+  subscribe: () => () => undefined,
+});
 
 interface IFormStoreProviderProps {
   children: React.ReactNode;
-  defaultValues?: Partial<FormStore>;
+  initialValues?: Partial<FormStore>;
 }
 
-const FormStoreProvider = ({ children, defaultValues }: IFormStoreProviderProps) => {
-  const storeData = useFormStoreData(defaultValues);
+const FormStoreProvider = ({ children, initialValues }: IFormStoreProviderProps) => {
+  const storeData = useFormStoreData(initialValues);
 
   return <FormStoreContext.Provider value={storeData}>{children}</FormStoreContext.Provider>;
 };
@@ -66,10 +80,6 @@ function useFormStore<T>(selector: (store: FormStore) => T): [T, (value: Partial
 
 function useFormStore<T>(selector?: (store: FormStore) => T): [FormStore | T, (value: Partial<FormStore>) => void] {
   const store = useContext(FormStoreContext);
-
-  if (!store) {
-    throw new Error("Store not found");
-  }
 
   const state = useSyncExternalStore(store.subscribe, () => (selector ? selector(store.get()) : store.get()));
 

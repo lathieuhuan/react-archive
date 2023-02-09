@@ -2,13 +2,14 @@ import React from "react";
 import { Form, Input } from "antd";
 
 interface IFormInputProps extends React.ComponentProps<typeof Form.Item> {
+  placeholder?: string;
   disabled?: boolean;
 }
 
-export const FormInput = ({ disabled, ...rest }: IFormInputProps) => {
+export const FormInput = ({ disabled, placeholder, ...rest }: IFormInputProps) => {
   return (
     <Form.Item {...rest}>
-      <Input disabled={disabled} />
+      <Input {...{ disabled, placeholder }} />
     </Form.Item>
   );
 };
