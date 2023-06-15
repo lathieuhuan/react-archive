@@ -1,28 +1,16 @@
-interface IFormItemControl {
-  value: string;
-  onChange: (value: string) => void;
-}
-
-interface IFormItemProps<K> {
-  name: K;
-  children: (control: IFormItemControl) => React.ReactElement<any, any> | null;
-}
+import { ReactElement } from "react";
 
 export function genForm<T extends Record<string, unknown>>() {
+  interface IFormItemProps<K extends keyof T> {
+    name: K;
+    children: (control: { value: T[K]; onChange: (value: T[K]) => void }) => ReactElement<any, any> | null;
+  }
+
   const formData = {} as T;
 
   console.log("genForm");
 
-  function FormItem<K extends keyof T>({
-    name,
-    children,
-  }: {
-    name: K;
-    children: (control: {
-      value: T[K];
-      onChange: (value: T[K]) => void;
-    }) => React.ReactElement<any, any> | null;
-  }): React.ReactElement<any, any> | null {
+  function FormItem<K extends keyof T>({ name, children }: IFormItemProps<K>) {
     console.log("FormItem");
 
     return children({
@@ -38,22 +26,21 @@ export function genForm<T extends Record<string, unknown>>() {
   };
 }
 
-function getObj<T extends Record<string, unknown>>() {
-  const obj = {} as T;
+// function getObj<T extends Record<string, unknown>>() {
+//   const obj = {} as T;
 
-  function item<K extends keyof T>(name: K, render: (value: T[K]) => number) {
-    return render(obj[name]);
-  }
+//   function item<K extends keyof T>(name: K, render: (value: T[K]) => number) {
+//     return render(obj[name]);
+//   }
 
-  return {
-    item,
-  };
-}
+//   return {
+//     item,
+//   };
+// }
 
-type Obj = {
-  key: number;
-};
+// type Obj = {
+//   key: number;
+// };
 
 // const obj = getObj<Obj>();
-
 // const b = obj.item("key", (value) => 2);
