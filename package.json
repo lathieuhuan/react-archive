@@ -10,7 +10,6 @@
   "dependencies": {
     "@ant-design/icons": "4.7.0",
     "@hookform/resolvers": "2.9.3",
-    "antd": "5.0.4",
     "axios": "0.27.2",
     "classnames": "2.3.1",
     "i18next": "21.8.13",
