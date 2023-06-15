@@ -1,11 +1,11 @@
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
-import { Button, Input } from "antd";
 import JsonDisplayer from "@Components/JsonDisplayer";
 import { showNotify } from "@Src/utils";
 
 import { COLORS } from "../constant";
 import { UseControllerFormData } from "./types";
 import customResolver from "./custom-resolver";
+import InputBox from "@Components/InputBox";
 
 export const UseController = () => {
   const { handleSubmit, watch, control, reset } = useForm<UseControllerFormData>({
@@ -38,7 +38,7 @@ export const UseController = () => {
             name="name"
             render={({ field: { onChange, onBlur, value, ref } }) => {
               return (
-                <Input placeholder="Enter your name" value={value} onChange={onChange} onBlur={onBlur} ref={ref} />
+                <InputBox placeholder="Enter your name" value={value} onChange={onChange} onBlur={onBlur} ref={ref} />
               );
             }}
           />
@@ -75,13 +75,12 @@ export const UseController = () => {
         />
 
         <div className="mx-auto mt-4 flex gap-3">
-          <Button htmlType="button" type="primary" danger onClick={() => reset()}>
+          <button type="button" className="button border" onClick={() => reset()}>
             Reset
-          </Button>
-          {/* background-color: transparent of tailwind overwrite background-color of antd Button */}
-          <Button className="bg-blue-400" htmlType="submit" type="primary">
+          </button>
+          <button className="button button-primary" type="submit">
             Submit
-          </Button>
+          </button>
         </div>
       </form>
 
