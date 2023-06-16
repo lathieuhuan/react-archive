@@ -1,80 +1,66 @@
-import { createContext, useCallback, useRef } from 'react';
+import { createContext, useCallback, useRef } from "react";
 
-export type TFormStore = {
-    activeGroupKeys: string[];
-    accordionMode: boolean;
-    disabledFields: string[];
-    /** Flag to prevent groups from validating fields when they're initially closed */
-    isValidatingGroup: boolean;
-};
+export type TFormStore<K> = K & Record<PropertyKey, unknown>;
 
-const DEFAULT_STORE: TFormStore = {
-    activeGroupKeys: [],
-    accordionMode: true,
-    isValidatingGroup: false,
-    disabledFields: [],
-};
+function useFormStoreData<K>(initialValues: Partial<TFormStore<K>> = {}): {
+  get: () => TFormStore<K>;
+  set: (value: Partial<TFormStore<K>>) => void;
+  subscribe: (callback: () => void) => () => void;
+} {
+  const formStore = useRef<TFormStore<K>>(initialValues as TFormStore<K>);
+  const subscribers = useRef(new Set<() => void>());
 
-const getDefaultFormStoreData = (defaultValues?: Partial<TFormStore>): TFormStore => {
-    const {
-        activeGroupKeys = DEFAULT_STORE.activeGroupKeys,
-        accordionMode = DEFAULT_STORE.accordionMode,
-        isValidatingGroup = DEFAULT_STORE.isValidatingGroup,
-        disabledFields = DEFAULT_STORE.disabledFields,
-    } = defaultValues || {};
+  const get = useCallback(() => formStore.current, []);
 
-    return { activeGroupKeys, accordionMode, isValidatingGroup, disabledFields };
-};
-
-const useFormStoreData = (
-    initialValues?: Partial<TFormStore>
-): {
-    get: () => TFormStore;
-    set: (value: Partial<TFormStore>) => void;
-    subscribe: (callback: () => void) => () => void;
-} => {
-    const formStore = useRef(getDefaultFormStoreData(initialValues));
-    const subscribers = useRef(new Set<() => void>());
-
-    const get = useCallback(() => formStore.current, []);
-
-    const set = useCallback((value: Partial<TFormStore>) => {
-        formStore.current = {
-            ...formStore.current,
-            ...value,
-        };
-
-        subscribers.current.forEach((callback) => callback());
-    }, []);
-
-    const subscribe = useCallback((callback: () => void) => {
-        subscribers.current.add(callback);
-
-        return () => subscribers.current.delete(callback);
-    }, []);
-
-    return {
-        get,
-        set,
-        subscribe,
+  const set = useCallback((value: Partial<TFormStore<K>>) => {
+    formStore.current = {
+      ...formStore.current,
+      ...value,
     };
-};
 
-type TFormStoreReturnType = ReturnType<typeof useFormStoreData>;
+    subscribers.current.forEach((callback) => callback());
+  }, []);
 
-export const FormStoreContext = createContext<TFormStoreReturnType>({
-    get: () => DEFAULT_STORE,
-    set: () => undefined,
-    subscribe: () => () => undefined,
-});
+  const subscribe = useCallback((callback: () => void) => {
+    subscribers.current.add(callback);
 
-interface IFormStoreProviderProps {
-    children: React.ReactNode;
-    initialValues?: Partial<TFormStore>;
+    return () => subscribers.current.delete(callback);
+  }, []);
+
+  return {
+    get,
+    set,
+    subscribe,
+  };
 }
 
-export const FormStoreProvider = ({ children, initialValues }: IFormStoreProviderProps) => {
-    const storeData = useFormStoreData(initialValues);
+export type TFormStoreReturnType<K> = ReturnType<typeof useFormStoreData<K>>;
 
-    return <FormStoreContext.Provider value={storeData}>{children}</FormStoreContext.Provider>;
-};
+export const FormStoreContext = createContext<TFormStoreReturnType<any>>({
+  get: () => ({}),
+  set: () => undefined,
+  subscribe: () => () => undefined,
+});
+
+interface IFormStoreProviderProps<K> {
+  children: React.ReactNode;
+  initialValues?: Partial<TFormStore<K>>;
+  onSubmit?: (data: TFormStore<K>) => void;
+}
+
+export function FormStoreProvider<K>({ children, initialValues, onSubmit }: IFormStoreProviderProps<K>) {
+  const storeData = useFormStoreData<K>(initialValues);
+
+  return (
+    <FormStoreContext.Provider value={storeData}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit?.(storeData.get());
+        }}
+      >
+        {children}
+      </form>
+    </FormStoreContext.Provider>
+  );
+}

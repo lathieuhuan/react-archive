@@ -1,16 +1,18 @@
-import { useContext, useSyncExternalStore } from 'react';
-import { TFormStore, FormStoreContext } from './form-store-provider';
+import { useContext, useSyncExternalStore } from "react";
+import { TFormStore, FormStoreContext, TFormStoreReturnType } from "./form-store-provider";
 
-function useFormStore(): [TFormStore, (value: Partial<TFormStore>) => void];
+function useFormStore<K>(): [TFormStore<K>, (value: Partial<TFormStore<K>>) => void];
 
-function useFormStore<T>(selector: (store: TFormStore) => T): [T, (value: Partial<TFormStore>) => void];
+function useFormStore<K, T>(selector: (store: TFormStore<K>) => T): [T, (value: Partial<TFormStore<K>>) => void];
 
-function useFormStore<T>(selector?: (store: TFormStore) => T): [TFormStore | T, (value: Partial<TFormStore>) => void] {
-    const store = useContext(FormStoreContext);
+function useFormStore<K, T>(
+  selector?: (store: TFormStore<K>) => T
+): [TFormStore<K> | T, (value: Partial<TFormStore<K>>) => void] {
+  const store = useContext(FormStoreContext) as TFormStoreReturnType<K>;
 
-    const state = useSyncExternalStore(store.subscribe, () => (selector ? selector(store.get()) : store.get()));
+  const state = useSyncExternalStore(store.subscribe, () => (selector ? selector(store.get()) : store.get()));
 
-    return [state, store.set];
+  return [state, store.set];
 }
 
 export { useFormStore };

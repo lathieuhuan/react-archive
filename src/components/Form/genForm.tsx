@@ -1,12 +1,19 @@
-import { ReactElement } from "react";
+import { FormEventHandler, ReactElement, useRef } from "react";
 
-export function genForm<T extends Record<string, unknown>>() {
+interface IGenFormArgs<T> {
+  onSubmit?: (data: T) => void;
+}
+
+export function genForm<T extends Record<PropertyKey, unknown>>(options?: IGenFormArgs<T>) {
   interface IFormItemProps<K extends keyof T> {
     name: K;
-    children: (control: { value: T[K]; onChange: (value: T[K]) => void }) => ReactElement<any, any> | null;
+    children: (control: {
+      // value: T[K];
+      onChange: (value: T[K]) => void;
+    }) => ReactElement<any, any> | null;
   }
 
-  const formData = {} as T;
+  const formData = useRef({} as T);
 
   console.log("genForm");
 
@@ -14,15 +21,23 @@ export function genForm<T extends Record<string, unknown>>() {
     console.log("FormItem");
 
     return children({
-      value: formData[name],
+      // value: formData[name],
       onChange: (value) => {
-        formData[name] = value;
+        formData.current[name] = value;
       },
     });
   }
 
+  const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
+    e.preventDefault();
+    options?.onSubmit?.(formData.current);
+  };
+
   return {
     FormItem,
+    getFormProps: () => ({
+      onSubmit,
+    }),
   };
 }
 
