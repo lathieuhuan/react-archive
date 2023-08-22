@@ -1,5 +1,6 @@
 import classNames from "classnames";
-import { type InputHTMLAttributes, ReactNode, useState } from "react";
+import { useState } from "react";
+import type { InputHTMLAttributes, ReactNode } from "react";
 import styles from "./styles.module.scss";
 
 const Note = ({ children }: { children: ReactNode }) => {

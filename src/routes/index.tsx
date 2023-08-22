@@ -7,6 +7,7 @@ import ReactQuery from "@Features/react-query";
 import { AutoResizeInput, TableWithAfter, HorizontalList } from "@Features/tricks";
 import { InputNumberExample, UseInputNumberExamples, BarcodeScanner } from "@Features/processors";
 import { I18next } from "@Features/i18next";
+import DynamicTypeForm from "@Features/dynamic-type-form";
 
 let branchID = 1;
 const queryClient = new QueryClient();
@@ -150,6 +151,14 @@ export const topCluster: ICluster = [
         component: BarcodeScanner,
       },
     ],
+  },
+  {
+    info: {
+      id: branchID++,
+      name: "Dynamic Type Form",
+      path: "dynamic-type-form",
+    },
+    component: DynamicTypeForm,
   },
   {
     info: {
