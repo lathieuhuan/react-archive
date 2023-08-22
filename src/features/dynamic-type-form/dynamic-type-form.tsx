@@ -11,7 +11,7 @@ export const DynamicTypeForm = () => {
   const { FormItem, getFormProps } = genForm<FormData>({
     //   onSubmit: console.log,
   });
-  const [count, setCount] = useState(0);
+  // const [count, setCount] = useState(0);
 
   console.log("run");
 
@@ -40,7 +40,7 @@ export const DynamicTypeForm = () => {
         <button className="button button-primary">Submit</button>
       </form>
 
-      <button onClick={() => setCount(count + 1)}>Click</button>
+      {/* <button onClick={() => setCount(count + 1)}>Click</button> */}
     </div>
   );
 };
