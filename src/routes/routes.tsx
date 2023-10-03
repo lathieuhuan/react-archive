@@ -5,7 +5,7 @@ import Axios, { Basic as AxiosBasic, Intermediate } from "@Features/axios";
 import { PlainValues, NestedValues, UseController } from "@Features/react-hook-form";
 import ReactQuery from "@Features/react-query";
 import { AutoResizeInput, TableWithAfter, HorizontalList } from "@Features/tricks";
-import { InputNumberExample, UseInputNumberExamples, BarcodeScanner } from "@Features/processors";
+import { InputNumberExample, UseInputNumberExamples } from "@Features/processors";
 import { I18next } from "@Features/i18next";
 import DynamicTypeForm from "@Features/dynamic-type-form";
 import WebComponents from "@Features/web-components";
@@ -142,14 +142,6 @@ export const topCluster: ICluster = [
             component: UseInputNumberExamples,
           },
         ],
-      },
-      {
-        info: {
-          id: branchID++,
-          name: "Barcode Scanner",
-          path: "barcode-scanner",
-        },
-        component: BarcodeScanner,
       },
     ],
   },
