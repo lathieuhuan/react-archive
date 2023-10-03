@@ -12,6 +12,7 @@ export const PlainValues = () => {
     formState: { errors },
   } = useForm<PlainFormField>({
     mode: "onBlur",
+    // defaultValues is snapshot at the start, not dynamic
     defaultValues: {
       name: "",
       age: null,
@@ -73,7 +74,7 @@ export const PlainValues = () => {
         >
           {GENDERS.map((gender) => {
             return (
-              <option className="capitalize" key={gender}>
+              <option className="capitalize" key={gender} value={gender}>
                 {gender}
               </option>
             );
