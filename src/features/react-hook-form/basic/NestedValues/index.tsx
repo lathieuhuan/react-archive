@@ -62,12 +62,10 @@ export const NestedValues = () => {
   // const formState = useFormState({ control });
   // const socialsTouched = formState.touchedFields.socials;
 
-  const { fields, append, prepend, remove, swap, move, insert } = useFieldArray(
-    {
-      control,
-      name: "socials",
-    }
-  );
+  const { fields, append, prepend, remove, swap, move, insert } = useFieldArray({
+    control,
+    name: "socials",
+  });
 
   let socialsNotAddable = false;
   const socials = watch("socials");
@@ -85,7 +83,7 @@ export const NestedValues = () => {
       style: {
         height: "600px",
         whiteSpace: "pre",
-        overflow: "auto"
+        overflow: "auto",
       },
     });
   };
@@ -93,23 +91,13 @@ export const NestedValues = () => {
   return (
     <div className="flex gap-8">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-        <p className="mb-2 italic text-right text-slate-400">
-          Validate with Yup
-        </p>
+        <p className="mb-2 italic text-right text-slate-400">Validate with Yup</p>
         <div>
           <div className="grid grid-cols-2 gap-2">
-            <InputBox
-              placeholder="Enter first name"
-              {...register("fullname.firstname")}
-            />
-            <InputBox
-              placeholder="Enter last name"
-              {...register("fullname.lastname")}
-            />
+            <InputBox placeholder="Enter first name" {...register("fullname.firstname")} />
+            <InputBox placeholder="Enter last name" {...register("fullname.lastname")} />
           </div>
-          <ErrorMsg
-            error={errors.fullname?.firstname || errors.fullname?.lastname}
-          />
+          <ErrorMsg error={errors.fullname?.firstname || errors.fullname?.lastname} />
         </div>
 
         <div className="flex flex-col">
@@ -119,12 +107,7 @@ export const NestedValues = () => {
               return (
                 <li key={color} className="mt-2">
                   <label>
-                    <input
-                      className="mr-2"
-                      type="checkbox"
-                      {...register("colors")}
-                      value={color}
-                    />
+                    <input className="mr-2" type="checkbox" {...register("colors")} value={color} />
                     <span className="capitalize" style={{ color }}>
                       {color}
                     </span>
@@ -144,30 +127,20 @@ export const NestedValues = () => {
               return (
                 <div key={social.id}>
                   <div className="flex gap-2">
-                    <InputBox
-                      placeholder="Enter social type"
-                      {...register(`socials.${i}.type`)}
-                    />
-                    <InputBox
-                      placeholder="Enter social url"
-                      {...register(`socials.${i}.url`)}
-                    />
+                    <InputBox placeholder="Enter social type" {...register(`socials.${i}.type`)} />
+                    <InputBox placeholder="Enter social url" {...register(`socials.${i}.url`)} />
                     <button
                       className="w-10 min-w-[40px] bg-red-200 hover:bg-red-300 text-black rounded"
                       onClick={() => {
                         remove(i);
-                        clearErrors(`socials.${i}`)
+                        clearErrors(`socials.${i}`);
                       }}
                       disabled={socials.length === 1}
                     >
                       <MinusOutlined />
                     </button>
                   </div>
-                  <ErrorMsg
-                    error={
-                      errors.socials?.[i]?.type || errors.socials?.[i]?.url
-                    }
-                  />
+                  <ErrorMsg error={errors.socials?.[i]?.type || errors.socials?.[i]?.url} />
                 </div>
               );
             })}
@@ -183,26 +156,29 @@ export const NestedValues = () => {
           >
             <PlusOutlined />
           </button>
+
+          {/* <ErrorMsg error={errors.socials} /> */}
+
           {socials.length < MIN_NUM_OF_SOCIALS && isSubmitted && (
-            <p className="mt-2 text-red-500">
-              Require atleast {MIN_NUM_OF_SOCIALS} fields.
-            </p>
+            <ErrorMsg
+              error={{
+                message: `Require atleast ${MIN_NUM_OF_SOCIALS} fields.`,
+              }}
+            />
           )}
         </div>
 
         <div className="mt-2 mx-auto flex gap-4">
-          <button
-            className="button bg-red-500 hover:bg-red-400 text-white"
-            type="button"
-            onClick={() => reset()}
-          >
+          <button className="button bg-red-500 hover:bg-red-400 text-white" type="button" onClick={() => reset()}>
             Reset
           </button>
-          <button type="submit" className="button button-primary">Submit</button>
+          <button type="submit" className="button button-primary">
+            Submit
+          </button>
         </div>
       </form>
 
       <FieldArrayPitfall />
     </div>
   );
-}
+};
