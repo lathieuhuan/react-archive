@@ -12,13 +12,14 @@ type StringSchema = {
   count?: number;
 };
 
-type Schema = NumberShema | StringSchema;
+export type Schema = NumberShema | StringSchema;
 
-export interface IUseFakeApiArgs {
-  dataSchema: Record<string, Schema>;
+export interface IUseMockApiArgs<T extends string> {
+  dataSchema: Record<T, Schema>;
+  delay?: number;
 }
 
-export interface ICallFakeApiArgs {
+export interface ICallMockApiArgs {
   error?: any;
   delay?: number;
   isError?: boolean;

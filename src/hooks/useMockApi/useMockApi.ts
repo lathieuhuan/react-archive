@@ -1,20 +1,23 @@
 import { getRandomInt } from "@Utils/index";
 import { useState } from "react";
-import type { ICallFakeApiArgs, IUseFakeApiArgs } from "./types";
+import type { ICallMockApiArgs, IUseMockApiArgs } from "./types";
 
-export const useFakeApi = (options: IUseFakeApiArgs) => {
-  const [status, setStatus] = useState("isIdle");
-  const [data, setData] = useState<any>();
+type TStatus = "IDLE" | "ERROR" | "LOADING";
 
-  const callFakeApi = (args?: ICallFakeApiArgs) => {
+export function useMockApi<T extends string>(options: IUseMockApiArgs<T>) {
+  const [status, setStatus] = useState<TStatus>("IDLE");
+  const [data, setData] = useState<Record<T, any>>();
+
+  const callMockApi = (args?: ICallMockApiArgs): Promise<Record<T, any>> => {
     const startTime = Date.now();
-    const { dataSchema } = options;
-    const { error = "error", isError = false, delay = 1000 } = args || {};
+    const { dataSchema, delay: defaultDelay = 1000 } = options;
+    const { error = "error", isError = false, delay = defaultDelay } = args || {};
     const response: Record<string, any> = {};
 
-    setStatus("isLoading");
+    setStatus("LOADING");
 
-    for (const [field, schema] of Object.entries(dataSchema)) {
+    for (const field in dataSchema) {
+      const schema = dataSchema[field];
       const { count = 1 } = schema;
       const emptyMold = [...Array(count)];
 
@@ -44,10 +47,10 @@ export const useFakeApi = (options: IUseFakeApiArgs) => {
     return new Promise((res, rej) => {
       setTimeout(() => {
         if (isError) {
-          setStatus("isIdle");
+          setStatus("IDLE");
           rej(error);
         } else {
-          setStatus("isError");
+          setStatus("ERROR");
           setData(response);
           res(response);
         }
@@ -56,9 +59,9 @@ export const useFakeApi = (options: IUseFakeApiArgs) => {
   };
 
   return {
-    isLoading: status === "isLoading",
-    isError: status === "isError",
+    isLoading: status === "LOADING",
+    isError: status === "ERROR",
     data,
-    callFakeApi,
+    callMockApi,
   };
-};
+}

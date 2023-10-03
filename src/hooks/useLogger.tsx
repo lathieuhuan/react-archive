@@ -31,18 +31,28 @@ export const useLogger = (args?: IUseLoggerArgs) => {
             <h3 className="text-2xl font-semibold">{args?.title}</h3>
           </div>
           <div className="px-4 py-2 relative">
-            <ul className="pl-4 list-disc leading-8">
-              {logs.map(({ text, className }, i) => {
-                return (
-                  <li key={i} className={className}>
-                    {text}
-                  </li>
-                );
-              })}
-            </ul>
-            <button className="button button-primary absolute top-1 right-1" hidden={!logs.length} onClick={() => setLogs([])}>
-              Reset
-            </button>
+            {logs.length ? (
+              <>
+                <ul className="pl-4 list-disc leading-8">
+                  {logs.map(({ text, className }, i) => {
+                    return (
+                      <li key={i} className={className}>
+                        {text}
+                      </li>
+                    );
+                  })}
+                </ul>
+                <button
+                  className="button button-danger absolute top-2 right-2"
+                  hidden={!logs.length}
+                  onClick={() => setLogs([])}
+                >
+                  Reset
+                </button>
+              </>
+            ) : (
+              <p>No data</p>
+            )}
           </div>
         </div>
       );
