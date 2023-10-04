@@ -13,8 +13,6 @@ export const DynamicTypeForm = () => {
   });
   // const [count, setCount] = useState(0);
 
-  console.log("run");
-
   return (
     <div>
       <p className="mb-4 text-red-700">This is Experimental</p>

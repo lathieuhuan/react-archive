@@ -18,12 +18,8 @@ export function genForm<T = Record<PropertyKey, unknown>>(options?: IGenFormArgs
   const formData = useRef({} as T);
   const formErrors = useRef({} as Record<keyof T, string | undefined>);
 
-  console.log("genForm");
-
   function FormItem<K extends keyof T>({ name, validate, children }: IFormItemProps<K>) {
     const [boo, setBoo] = useState(false);
-
-    console.log("FormItem");
 
     return children({
       // value: formData[name],
@@ -60,22 +56,3 @@ export function genForm<T = Record<PropertyKey, unknown>>(options?: IGenFormArgs
     },
   };
 }
-
-// function getObj<T extends Record<string, unknown>>() {
-//   const obj = {} as T;
-
-//   function item<K extends keyof T>(name: K, render: (value: T[K]) => number) {
-//     return render(obj[name]);
-//   }
-
-//   return {
-//     item,
-//   };
-// }
-
-// type Obj = {
-//   key: number;
-// };
-
-// const obj = getObj<Obj>();
-// const b = obj.item("key", (value) => 2);
