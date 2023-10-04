@@ -107,7 +107,7 @@ export const InputNumberExample = () => {
                 <div className="flex">
                   {type === "select" ? (
                     <Select
-                      options={options || []}
+                      options={options?.map((option) => ({ label: option })) || []}
                       name={key}
                       value={isDisabledInput ? options?.[0] : test[key]}
                       onChange={onChange}

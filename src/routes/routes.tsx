@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import type { ICluster } from "./types";
 
 import Axios, { Basic as AxiosBasic, Intermediate } from "@Features/axios";
-import { PlainValues, NestedValues, UseController } from "@Features/react-hook-form";
+import { PlainValues, NestedValues, UseController, LargeForm } from "@Features/react-hook-form";
 import ReactQuery from "@Features/react-query";
 import { AutoResizeInput, TableWithAfter, HorizontalList } from "@Features/tricks";
 import { InputNumberExample, UseInputNumberExamples } from "@Features/processors";
@@ -94,6 +94,23 @@ export const topCluster: ICluster = [
               path: "use-controller",
             },
             component: UseController,
+          },
+        ],
+      },
+      {
+        info: {
+          id: branchID++,
+          name: "Advanced",
+          path: "advanced",
+        },
+        cluster: [
+          {
+            info: {
+              id: branchID++,
+              name: "Large Form",
+              path: "large-form",
+            },
+            component: LargeForm,
           },
         ],
       },
