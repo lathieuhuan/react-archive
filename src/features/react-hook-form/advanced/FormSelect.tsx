@@ -1,13 +1,12 @@
-import { Control, ControllerProps, FieldValues, Path, useController } from "react-hook-form";
+import { FieldValues, useController } from "react-hook-form";
+
 import Select, { SelectProps } from "@Components/Select";
 import { ErrorMsg } from "../components";
+import { Label } from "./Label";
+import { FormItemProps } from "./types";
 
-type FormSelectProps<T extends FieldValues> = SelectProps & {
-  label?: string;
-  name: Path<T>;
-  control: Control<T, any>;
-  rules?: ControllerProps["rules"];
-};
+type FormSelectProps<T extends FieldValues> = Omit<SelectProps, "name"> & FormItemProps<T>;
+
 export function FormSelect<T extends FieldValues>({ label, name, control, rules, ...rest }: FormSelectProps<T>) {
   const {
     field,
@@ -16,9 +15,7 @@ export function FormSelect<T extends FieldValues>({ label, name, control, rules,
 
   return (
     <div className="flex flex-col">
-      <label>
-        {rules?.required ? <span className="text-red-500">*</span> : null} {label}
-      </label>
+      <Label rules={rules}>{label}</Label>
       <Select {...rest} {...field} value={field.value as string} />
       <ErrorMsg error={errors[name]} />
     </div>

@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { forwardRef, LegacyRef } from "react";
+import { forwardRef } from "react";
 
 type TOption = {
   className?: string;

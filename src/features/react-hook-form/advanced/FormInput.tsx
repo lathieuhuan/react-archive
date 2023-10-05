@@ -1,19 +1,19 @@
-import { Control, ControllerProps, FieldValues, Path, useController } from "react-hook-form";
+import { ChangeEvent } from "react";
+import { FieldValues, useController } from "react-hook-form";
+
 import InputBox, { InputBoxProps } from "@Components/InputBox";
 import { ErrorMsg } from "../components";
+import { Label } from "./Label";
+import { FormItemProps } from "./types";
 
-type FormInputProps<T extends FieldValues> = InputBoxProps & {
-  label?: string;
-  name: Path<T>;
-  control: Control<T, any>;
-  rules?: ControllerProps["rules"];
-  placeholder?: string;
-};
+type FormInputProps<T extends FieldValues> = Omit<InputBoxProps, "name"> & FormItemProps<T>;
+
 export function FormInput<T extends FieldValues>({
   label,
   name,
   control,
   rules,
+  type,
   placeholder = "Enter",
   ...rest
 }: FormInputProps<T>) {
@@ -22,12 +22,17 @@ export function FormInput<T extends FieldValues>({
     formState: { errors },
   } = useController({ name, control, rules });
 
+  const value = type === "number" && field.value === undefined ? "" : field.value;
+
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    field.onChange(type === "number" ? (value === "" ? undefined : +value) : value);
+  };
+
   return (
     <div className="flex flex-col">
-      <label>
-        {rules?.required ? <span className="text-red-500">*</span> : null} {label}
-      </label>
-      <InputBox placeholder={placeholder} {...rest} onChange={(e) => field.onChange(e.target.value)} />
+      <Label rules={rules}>{label}</Label>
+      <InputBox placeholder={placeholder} {...rest} {...field} type={type} value={value} onChange={onChange} />
       <ErrorMsg error={errors[name]} />
     </div>
   );
