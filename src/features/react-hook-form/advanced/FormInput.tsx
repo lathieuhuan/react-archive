@@ -19,7 +19,7 @@ export function FormInput<T extends FieldValues>({
 }: FormInputProps<T>) {
   const {
     field,
-    formState: { errors },
+    fieldState: { error },
   } = useController({ name, control, rules });
 
   const value = type === "number" && field.value === undefined ? "" : field.value;
@@ -33,7 +33,7 @@ export function FormInput<T extends FieldValues>({
     <div className="flex flex-col">
       <Label rules={rules}>{label}</Label>
       <InputBox placeholder={placeholder} {...rest} {...field} type={type} value={value} onChange={onChange} />
-      <ErrorMsg error={errors[name]} />
+      <ErrorMsg error={error} />
     </div>
   );
 }

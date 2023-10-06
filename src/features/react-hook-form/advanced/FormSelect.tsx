@@ -10,14 +10,14 @@ type FormSelectProps<T extends FieldValues> = Omit<SelectProps, "name"> & FormIt
 export function FormSelect<T extends FieldValues>({ label, name, control, rules, ...rest }: FormSelectProps<T>) {
   const {
     field,
-    formState: { errors },
+    fieldState: { error },
   } = useController({ name, control, rules });
 
   return (
     <div className="flex flex-col">
       <Label rules={rules}>{label}</Label>
       <Select {...rest} {...field} value={field.value as string} />
-      <ErrorMsg error={errors[name]} />
+      <ErrorMsg error={error} />
     </div>
   );
 }

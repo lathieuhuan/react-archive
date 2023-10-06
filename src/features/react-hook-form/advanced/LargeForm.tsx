@@ -8,9 +8,10 @@ import { FormRadio } from "./FormRadio";
 import { FormWatcher } from "./FormWatcher";
 
 const defaultValues: Partial<FormData> = {
-  firstName: "",
-  gender: "OTHER",
-  occupation: "GAME_DEV",
+  formInput: "",
+  formRadio: "RADIO_B",
+  formSelect: "OPTION_C",
+  dummy1: "",
 };
 
 export function LargeForm() {
@@ -18,7 +19,7 @@ export function LargeForm() {
     mode: "onChange",
     defaultValues,
   });
-  const { control, formState, trigger, watch, reset, getValues, handleSubmit, getFieldState } = methods;
+  const { control, formState, reset, handleSubmit } = methods;
   const [submittedData, setSubmittedData] = useState<any>();
 
   console.log("render");
@@ -37,8 +38,8 @@ export function LargeForm() {
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <FormInput
             control={control}
-            name="firstName"
-            label="Name"
+            name="formInput"
+            label="Form Input"
             rules={{
               required: "This field is required",
               maxLength: {
@@ -48,43 +49,83 @@ export function LargeForm() {
             }}
           />
 
-          <FormSelect
+          <FormInput
             control={control}
-            name="occupation"
-            label="Occupation"
-            options={[
-              { label: "Web Developer", value: "WEB_DEV" },
-              { label: "Game Developer", value: "GAME_DEV" },
-              { label: "AI Developer", value: "AI_DEV" },
-            ]}
+            name="formInputNumber"
+            label="Form Input Number"
+            type="number"
+            rules={{
+              required: "This field is required",
+              max: {
+                value: 100,
+                message: "Max 100",
+              },
+            }}
           />
-
-          <FormWatcher<FormData, ["gender"]> paths={["gender"]}>
-            {(values) => {
-              const gender = values[0];
-
+          <FormWatcher<FormData, "formInputNumber"> paths="formInputNumber">
+            {(numberValue) => {
               return (
-                <FormInput
-                  control={control}
-                  name="yoe"
-                  label="Years of Experience"
-                  rules={{
-                    required: {
-                      value: gender === "MALE",
-                      message: "This field is required",
-                    },
-                  }}
-                  type="number"
-                />
+                <div>
+                  <FormInput
+                    control={control}
+                    name="dummy1"
+                    label="Dummy 1"
+                    rules={{
+                      required: {
+                        value: numberValue > 20,
+                        message: "This field is required",
+                      },
+                    }}
+                  />
+                  <p>This field is required when Form Input Number value is greater than 20</p>
+                </div>
               );
             }}
           </FormWatcher>
 
-          <FormRadio control={control} name="gender" label="Gender" className="mt-1 space-y-2">
-            <FormRadio.Item value="MALE">Male</FormRadio.Item>
-            <FormRadio.Item value="FEMALE">Female</FormRadio.Item>
-            <FormRadio.Item value="OTHER">Other</FormRadio.Item>
+          <FormRadio control={control} name="formRadio" label="Form Radio" className="mt-1 space-y-2">
+            <FormRadio.Item value="RADIO_A">Radio A</FormRadio.Item>
+            <FormRadio.Item value="RADIO_B">Radio B</FormRadio.Item>
+            <FormRadio.Item value="RADIO_C">Radio C</FormRadio.Item>
           </FormRadio>
+
+          <FormWatcher<FormData, "formRadio"> paths="formRadio">
+            {(radioValue) => {
+              return (
+                <div>
+                  <FormInput
+                    control={control}
+                    name="dummy2"
+                    label="Dummy 2"
+                    disabled={radioValue === "RADIO_A"}
+                  />
+                  <p>This field is disabled when Form Radio value is Radio A</p>
+                </div>
+              );
+            }}
+          </FormWatcher>
+
+          <FormSelect
+            control={control}
+            name="formSelect"
+            label="Form Select"
+            options={[
+              { label: "Option A", value: "OPTION_A" },
+              { label: "Option B", value: "OPTION_B" },
+              { label: "Option C", value: "OPTION_C" },
+            ]}
+          />
+
+          <FormWatcher<FormData, "formSelect"> paths="formSelect">
+            {(selectValue) => {
+              return (
+                <div>
+                  {selectValue === "OPTION_A" ? null : <FormInput control={control} name="dummy3" label="Dummy 3" />}
+                  <p>This field is unmounted when Form Select value is Option A</p>
+                </div>
+              );
+            }}
+          </FormWatcher>
 
           <div className="flex space-x-4">
             <button type="button" className="button button-danger" onClick={onReset}>

@@ -46,30 +46,38 @@ function Item(props: ItemProps) {
 type FormRadioProps<T extends FieldValues> = FormItemProps<T> & {
   className?: string;
   children: ReactNode;
+  onChange?: (value: RadioValue) => void;
 };
-function FormRadio<T extends FieldValues>({ className, children, label, name, control, rules }: FormRadioProps<T>) {
+function FormRadio<T extends FieldValues>({
+  className,
+  children,
+  label,
+  onChange,
+  ...controlProps
+}: FormRadioProps<T>) {
   const [value, setValue] = useState<RadioValue>();
 
   const {
     field,
-    formState: { errors },
-  } = useController({ name, control, rules });
+    fieldState: { error },
+  } = useController(controlProps);
 
   useEffect(() => {
     setValue(field.value);
   }, [field.value]);
 
-  const onChange = (newValue: RadioValue) => {
+  const handleChange = (newValue: RadioValue) => {
+    onChange?.(newValue);
     field.onChange(newValue);
     setValue(newValue);
   };
 
   return (
-    <Context.Provider value={{ value, onChange }}>
+    <Context.Provider value={{ value, onChange: handleChange }}>
       <div className="flex flex-col">
-        <Label rules={rules}>{label}</Label>
+        <Label rules={controlProps.rules}>{label}</Label>
         <div className={className}>{children}</div>
-        <ErrorMsg error={errors[name]} />
+        <ErrorMsg error={error} />
       </div>
     </Context.Provider>
   );
