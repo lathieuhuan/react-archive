@@ -1,9 +1,15 @@
 import { useSyncExternalStore } from "react";
-import { FormCenterService, TFormCenter } from "../form-center";
+import { FormCenterService, FormCenter } from "../form-center";
+import { FormValues, Path } from "../types";
 
-export function useWatch(path: string, formCenter: TFormCenter) {
+// Improve: should return defaultValue on first render when pass formCenter
+
+export function useWatch<
+  TFormValues extends FormValues = FormValues,
+  TPath extends Path<TFormValues> = Path<TFormValues>
+>(formCenter: FormCenter<TFormValues>, path: TPath) {
   return useSyncExternalStore(
-    (subscriber) => (formCenter as FormCenterService)._watchValue(path, subscriber),
-    () => formCenter.getValue(path)
+    (subscriber) => (formCenter as FormCenterService<TFormValues>)._watchValue(path, subscriber),
+    () => formCenter.getValue<TPath>(path)
   );
 }

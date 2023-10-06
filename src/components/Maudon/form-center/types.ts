@@ -1,27 +1,30 @@
-export type TFormValues = Record<string, any>;
+import { FormValues, Path, PathValue } from "../types";
 
-export type TSubscriber<K extends keyof T = any, T extends TFormValues = any> = (value: T[K]) => void;
+export type ValueWatcher<TFormValues extends FormValues> = <TFieldName extends Path<TFormValues> = Path<TFormValues>>(
+  value: PathValue<TFormValues, TFieldName>
+) => void;
 
-type TGetValue = (path: string) => any;
+type GetValue<TFormValues extends FormValues = FormValues> = {
+  <TPath extends Path<TFormValues>>(path: TPath): TFormValues[TPath];
+  (): TFormValues;
+};
 
-type FieldValue<TFieldValues extends TFormValues> = TFieldValues[string];
-
-type SetFieldValue<TFieldValues extends TFormValues> = FieldValue<TFieldValues>;
-
-type TSetValueOptions = {
+type SetValueOptions = {
   validate?: boolean;
 };
 
-type TSetValue = (name: string, value: SetFieldValue<TFormValues>, options?: TSetValueOptions) => void;
+type SetValue<TFormValues extends FormValues> = <TFieldName extends Path<TFormValues> = Path<TFormValues>>(
+  name: TFieldName,
+  value: PathValue<TFormValues, TFieldName>,
+  options?: SetValueOptions
+) => void;
 
-type TRegister = (path: string) => {
-  onChange: (e: any) => void;
+export type InternalFormCenter<TFormValues extends FormValues = FormValues> = {
+  getValue: GetValue<TFormValues>;
+  setValue: SetValue<TFormValues>;
 };
 
-export type TInternalFormCenter = {
-  register: TRegister;
-  getValue: TGetValue;
-  setValue: TSetValue;
-};
-
-export type TFormCenter = Pick<TInternalFormCenter, "register" | "getValue" | "setValue">;
+export type FormCenter<TFormValues extends FormValues = FormValues> = Pick<
+  InternalFormCenter<TFormValues>,
+  "getValue" | "setValue"
+>;

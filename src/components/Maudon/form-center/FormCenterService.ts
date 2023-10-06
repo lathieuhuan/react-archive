@@ -1,8 +1,13 @@
-import { TFormValues, TInternalFormCenter, TSubscriber } from "./types";
+import { FormValues, Path } from "../types";
+import get from "../utils/get";
+import isNullOrUndefined from "../utils/isNullOrUndefined";
+import isObject from "../utils/isObject";
+import set from "../utils/set";
+import { InternalFormCenter, ValueWatcher } from "./types";
 
-export class FormCenterService<T extends TFormValues = TFormValues> {
-  values: TFormValues = {};
-  subscribers: Map<string, Set<TSubscriber<any>>> = new Map();
+export class FormCenterService<TFormValues extends FormValues = FormValues> {
+  values: FormValues = {};
+  valueWatchers: Map<Path<TFormValues>, Set<ValueWatcher<TFormValues>>> = new Map();
 
   constructor() {
     // this.values = {
@@ -10,37 +15,50 @@ export class FormCenterService<T extends TFormValues = TFormValues> {
     // };
   }
 
-  _changeValue = (path: string) => (e: any) => {
-    //
+  /** Improve this */
+  _changeValue = (e: any, path: Path<TFormValues>) => {
+    let value;
+
+    if (isNullOrUndefined(e)) {
+      value = e;
+    } else if ("target" in e) {
+      value = (e as any)?.target?.value;
+    } else {
+      value = e;
+    }
+    this.setValue(path, value);
   };
 
-  _watchValue = <K extends keyof T>(path: K, observer: TSubscriber<K>): (() => void) => {
-    const subscribers = this.subscribers.get(path as string);
+  _watchValue = <TPath extends Path<TFormValues>>(
+    path: TPath,
+    observer: ValueWatcher<TFormValues>
+  ): (() => void) => {
+    const valueWatchers = this.valueWatchers.get(path);
 
-    if (subscribers) {
-      subscribers.add(observer);
+    if (valueWatchers) {
+      valueWatchers.add(observer);
       return () => {
-        subscribers.delete(observer);
+        valueWatchers.delete(observer);
       };
     }
 
-    this.subscribers.set(path as string, new Set([observer]));
+    this.valueWatchers.set(path, new Set([observer]));
     return () => {
-      this.subscribers.get(path as string)?.delete(observer);
+      this.valueWatchers.get(path)?.delete(observer);
     };
   };
 
-  register: TInternalFormCenter["register"] = (path) => {
-    return {
-      onChange: this._changeValue(path),
-    };
+  setValue: InternalFormCenter<TFormValues>["setValue"] = (path, value, options = {}) => {
+    set(this.values, path, value);
+
+    const watchers = this.valueWatchers.get(path);
+
+    if (watchers) {
+      watchers.forEach((watcher) => watcher(value));
+    }
   };
 
-  setValue: TInternalFormCenter["setValue"] = (path, value, options = {}) => {
-    //
-  };
-
-  getValue: TInternalFormCenter["getValue"] = () => {
-    //
+  getValue: InternalFormCenter<TFormValues>["getValue"] = (path?: Path<TFormValues>) => {
+    return path ? get(this.values, path) : this.values;
   };
 }

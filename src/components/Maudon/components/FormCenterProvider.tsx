@@ -1,21 +1,26 @@
 import { createContext, useContext } from "react";
-import { TFormCenter } from "../form-center";
+import { FormCenter } from "../form-center";
+import { FormValues } from "../types";
 
-export const FormCenterContext = createContext<TFormCenter | null>(null);
+export const FormCenterContext = createContext<FormCenter | null>(null);
 
-type FormCenterProviderProps = {
-  formCenter: TFormCenter;
+type FormCenterProviderProps<TFormValues extends FormValues> = {
+  formCenter: FormCenter<TFormValues>;
   children: React.ReactNode;
 };
-export function FormCenterProvider(props: FormCenterProviderProps) {
-  return <FormCenterContext.Provider value={props.formCenter}>{props.children}</FormCenterContext.Provider>;
+export function FormCenterProvider<TFormValues extends FormValues = FormValues>(
+  props: FormCenterProviderProps<TFormValues>
+) {
+  return (
+    <FormCenterContext.Provider value={props.formCenter as FormCenter}>{props.children}</FormCenterContext.Provider>
+  );
 }
 
-export const useFormCenter = () => {
+export function useFormCenter<TFormValues extends FormValues = FormValues>(form?: FormCenter<TFormValues>) {
   const formCenter = useContext(FormCenterContext);
 
   if (!formCenter) {
     throw new Error("useFormCenter must be used inside FormCenterProvider");
   }
-  return formCenter;
-};
+  return (form || formCenter) as FormCenter<TFormValues>;
+}

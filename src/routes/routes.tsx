@@ -9,6 +9,7 @@ import { InputNumberExample, UseInputNumberExamples } from "@Features/processors
 import { I18next } from "@Features/i18next";
 import DynamicTypeForm from "@Features/dynamic-type-form";
 import WebComponents from "@Features/web-components";
+import { MyFormBasic } from "@Features/my-form";
 
 let branchID = 1;
 const queryClient = new QueryClient();
@@ -159,6 +160,23 @@ export const topCluster: ICluster = [
             component: UseInputNumberExamples,
           },
         ],
+      },
+    ],
+  },
+  {
+    info: {
+      id: branchID++,
+      name: "My Form",
+      path: "my-form",
+    },
+    cluster: [
+      {
+        info: {
+          id: branchID++,
+          name: "Basic",
+          path: "basic",
+        },
+        component: MyFormBasic,
       },
     ],
   },
