@@ -1,4 +1,9 @@
 import { FormValues, Path, PathValue } from "../types";
+import { DeepPartial } from "../types/utils";
+
+export type FormCenterConstructOptions<TFormValues extends FormValues> = {
+  defaultValues?: DeepPartial<TFormValues>;
+};
 
 export type ValueWatcher<TFormValues extends FormValues> = <TFieldName extends Path<TFormValues> = Path<TFormValues>>(
   value: PathValue<TFormValues, TFieldName>

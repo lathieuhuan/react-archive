@@ -3,6 +3,9 @@ import { Form, Path } from "@Components/Maudon";
 
 type FormData = {
   primitive: string;
+  required1: string;
+  required2: string;
+  required3: string;
   nested: {
     value: string;
   };
@@ -45,8 +48,6 @@ function TestUseWatch({ path }: { path: Path<FormData> }) {
   const form = Form.useFormCenter<FormData>();
   const value = Form.useWatch(form, path);
 
-  console.log("TestUseWatch", path);
-
   return (
     <div>
       <p>Watched {path}</p>
@@ -58,13 +59,35 @@ function TestUseWatch({ path }: { path: Path<FormData> }) {
 export function MyFormBasic() {
   const form = Form.useForm<FormData>({
     defaultValues: {
-      code: "",
+      primitive: "",
+      nested: {
+        value: "",
+      },
+      object: {
+        key: "",
+      },
+    },
+    rules: {
+      required1: {
+        required: true,
+      },
+      required2: {
+        required: {
+          value: true,
+          message: "This is required",
+        },
+      },
+      required3: {
+        required: {
+          value: () => true,
+          message: "This is dynamic required",
+        },
+      },
     },
   });
 
   const handleClick = () => {
-    // form.setValue("nested", { value: "DEV" }); // Not work, no watcher for "nested", only for "nested.value", improve?
-    // form.setValue("object", { key: "DEV" });
+    form.setValue("object", { key: "DEV" });
   };
 
   return (

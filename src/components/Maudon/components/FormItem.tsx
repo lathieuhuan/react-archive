@@ -1,7 +1,8 @@
-import { useFormCenter } from "./FormCenterProvider";
 import { FormCenter, FormCenterService } from "../form-center";
 import { useWatch } from "../hooks";
+import { useFormCenter } from "./FormCenterProvider";
 import { FormValues, Path, PathValue } from "../types";
+import isNullOrUndefined from "../utils/isNullOrUndefined";
 
 type RenderChildrenProps<TFormValues extends FormValues, TPath extends Path<TFormValues>> = {
   control: {
@@ -24,7 +25,18 @@ export function FormItem<
   const value = useWatch(formCenter, name);
 
   const handleChange = (...e: any[]) => {
-    formCenter._changeValue(e[0], name);
+    const value = e[0];
+    let newValue;
+
+    if (isNullOrUndefined(value)) {
+      newValue = value;
+    } else if ("target" in value) {
+      newValue = (value as any)?.target?.value;
+    } else {
+      newValue = value;
+    }
+
+    formCenter.setValue(name, newValue);
   };
 
   return children({
