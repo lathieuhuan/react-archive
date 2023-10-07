@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { FormProvider, SubmitHandler, useForm, useWatch } from "react-hook-form";
+import { useState } from "react";
+import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 
 import { FormData } from "./types";
 import { FormInput } from "./FormInput";
@@ -19,7 +19,11 @@ export function LargeForm() {
     mode: "onChange",
     defaultValues,
   });
-  const { control, formState, reset, handleSubmit } = methods;
+  const {
+    formState: { isValid },
+    reset,
+    handleSubmit,
+  } = methods;
   const [submittedData, setSubmittedData] = useState<any>();
 
   console.log("render");
@@ -37,7 +41,6 @@ export function LargeForm() {
       <FormProvider {...methods}>
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <FormInput
-            control={control}
             name="formInput"
             label="Form Input"
             rules={{
@@ -50,7 +53,6 @@ export function LargeForm() {
           />
 
           <FormInput
-            control={control}
             name="formInputNumber"
             label="Form Input Number"
             type="number"
@@ -67,7 +69,6 @@ export function LargeForm() {
               return (
                 <div>
                   <FormInput
-                    control={control}
                     name="dummy1"
                     label="Dummy 1"
                     rules={{
@@ -83,7 +84,7 @@ export function LargeForm() {
             }}
           </FormWatcher>
 
-          <FormRadio control={control} name="formRadio" label="Form Radio" className="mt-1 space-y-2">
+          <FormRadio name="formRadio" label="Form Radio" className="mt-1 space-y-2">
             <FormRadio.Item value="RADIO_A">Radio A</FormRadio.Item>
             <FormRadio.Item value="RADIO_B">Radio B</FormRadio.Item>
             <FormRadio.Item value="RADIO_C">Radio C</FormRadio.Item>
@@ -93,12 +94,7 @@ export function LargeForm() {
             {(radioValue) => {
               return (
                 <div>
-                  <FormInput
-                    control={control}
-                    name="dummy2"
-                    label="Dummy 2"
-                    disabled={radioValue === "RADIO_A"}
-                  />
+                  <FormInput name="dummy2" label="Dummy 2" disabled={radioValue === "RADIO_A"} />
                   <p>This field is disabled when Form Radio value is Radio A</p>
                 </div>
               );
@@ -106,7 +102,6 @@ export function LargeForm() {
           </FormWatcher>
 
           <FormSelect
-            control={control}
             name="formSelect"
             label="Form Select"
             options={[
@@ -120,7 +115,7 @@ export function LargeForm() {
             {(selectValue) => {
               return (
                 <div>
-                  {selectValue === "OPTION_A" ? null : <FormInput control={control} name="dummy3" label="Dummy 3" />}
+                  {selectValue === "OPTION_A" ? null : <FormInput name="dummy3" label="Dummy 3" />}
                   <p>This field is unmounted when Form Select value is Option A</p>
                 </div>
               );
@@ -131,7 +126,7 @@ export function LargeForm() {
             <button type="button" className="button button-danger" onClick={onReset}>
               Reset
             </button>
-            <button type="submit" className="button button-primary" disabled={!formState.isValid}>
+            <button type="submit" className="button button-primary" disabled={!isValid}>
               Submit
             </button>
           </div>

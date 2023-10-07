@@ -18,6 +18,5 @@ export type FormData = {
 export type FormItemProps<T extends FieldValues> = {
   label?: string;
   name: Path<T>;
-  control: Control<T, any>;
   rules?: ControllerProps["rules"];
 };

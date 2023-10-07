@@ -11,7 +11,6 @@ type FormInputProps<T extends FieldValues> = Omit<InputBoxProps, "name"> & FormI
 export function FormInput<T extends FieldValues>({
   label,
   name,
-  control,
   rules,
   type,
   placeholder = "Enter",
@@ -20,13 +19,14 @@ export function FormInput<T extends FieldValues>({
   const {
     field,
     fieldState: { error },
-  } = useController({ name, control, rules });
+  } = useController({ name, rules });
 
   const value = type === "number" && field.value === undefined ? "" : field.value;
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     field.onChange(type === "number" ? (value === "" ? undefined : +value) : value);
+    rest.onChange?.(e);
   };
 
   return (
