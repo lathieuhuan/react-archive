@@ -1,0 +1,95 @@
+.history-log {
+  --connector-length: 2rem;
+  --connector-length-negative: -2rem;
+
+  padding-left: 4rem;
+  display: flex;
+
+  .history-timeline-wrap {
+    width: calc(var(--connector-length) * 2);
+    display: flex;
+
+    .history-timeline {
+      width: 50%;
+      border-right: 2px dashed rgba($color: #000000, $alpha: 0.5);
+      transition: height 500ms ease-out;
+    }
+    .connector-revealer {
+      width: 50%;
+      background-color: white;
+      z-index: 10;
+
+      &.revealing {
+        width: 0;
+        transition: width 300ms ease-in-out;
+      }
+    }
+  }
+
+  .version-list {
+    flex-grow: 1;
+
+    .version-view {
+      height: 100px;
+      position: relative;
+      padding: 24px;
+      border: 1px solid rgba($color: #000000, $alpha: 0.1);
+      border-radius: 8px;
+      box-shadow: 2px 3px 4px rgba($color: #000000, $alpha: 0.25);
+      --milestone-size: 1rem;
+
+      .version-label {
+        position: absolute;
+        top: 22px; // 32 - (line-height) 20
+        right: calc(100% + var(--connector-length) + var(--milestone-size));
+        font-size: 14px;
+        line-height: 20px;
+        opacity: 0;
+        transition: scale 300ms ease-in-out, opacity 300ms ease-in-out;
+      }
+
+      &::before {
+        position: absolute;
+        top: 32px;
+        right: 100%;
+        width: var(--connector-length);
+        border-top: 2px dashed rgba($color: #000000, $alpha: 0.5);
+        content: "";
+      }
+
+      &::after {
+        width: var(--milestone-size);
+        height: var(--milestone-size);
+        border-radius: 50%;
+        border: 2px solid rgba($color: #000000, $alpha: 0.5);
+        background-color: white;
+
+        scale: 0;
+        position: absolute;
+        top: calc(32px - var(--milestone-size) / 2);
+        left: calc(var(--connector-length-negative) - var(--milestone-size) / 2);
+        transition:  background-color 300ms ease-in-out, scale 300ms ease-in-out;
+        content: "";
+      }
+
+      &.connected {
+        &::after {
+          scale: 1;
+        }
+
+        .version-label {
+          opacity: 1;
+        }
+      }
+
+      &:hover {
+        &::after {
+          @apply bg-blue-500;
+        }
+        .version-label {
+          scale: 1.2;
+        }
+      }
+    }
+  }
+}

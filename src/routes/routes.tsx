@@ -7,6 +7,8 @@ import ReactQuery from "@Features/react-query";
 import { AutoResizeInput, TableWithAfter, HorizontalList } from "@Features/tricks";
 import { InputNumberExample, UseInputNumberExamples } from "@Features/processors";
 import { I18next } from "@Features/i18next";
+import HistoryLog from "@Features/history-log";
+
 import DynamicTypeForm from "@Features/dynamic-type-form";
 import WebComponents from "@Features/web-components";
 import { MyFormBasic } from "@Features/my-form";
@@ -162,6 +164,14 @@ export const topCluster: ICluster = [
         ],
       },
     ],
+  },
+  {
+    info: {
+      id: branchID++,
+      name: "History Log",
+      path: "history-log",
+    },
+    component: HistoryLog,
   },
   {
     info: {
