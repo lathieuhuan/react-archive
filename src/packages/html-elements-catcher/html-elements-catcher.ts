@@ -1,3 +1,8 @@
+type Position = {
+  x: number;
+  y: number;
+};
+
 const MIN_NET_SIZE = 4;
 const DEFAULT_NET_HALF_SIZE = 80; // DEFAULT_NET_SIZE is x2 this
 const prefix = "HTMLEC";
@@ -8,7 +13,7 @@ const resizerCls = "absolute w-4 h-4 border-red-400";
 
 export class HTMLElementsCatcher {
   private net: HTMLDivElement | undefined;
-  private startingAt = {
+  private startingAt: Position = {
     x: 0,
     y: 0,
   };
@@ -54,10 +59,29 @@ export class HTMLElementsCatcher {
     }
   };
 
-  private catchElements = (e: MouseEvent) => {
+  private throwNet = (e: MouseEvent) => {
     if (this.net) {
       this.resize(this.net, e.x - this.startingAt.x, e.y - this.startingAt.y);
     }
+  };
+
+  private catchElements = (net: HTMLDivElement) => {
+    // const { clientWidth, clientHeight } = document.documentElement;
+    const { top, left, width, height } = net.getBoundingClientRect();
+
+    document.querySelectorAll("*").forEach((element) => {
+      if (!element.closest(`#${prefix}`)) {
+        const rect = element.getBoundingClientRect();
+
+        if (rect.left >= left && rect.top >= top && rect.right <= left + width && rect.bottom <= top + height) {
+          if ("style" in element) {
+            (element.style as any).backgroundColor = "red";
+          } else {
+            console.log(element);
+          }
+        }
+      }
+    });
   };
 
   private startCatching = (e: MouseEvent) => {
@@ -69,7 +93,7 @@ export class HTMLElementsCatcher {
       x: e.x,
       y: e.y,
     };
-    document.addEventListener("mousemove", this.catchElements);
+    document.addEventListener("mousemove", this.throwNet);
   };
 
   private endCatching = (e: MouseEvent) => {
@@ -106,13 +130,15 @@ export class HTMLElementsCatcher {
 
         this.net.appendChild(resizer);
       }
+
+      // this.catchElements(this.net);
     }
 
     this.startingAt = {
       x: 0,
       y: 0,
     };
-    document.removeEventListener("mousemove", this.catchElements);
+    document.removeEventListener("mousemove", this.throwNet);
   };
 
   startSession() {
@@ -127,7 +153,7 @@ export class HTMLElementsCatcher {
     this.overlayElmt.classList.add("hidden");
     document.removeEventListener("keydown", this.endSessionOnEscPressed);
     document.removeEventListener("mousedown", this.startCatching);
-    document.removeEventListener("mousemove", this.catchElements);
+    document.removeEventListener("mousemove", this.throwNet);
     document.removeEventListener("mouseup", this.endCatching);
   }
 }
