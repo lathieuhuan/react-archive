@@ -9,6 +9,7 @@ import { InputNumberExample, UseInputNumberExamples } from "@Features/processors
 import { I18next } from "@Features/i18next";
 import DynamicTypeForm from "@Features/dynamic-type-form";
 import WebComponents from "@Features/web-components";
+import HTMLElementsCatcher from "@Features/html-elements-catcher";
 
 let branchID = 1;
 const queryClient = new QueryClient();
@@ -210,5 +211,13 @@ export const topCluster: ICluster = [
         component: HorizontalList,
       },
     ],
+  },
+  {
+    info: {
+      id: branchID++,
+      name: "HTML Elements Catcher",
+      path: "html-elements-catcher",
+    },
+    component: HTMLElementsCatcher,
   },
 ];
