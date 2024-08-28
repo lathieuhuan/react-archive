@@ -2,16 +2,18 @@ import { useEffect, useRef } from "react";
 import { HTMLElementsCatcher } from "@Src/packages";
 
 export function HTMLElementsCatcherDemo() {
-  const catcher = useRef(new HTMLElementsCatcher());
+  const catcher = useRef<HTMLElementsCatcher>();
 
   useEffect(() => {
+    catcher.current = new HTMLElementsCatcher();
+
     return () => {
-      catcher.current.endSession();
+      catcher.current?.endSession();
     };
   }, []);
 
   const onClickStart = () => {
-    catcher.current.startSession();
+    catcher.current?.startSession();
   };
 
   return (
