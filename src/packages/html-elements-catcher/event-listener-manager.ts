@@ -2,7 +2,7 @@ let timeout: NodeJS.Timeout | undefined;
 
 export class EventListenerManager {
   private eventsByType = new Map<string, Set<Function>>();
-  private debugging = true;
+  private debugging = false;
 
   private debugLog(message?: any, ...optionalParams: any[]) {
     clearTimeout(timeout);

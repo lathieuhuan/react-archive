@@ -22,7 +22,7 @@ export function HTMLElementsCatcherDemo() {
   };
 
   return (
-    <div>
+    <div style={{ height: 1200 }}>
       <div className="flex gap-4">
         <button className="button button-primary" onClick={onClickStart}>
           Start
