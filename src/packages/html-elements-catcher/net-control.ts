@@ -1,4 +1,5 @@
 import { prefix, MIN_NET_SIZE } from "./configs";
+import { EventListenerManager } from "./event-listener-manager";
 
 type Position = {
   x: number;
@@ -29,7 +30,7 @@ const resizersAttrs = {
   },
 };
 
-export class NetControl {
+export class NetControl extends EventListenerManager {
   private net: HTMLDivElement;
   private sea: HTMLElement | undefined;
   private anchor: Position = {
@@ -37,8 +38,12 @@ export class NetControl {
     y: 0,
   };
   private adjustDir: "tl" | "tr" | "br" | "bl" = "br";
+  private devMode = true;
+  private netDescription = document.createElement("div");
+  private timeout: NodeJS.Timeout | undefined;
 
   constructor() {
+    super();
     this.net = this.createNet();
   }
 
@@ -60,15 +65,46 @@ export class NetControl {
     net.className = netCls;
     net.style.left = `${startX}px`;
     net.style.top = `${startY}px`;
-    this.resizeNet(width, height);
+    net.style.width = `${width}px`;
+    net.style.height = `${height}px`;
+    this.dev();
     return (this.net = net);
   };
 
+  get netStyle() {
+    return this.net.style;
+  }
+
   set netStyle(style: Partial<CSSStyleDeclaration>) {
     for (const key in style) {
-      if (style[key]) this.net.style[key] = style[key];
+      if (style[key]) this.netStyle[key] = style[key];
     }
+    this.dev();
   }
+
+  private dev = () => {
+    clearTimeout(this.timeout);
+
+    if (this.devMode) {
+      this.timeout = setTimeout(() => {
+        const { top, right, bottom, left, width, height } = this.netStyle;
+        const style = {
+          top,
+          right,
+          bottom,
+          left,
+          width,
+          height,
+        };
+
+        this.netDescription.innerHTML = `<pre class='text-sm'>${JSON.stringify(style, null, 2)}</pre>`;
+
+        if (!this.net.contains(this.netDescription)) {
+          this.net.appendChild(this.netDescription);
+        }
+      }, 1000);
+    }
+  };
 
   private resizeNet = (width: number, height: number) => {
     this.netStyle = {
@@ -99,11 +135,11 @@ export class NetControl {
   };
 
   private deactivateNet = () => {
-    document.removeEventListener("mousemove", this.deployNet);
+    this.removeListener("mousemove", this.deployNet);
   };
 
   startNetDeployment = () => {
-    document.addEventListener("mousemove", this.deployNet);
+    this.addListenter("mousemove", this.deployNet);
   };
 
   endNetDeployment = () => {
@@ -130,25 +166,19 @@ export class NetControl {
     return elmt.classList.contains(resizerIdentityCls);
   };
 
+  // #to-do: an adjust function for each direction
   private adjustNet = (e: MouseEvent) => {
-    const { x, y } = this.netRect;
+    console.log("cursor", e.x, e.y);
 
-    // #to-do: Resize net base on this.anchor and e.x & e.y
+    const newWidth = e.x - this.anchor.x;
+    const newHeight = e.y - this.anchor.y;
 
-    switch (this.adjustDir) {
-      case "tl":
-        break;
-      case "br":
-        this.resizeNet(Math.max(e.x - x, MIN_NET_SIZE), Math.max(e.y - y, MIN_NET_SIZE));
-        break;
-    }
+    this.resizeNet(Math.abs(Math.max(newWidth, MIN_NET_SIZE)), Math.abs(Math.max(newHeight, MIN_NET_SIZE)));
   };
 
   startNetAdjustment = (e: MouseEvent, resizer: HTMLElement) => {
     const { top, left, right, bottom } = this.netRect;
     const { clientWidth, clientHeight } = document.documentElement;
-
-    // #to-do: Update this.anchor
 
     switch (resizer.id) {
       case resizersAttrs.tl.id:
@@ -156,18 +186,26 @@ export class NetControl {
           left: "unset",
           top: "unset",
           right: `${clientWidth - right}px`,
-          bottom: `${clientHeight - bottom}`,
+          bottom: `${clientHeight - bottom}px`,
         };
         this.adjustDir = "tl";
+        this.anchor = {
+          x: right,
+          y: bottom,
+        };
         break;
       case resizersAttrs.tr.id:
         this.netStyle = {
           left: `${left}px`,
           top: "unset",
           right: "unset",
-          bottom: `${clientHeight - bottom}`,
+          bottom: `${clientHeight - bottom}px`,
         };
         this.adjustDir = "tr";
+        this.anchor = {
+          x: left,
+          y: bottom,
+        };
         break;
       case resizersAttrs.br.id:
         this.netStyle = {
@@ -177,6 +215,10 @@ export class NetControl {
           bottom: "unset",
         };
         this.adjustDir = "br";
+        this.anchor = {
+          x: left,
+          y: top,
+        };
         break;
       case resizersAttrs.bl.id:
         this.netStyle = {
@@ -185,17 +227,23 @@ export class NetControl {
           right: `${clientWidth - right}px`,
           bottom: "unset",
         };
+        this.anchor = {
+          x: right,
+          y: top,
+        };
         this.adjustDir = "bl";
         break;
     }
 
-    document.addEventListener("mousemove", this.adjustNet);
-    document.addEventListener("mouseup", this.endNetAdjustment);
+    console.log("anchor", this.anchor.x, this.anchor.y);
+
+    this.addListenter("mousemove", this.adjustNet);
+    this.addListenter("mouseup", this.endNetAdjustment);
   };
 
   private endNetAdjustment = () => {
-    document.removeEventListener("mousemove", this.adjustNet);
-    document.removeEventListener("mouseup", this.endNetAdjustment);
+    this.removeListener("mousemove", this.adjustNet);
+    this.removeListener("mouseup", this.endNetAdjustment);
   };
 
   disconnect = () => {

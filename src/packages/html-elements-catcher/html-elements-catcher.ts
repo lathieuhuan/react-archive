@@ -1,13 +1,14 @@
 import { prefix, MIN_NET_SIZE } from "./configs";
+import { EventListenerManager } from "./event-listener-manager";
 import { NetControl } from "./net-control";
 
 const DEFAULT_NET_HALF_SIZE = 80; // DEFAULT_NET_SIZE is x2 this
 const catcherCls = "fixed top-0 left-0 z-50 w-full h-full bg-black/40 cursor-crosshair hidden";
 
-export class HTMLElementsCatcher {
+export class HTMLElementsCatcher extends EventListenerManager {
   private netCtrl = new NetControl();
 
-  get overlayElmt() {
+  private get overlayElmt() {
     let overlay: HTMLDivElement | null = document.querySelector(`#${prefix}`);
 
     if (!overlay) {
@@ -45,15 +46,6 @@ export class HTMLElementsCatcher {
     });
   };
 
-  // ========== THROW NET ==========
-
-  private startCatching = (e: MouseEvent) => {
-    this.netCtrl.launchNewNet(this.overlayElmt, e.x, e.y);
-    this.netCtrl.startNetDeployment();
-
-    document.addEventListener("mouseup", this.endCatching);
-  };
-
   private endCatching = (e: MouseEvent) => {
     const { width, height } = this.netCtrl.netRect;
 
@@ -66,9 +58,10 @@ export class HTMLElementsCatcher {
     }
 
     this.netCtrl.endNetDeployment();
+    this.removeListener("mouseup", this.endCatching);
   };
 
-  handleMousedown = (e: MouseEvent) => {
+  private handleMousedown = (e: MouseEvent) => {
     const { target } = e;
 
     if (target instanceof HTMLElement) {
@@ -77,21 +70,24 @@ export class HTMLElementsCatcher {
         return;
       }
 
-      this.startCatching(e);
+      this.netCtrl.launchNewNet(this.overlayElmt, e.x, e.y);
+      this.netCtrl.startNetDeployment();
+
+      this.addListenter("mouseup", this.endCatching);
     }
   };
 
   startSession() {
     this.overlayElmt.classList.remove("hidden");
-    document.addEventListener("keydown", this.endSessionOnEscPressed);
-    document.addEventListener("mousedown", this.handleMousedown);
+    this.addListenter("keydown", this.endSessionOnEscPressed);
+    this.addListenter("mousedown", this.handleMousedown);
   }
 
   endSession() {
     this.overlayElmt.classList.add("hidden");
     this.netCtrl.disconnect();
-    document.removeEventListener("keydown", this.endSessionOnEscPressed);
-    document.removeEventListener("mousedown", this.handleMousedown);
-    document.removeEventListener("mouseup", this.endCatching);
+    this.removeListener("keydown", this.endSessionOnEscPressed);
+    this.removeListener("mousedown", this.handleMousedown);
+    this.removeListener("mouseup", this.endCatching);
   }
 }
