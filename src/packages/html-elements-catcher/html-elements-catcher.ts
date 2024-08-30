@@ -1,6 +1,6 @@
 import { catcherCls, DEFAULT_NET_HALF_SIZE, MIN_NET_SIZE, prefix } from "./configs";
-import { EventListenerManager } from "./event-listener-manager";
 import { NetControl } from "./net-control";
+import $events from "./events-manager";
 
 type CatcherConstructOpions = {
   closeOnEscape?: boolean;
@@ -10,13 +10,11 @@ const defaultOptions: CatcherConstructOpions = {
   closeOnEscape: true,
 };
 
-export class HTMLElementsCatcher extends EventListenerManager {
+export class HTMLElementsCatcher {
   private previousBodyOverflow = "";
   private netCtrl = new NetControl(this.overlayElmt, prefix, MIN_NET_SIZE, DEFAULT_NET_HALF_SIZE * 2);
 
-  constructor(private options: CatcherConstructOpions = defaultOptions) {
-    super();
-  }
+  constructor(private options: CatcherConstructOpions = defaultOptions) {}
 
   private get overlayElmt() {
     let overlay: HTMLDivElement | null = document.querySelector(`#${prefix}`);
@@ -29,6 +27,10 @@ export class HTMLElementsCatcher extends EventListenerManager {
       document.body.appendChild(overlay);
     }
     return overlay;
+  }
+
+  get subscribersCount() {
+    return $events.subscribersCount;
   }
 
   private endSessionOnEscPressed = (e: KeyboardEvent) => {
@@ -69,8 +71,8 @@ export class HTMLElementsCatcher extends EventListenerManager {
     document.body.style.overflow = "hidden";
 
     this.overlayElmt.classList.remove("hidden");
-    this.addListenter("keydown", this.endSessionOnEscPressed);
-    this.addListenter("mousedown", this.handleMousedown);
+    $events.subscribe("keydown", this.endSessionOnEscPressed);
+    $events.subscribe("mousedown", this.handleMousedown);
   }
 
   endSession() {
@@ -78,7 +80,7 @@ export class HTMLElementsCatcher extends EventListenerManager {
 
     this.overlayElmt.classList.add("hidden");
     this.netCtrl.disconnect();
-    this.removeListener("keydown", this.endSessionOnEscPressed);
-    this.removeListener("mousedown", this.handleMousedown);
+    $events.unsubscribe("keydown", this.endSessionOnEscPressed);
+    $events.unsubscribe("mousedown", this.handleMousedown);
   }
 }

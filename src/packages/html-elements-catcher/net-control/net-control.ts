@@ -1,8 +1,8 @@
-import { EventListenerManager } from "../event-listener-manager";
 import { netCls, netRingCls } from "./configs";
 import { ResizerControl, ResizerElement } from "./resizer-control";
+import $events from "../events-manager";
 
-export class NetControl extends EventListenerManager {
+export class NetControl {
   private net: HTMLDivElement;
   private defaultHalfSize: number;
   private anchor = {
@@ -11,13 +11,7 @@ export class NetControl extends EventListenerManager {
   };
   private resizerCtrl: ResizerControl;
 
-  //
-  private devMode = true;
-  private netDescription = document.createElement("div");
-  private timeout: NodeJS.Timeout | undefined;
-
   constructor(private sea: HTMLElement, private prefix: string, private minNetSize: number, defaultSize: number) {
-    super();
     this.net = this.createNet(0, 0, 0, 0);
     this.defaultHalfSize = defaultSize / 2;
     this.resizerCtrl = new ResizerControl(prefix);
@@ -27,29 +21,11 @@ export class NetControl extends EventListenerManager {
     for (const key in style) {
       if (style[key]) this.net.style[key] = style[key];
     }
-    this.dev();
   }
 
   private get netRect() {
     return this.net.getBoundingClientRect();
   }
-
-  private dev = () => {
-    clearTimeout(this.timeout);
-
-    if (this.devMode) {
-      this.timeout = setTimeout(() => {
-        const { left, top, width, height } = this.net.style;
-        const style = { left, top, width, height };
-
-        this.netDescription.innerHTML = `<pre class='text-sm'>${JSON.stringify(style, null, 2)}</pre>`;
-
-        if (!this.net.contains(this.netDescription)) {
-          this.net.appendChild(this.netDescription);
-        }
-      }, 500);
-    }
-  };
 
   private removeNet = () => {
     if (this.sea.contains(this.net)) {
@@ -100,15 +76,15 @@ export class NetControl extends EventListenerManager {
   };
 
   private unsubscribeDeployment = () => {
-    this.removeListener("mousemove", this.resizeNet);
-    this.removeListener("mouseup", this.endNetDeployment);
+    $events.unsubscribe("mousemove", this.resizeNet);
+    $events.unsubscribe("mouseup", this.endNetDeployment);
   };
 
   startNetDeployment = (e: MouseEvent) => {
     this.launchNewNet(e.x, e.y);
 
-    this.addListenter("mousemove", this.resizeNet);
-    this.addListenter("mouseup", this.endNetDeployment);
+    $events.subscribe("mousemove", this.resizeNet);
+    $events.subscribe("mouseup", this.endNetDeployment);
   };
 
   private endNetDeployment = (e: MouseEvent) => {
@@ -166,8 +142,8 @@ export class NetControl extends EventListenerManager {
         break;
     }
 
-    this.addListenter("mousemove", this.resizeNet);
-    this.addListenter("mouseup", this.endNetAdjustment);
+    $events.subscribe("mousemove", this.resizeNet);
+    $events.subscribe("mouseup", this.endNetAdjustment);
   };
 
   private endNetAdjustment = () => {
@@ -176,8 +152,8 @@ export class NetControl extends EventListenerManager {
   };
 
   private unsubscribeAdjustment = () => {
-    this.removeListener("mousemove", this.resizeNet);
-    this.removeListener("mouseup", this.endNetAdjustment);
+    $events.unsubscribe("mousemove", this.resizeNet);
+    $events.unsubscribe("mouseup", this.endNetAdjustment);
   };
 
   disconnect = () => {

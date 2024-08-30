@@ -18,7 +18,7 @@ export function HTMLElementsCatcherDemo() {
   };
 
   const logListenersCount = () => {
-    console.log(catcher.current?.listenersCount);
+    console.log(catcher.current?.subscribersCount);
   };
 
   return (
