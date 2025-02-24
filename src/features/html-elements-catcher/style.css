@@ -1,0 +1,20 @@
+.htmlec-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  background-color: #0000001a;
+}
+
+.htmlec-box {
+  --borderColor: rgb(0, 0, 0);
+  position: absolute;
+  border: 3px solid var(--borderColor);
+  box-sizing: border-box;
+}
+
+.wpaint-box--current {
+  --borderColor: blue;
+}

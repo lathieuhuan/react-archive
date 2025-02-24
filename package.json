@@ -19,6 +19,7 @@
     "react-i18next": "11.18.0",
     "react-query": "3.39.1",
     "react-router-dom": "6.3.0",
+    "web-paint": "0.0.1-beta.3",
     "yup": "0.32.11"
   },
   "devDependencies": {
